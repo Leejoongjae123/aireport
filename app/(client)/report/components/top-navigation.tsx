@@ -11,7 +11,8 @@ interface TopNavigationProps {
 export function TopNavigation({ onMenuClick }: TopNavigationProps) {
   const pathname = usePathname();
   const isInputsOrProcedurePage =
-    pathname?.includes("/report/inputs") || pathname?.includes("/report/procedure");
+    pathname?.includes("/report/inputs") ||
+    pathname?.includes("/report/procedure");
 
   return (
     <div
@@ -30,11 +31,19 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
 
       {isInputsOrProcedurePage && (
         <div className="flex gap-3">
-          <Button variant="outline" className="bg-white text-primary w-[144px] h-12 text-[18px] font-semibold border-primary hover:bg-white/90 hover:text-primary">
+          <Button
+            variant="outline"
+            className="bg-white text-primary w-[144px] h-12 text-[18px] font-semibold border-primary hover:bg-white/90 hover:text-primary"
+          >
             <Image src="/images/save.svg" alt="save" width={15} height={15} />
             임시 저장
           </Button>
-          <Button variant="default" className="w-[79px] h-12 text-[18px] font-semibold">다음</Button>
+          <Button
+            variant="default"
+            className="w-[79px] h-12 text-[18px] font-semibold"
+          >
+            다음
+          </Button>
         </div>
       )}
     </div>
