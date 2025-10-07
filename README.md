@@ -319,3 +319,10 @@ AI 사업보고서를 5분 만에 생성하는 혁신적인 플랫폼의 메인 
 <p align="center">
   Made with ❤️ by AI Report Service Team
 </p>
+
+공용컴포넌트
+
+- 필터 : filter-dropdown.tsx
+- 필터+검색어 : search-input-with-filter.tsx
+- 페이지네이션 : pagination.tsx
+- 날짜입력 : date-edit.tsx (useRef로 구현)

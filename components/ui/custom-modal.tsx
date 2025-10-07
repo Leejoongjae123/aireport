@@ -7,6 +7,8 @@ import {
   DialogContent,
   DialogOverlay,
   DialogPortal,
+  DialogTitle,
+  VisuallyHidden,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +63,15 @@ export const CustomModal: React.FC<CustomModalProps> = ({
           }}
           showCloseButton={false}
         >
+          {/* DialogTitle for accessibility */}
+          {title ? (
+            <DialogTitle className="sr-only">{title}</DialogTitle>
+          ) : (
+            <VisuallyHidden>
+              <DialogTitle>Dialog</DialogTitle>
+            </VisuallyHidden>
+          )}
+
           <div
             className={cn(
               "flex flex-col items-start gap-6 relative w-full",

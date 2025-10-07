@@ -1,0 +1,89 @@
+"use client";
+
+import React, { useState } from "react";
+import { CustomModal } from "@/components/ui/custom-modal";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
+import Image from "next/image";
+interface ReportPreviewModalProps {
+  children: React.ReactNode;
+}
+
+export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
+  children,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleOpenModal = () => setIsOpen(true);
+  const handleCloseModal = () => setIsOpen(false);
+
+  return (
+    <>
+      {/* Trigger */}
+      <div onClick={handleOpenModal}>{children}</div>
+
+      {/* Modal */}
+      <CustomModal
+        isOpen={isOpen}
+        onClose={handleCloseModal}
+        className="border-none"
+        width="691px"
+        
+        padding="40px"
+        showCloseButton={false}
+      >
+        <div className="flex flex-col items-center relative w-full h-full">
+          <div className="flex flex-col items-start relative w-full h-full">
+            {/* Header */}
+            <div className="flex justify-between items-start self-stretch relative">
+              <div className="text-black font-pretendard text-[24px] font-bold leading-normal">
+                보고서
+              </div>
+              <button
+                onClick={handleCloseModal}
+                className="w-8 h-8 flex items-center justify-center"
+              >
+                <X className="w-8 h-8 text-[#767676]" strokeWidth={1.6} />
+              </button>
+            </div>
+
+            {/* Title and Download Button */}
+            <div className="flex justify-between items-start self-stretch relative py-6">
+              <div className="text-[#2A2A2A] font-pretendard text-[20px] font-semibold leading-[150%] tracking-[-0.4px]">
+                AI 기반 리테일 수요예측 사업계획서
+              </div>
+              <button className="w-[139px] h-[40px] flex items-center justify-center gap-2 border border-[#D9D9D9] bg-white rounded" >
+                {/* Word Icon */}
+                <Image src="/images/word.svg" alt="Word" width={24} height={24} />
+                <span className="text-[#5A5A5A] font-pretendard text-[12px] font-bold leading-[150%] tracking-[-0.32px]">
+                  Word 다운로드
+                </span>
+              </button>
+            </div>
+
+            {/* Document Preview */}
+            <div className="flex w-[611px] h-[555px] p-5 px-6 flex-col items-center gap-[10px] border border-[#EEEEEF] bg-white rounded-xl relative">
+              <div className="flex flex-col items-start flex-1 self-stretch relative">
+                {/* Document Image */}
+                
+              </div>
+              
+              {/* Scrollbar */}
+              
+            </div>
+          </div>
+
+          {/* Confirm Button */}
+          <div className="flex justify-center items-center gap-3 self-stretch relative mt-6">
+            <Button
+              onClick={handleCloseModal}
+              className="flex w-[271px] h-[62px] justify-center items-center gap-2 rounded-[10px] bg-[#0077FF] text-white font-pretendard text-[18px] font-bold leading-normal tracking-[-0.36px] hover:bg-[#0077FF]/90"
+            >
+              확인
+            </Button>
+          </div>
+        </div>
+      </CustomModal>
+    </>
+  );
+};

@@ -1,15 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
+import { useReportStore } from "../components/store/report-store";
 
-export default function ReportInputsPage() {
+function ReportInputsContent() {
+  const searchParams = useSearchParams();
+  const setReportType = useReportStore((state) => state.setReportType);
   const [investmentAmount, setInvestmentAmount] = useState("");
   const [businessIdea, setBusinessIdea] = useState("");
   const [coreValue, setCoreValue] = useState("");
+
+  // URL에서 reportType 가져와서 store에 저장
+  useEffect(() => {
+    const reportType = searchParams.get("reportType");
+    if (reportType) {
+      setReportType(reportType);
+    }
+  }, [searchParams, setReportType]);
 
   const formatNumber = (value: string) => {
     const numericValue = value.replace(/[^0-9]/g, "");
@@ -17,7 +29,9 @@ export default function ReportInputsPage() {
     return new Intl.NumberFormat("ko-KR").format(parseInt(numericValue));
   };
 
-  const handleInvestmentAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInvestmentAmountChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const formatted = formatNumber(e.target.value);
     setInvestmentAmount(formatted);
   };
@@ -121,5 +135,13 @@ export default function ReportInputsPage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+export default function ReportInputsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ReportInputsContent />
+    </Suspense>
   );
 }
