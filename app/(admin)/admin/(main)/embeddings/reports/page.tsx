@@ -1,25 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Search,
-  RotateCcw,
-  Calendar,
-  ChevronUp,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-import { useState } from "react";
+import { Search, RotateCcw, Calendar } from "lucide-react";
+import FilterDropdown from "@/components/ui/filter-dropdown";
+import SearchInputWithFilter from "@/components/ui/search-input-with-filter";
+import Pagination from "@/components/ui/pagination";
+import DateEdit from "@/components/ui/date-edit";
 
 // Mock data for the table
 const mockReports = [

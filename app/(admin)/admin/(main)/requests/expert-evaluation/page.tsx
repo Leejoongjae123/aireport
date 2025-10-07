@@ -70,7 +70,10 @@ const requestData = [
       field: "디지털·ICT·AI",
       expert: "김이수",
       deadline: "2023-11-15",
-      status: (i % 3 === 0 ? "완료" : i % 3 === 1 ? "대기" : "지연") as const,
+      status: (i % 3 === 0 ? "완료" : i % 3 === 1 ? "대기" : "지연") as
+        | "완료"
+        | "대기"
+        | "지연",
       requestDate: "2023-11-15",
     })),
 ];

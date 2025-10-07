@@ -35,7 +35,7 @@ const reportData = [
   // Add more sample data with same structure
   ...Array(8)
     .fill(null)
-    .map((_, i) => ({
+    .map(() => ({
       no: "12345",
       reportId: "RP10231",
       title:

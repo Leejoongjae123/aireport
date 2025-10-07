@@ -25,17 +25,17 @@ export async function updateSession(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
+            request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({
             request,
           });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
+            supabaseResponse.cookies.set(name, value, options)
           );
         },
       },
-    },
+    }
   );
 
   // Do not run code between createServerClient and
@@ -44,14 +44,15 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: If you remove getClaims() and you use server-side rendering
   // with the Supabase client, your users may be randomly logged out.
-  const { data } = await supabase.auth.getClaims();
-  const user = data?.claims;
+  // const { data } = await supabase.auth.getClaims();
+  await supabase.auth.getClaims();
+  // const user = data?.claims;
 
   // 인증이 필요한 경로 정의
-  const protectedPaths = ["/report", "/review", "/mypage"];
-  const isProtectedPath = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
-  );
+  // const protectedPaths = ["/report", "/review", "/mypage"];
+  // const isProtectedPath = protectedPaths.some((path) =>
+  //   request.nextUrl.pathname.startsWith(path)
+  // );
 
   // 인증이 필요한 경로에서 로그인되지 않은 경우에만 리다이렉트
   // if (isProtectedPath && !user) {
