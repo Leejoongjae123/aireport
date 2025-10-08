@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, RotateCcw, Calendar } from "lucide-react";
 import FilterDropdown from "@/components/ui/filter-dropdown";
@@ -65,6 +65,8 @@ const mockReports = [
 ];
 
 export default function ExpertEvaluationRequestPage() {
+  const router = useRouter();
+
   // 필터 상태
   const [startDate, setStartDate] = useState<Date | undefined>(
     new Date(2025, 7, 8)
@@ -278,26 +280,26 @@ export default function ExpertEvaluationRequestPage() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="flex items-start gap-4">
-          <Card className="flex flex-col items-center gap-4 p-4 border border-[#D9D9D9] rounded-lg">
+        <div className="flex justify-center items-start gap-4">
+          <div className="flex flex-col items-center gap-4 border border-[rgba(217,217,217,1)] bg-white rounded-[8px] w-[180px] h-[98px] justify-center items-center">
             <Badge className="px-2.5 py-1.5 bg-[#ECF5FF] text-[#0077FF] text-xs font-medium rounded-full">
               등록 보고서
             </Badge>
             <div className="text-xl font-bold text-[#303030] text-center w-[100px]">
               152건
             </div>
-          </Card>
+          </div>
 
-          <Card className="flex flex-col items-center gap-4 p-4 border border-[#D9D9D9] rounded-lg">
+          <div className="flex flex-col items-center gap-4 border border-[rgba(217,217,217,1)] bg-white rounded-[8px] w-[180px] h-[98px] justify-center items-center">
             <Badge className="px-2.5 py-1.5 bg-[#ECF5FF] text-[#0077FF] text-xs font-medium rounded-full">
               이번달 신규
             </Badge>
             <div className="text-xl font-bold text-[#303030] text-center w-[100px]">
               12건
             </div>
-          </Card>
+          </div>
 
-          <Card className="flex flex-col items-center gap-4 p-4 border border-[#D9D9D9] rounded-lg">
+          <div className="flex flex-col items-center gap-4 border border-[rgba(217,217,217,1)] bg-white rounded-[8px] w-[180px] h-[98px] justify-center items-center">
             <Badge className="px-2.5 py-1.5 bg-[#ECF5FF] text-[#0077FF] text-xs font-medium rounded-full">
               최신 임베딩일
             </Badge>
@@ -309,7 +311,7 @@ export default function ExpertEvaluationRequestPage() {
                 15:32
               </div>
             </div>
-          </Card>
+          </div>
         </div>
 
         {/* Content Section */}
@@ -362,43 +364,43 @@ export default function ExpertEvaluationRequestPage() {
           {/* Data Table */}
           <div className="flex flex-col w-full">
             {/* Table Header */}
-            <div className="flex h-[50px] px-4 justify-between items-center bg-[#EEEEEE] rounded-sm">
-              <div className="flex items-center justify-center w-10 px-2.5 py-4">
+            <div className="grid grid-cols-8 h-[50px] px-4 items-center bg-[#EEEEEE] rounded-sm">
+              <div className="flex items-center justify-center">
                 <span className="text-xs font-bold text-[#515151] text-center">
                   NO
                 </span>
               </div>
-              <div className="flex items-center justify-center w-20 px-2.5 py-4">
+              <div className="flex items-center justify-center">
                 <span className="text-xs font-bold text-[#515151] text-center">
                   보고서ID
                 </span>
               </div>
-              <div className="flex items-center justify-center w-[220px] px-2.5 py-4">
+              <div className="flex items-center justify-center">
                 <span className="text-xs font-bold text-[#515151] text-center">
                   제목
                 </span>
               </div>
-              <div className="flex items-center justify-center w-15 px-2.5 py-4">
+              <div className="flex items-center justify-center">
                 <span className="text-xs font-bold text-[#515151] text-center">
                   카테고리
                 </span>
               </div>
-              <div className="flex items-center justify-center w-25 px-2.5 py-4">
+              <div className="flex items-center justify-center">
                 <span className="text-xs font-bold text-[#515151] text-center">
                   분야
                 </span>
               </div>
-              <div className="flex items-center justify-center w-40 px-2.5 py-4">
+              <div className="flex items-center justify-center">
                 <span className="text-xs font-bold text-[#515151] text-center">
                   키워드
                 </span>
               </div>
-              <div className="flex items-center justify-center w-15 px-2.5 py-4">
+              <div className="flex items-center justify-center">
                 <span className="text-xs font-bold text-[#515151] text-center">
                   파일
                 </span>
               </div>
-              <div className="flex items-center justify-center w-30 px-2.5 py-4">
+              <div className="flex items-center justify-center">
                 <span className="text-xs font-bold text-[#515151] text-center">
                   임베딩 일시
                 </span>
@@ -409,78 +411,54 @@ export default function ExpertEvaluationRequestPage() {
             {mockReports.map((report, index) => (
               <div
                 key={index}
-                className={`flex h-[50px] px-4 justify-between items-center rounded ${
-                  report.isHighlighted ? "bg-[#E3EFFE]" : ""
-                }`}
+                className="group grid grid-cols-8 h-[50px] px-4 items-center cursor-pointer border-b border-gray-100 bg-white hover:bg-[#E3EFFE] transition-colors duration-200"
+                onClick={() => {
+                  router.push(`/admin/embeddings/reports/${report.reportId}`);
+                }}
               >
-                <div className="flex items-center justify-center w-10 px-2.5 py-4">
-                  <span
-                    className={`text-xs font-medium text-center ${
-                      report.isHighlighted ? "text-[#0077FF]" : "text-[#686868]"
-                    }`}
-                  >
+                <div className="flex items-center justify-center">
+                  <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                     {report.no}
                   </span>
                 </div>
-                <div className="flex items-center justify-center w-20 px-2.5 py-4">
-                  <span
-                    className={`text-xs font-medium text-center ${
-                      report.isHighlighted ? "text-[#0077FF]" : "text-[#686868]"
-                    }`}
-                  >
+                <div className="flex items-center justify-center">
+                  <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                     {report.reportId}
                   </span>
                 </div>
-                <div className="flex items-center justify-center w-[220px] px-2.5 py-4">
-                  <span
-                    className={`text-xs font-medium text-center max-h-[14px] ${
-                      report.isHighlighted ? "text-[#0077FF]" : "text-[#686868]"
-                    }`}
-                  >
+                <div className="flex items-center justify-center">
+                  <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200 truncate">
                     {report.title}
                   </span>
                 </div>
-                <div className="flex items-center justify-center w-15 px-2.5 py-4">
-                  <span
-                    className={`text-xs font-medium text-center max-w-[60px] ${
-                      report.isHighlighted ? "text-[#0077FF]" : "text-[#686868]"
-                    }`}
-                  >
+                <div className="flex items-center justify-center">
+                  <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                     {report.category}
                   </span>
                 </div>
-                <div className="flex items-center justify-center w-25 px-2.5 py-4">
-                  <span
-                    className={`text-xs font-medium text-center max-w-[100px] ${
-                      report.isHighlighted ? "text-[#0077FF]" : "text-[#686868]"
-                    }`}
-                  >
+                <div className="flex items-center justify-center">
+                  <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200 truncate">
                     {report.field}
                   </span>
                 </div>
-                <div className="flex items-center justify-center w-40 px-2.5 py-4">
-                  <span
-                    className={`text-xs font-medium text-center max-h-[14px] ${
-                      report.isHighlighted ? "text-[#0077FF]" : "text-[#686868]"
-                    }`}
-                  >
+                <div className="flex items-center justify-center">
+                  <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200 truncate">
                     {report.keywords}
                   </span>
                 </div>
-                <div className="flex items-center justify-center w-15 px-2.5 py-4">
+                <div className="flex items-center justify-center">
                   <Button
                     variant="outline"
-                    className="h-6 px-2 py-1 border border-[#BAD1EC] bg-white text-xs font-medium text-[#5A5A5A] rounded"
+                    className="h-6 px-2 py-1 border border-[#BAD1EC] bg-white text-xs font-medium text-[#5A5A5A] rounded hover:bg-gray-50"
+                    onClick={(e) => {
+                      e.stopPropagation(); // 행 클릭 이벤트 방지
+                    }}
                   >
                     다운로드
                   </Button>
                 </div>
-                <div className="flex items-center justify-center w-30 px-2.5 py-4">
-                  <span
-                    className={`text-xs font-medium text-center ${
-                      report.isHighlighted ? "text-[#0077FF]" : "text-[#686868]"
-                    }`}
-                  >
+                <div className="flex items-center justify-center">
+                  <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                     {report.embeddingDate}
                   </span>
                 </div>

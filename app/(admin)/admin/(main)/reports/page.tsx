@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Search, RotateCcw, Calendar } from "lucide-react";
 import FilterDropdown from "@/components/ui/filter-dropdown";
@@ -50,7 +51,7 @@ const reportData = [
 ];
 
 export default function ReportsPage() {
-  const [selectedRow, setSelectedRow] = useState<number | null>(1);
+  const router = useRouter();
 
   // 필터 상태
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -279,31 +280,31 @@ export default function ReportsPage() {
         <div className="flex flex-col">
           {/* Table Header */}
           <div className="flex items-center px-4 py-4 bg-[#EEE] rounded-t-sm">
-            <div className="flex items-center justify-center px-2.5 min-w-[60px]">
+            <div className="flex items-center justify-center px-2.5 flex-1">
               <span className="text-xs font-bold text-[#515151]">NO</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[92px]">
+            <div className="flex items-center justify-center px-2.5 flex-1">
               <span className="text-xs font-bold text-[#515151]">보고서ID</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[200px]">
+            <div className="flex items-center justify-center px-2.5 flex-[2]">
               <span className="text-xs font-bold text-[#515151]">제목</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[100px]">
+            <div className="flex items-center justify-center px-2.5 flex-1">
               <span className="text-xs font-bold text-[#515151]">분야</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[80px]">
+            <div className="flex items-center justify-center px-2.5 flex-1">
               <span className="text-xs font-bold text-[#515151]">이름</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[180px]">
+            <div className="flex items-center justify-center px-2.5 flex-[1.5]">
               <span className="text-xs font-bold text-[#515151]">ID</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[64px]">
+            <div className="flex items-center justify-center px-2.5 flex-1">
               <span className="text-xs font-bold text-[#515151]">버전</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[144px]">
+            <div className="flex items-center justify-center px-2.5 flex-[1.5]">
               <span className="text-xs font-bold text-[#515151]">생성일시</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[144px]">
+            <div className="flex items-center justify-center px-2.5 flex-[1.5]">
               <span className="text-xs font-bold text-[#515151]">수정일시</span>
             </div>
           </div>
@@ -312,91 +313,51 @@ export default function ReportsPage() {
           {reportData.map((report, index) => (
             <div
               key={index}
-              className={`flex items-center px-4 py-4 ${
-                selectedRow === index ? "bg-[#E3EFFE]" : "bg-white"
-              }`}
-              onClick={() =>
-                setSelectedRow(selectedRow === index ? null : index)
-              }
+              className="flex items-center px-4 h-[50px] bg-white cursor-pointer hover:bg-[#E3EFFE] group transition-colors duration-200"
+              onClick={() => router.push(`/admin/reports/${report.reportId}`)}
             >
-              <div className="flex items-center justify-center px-2.5 min-w-[60px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center px-2.5 flex-1">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {report.no}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[92px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center px-2.5 flex-1">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {report.reportId}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[200px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  } text-center truncate`}
-                >
+              <div className="flex items-center justify-center px-2.5 flex-[2]">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] text-center truncate transition-colors duration-200">
                   {report.title}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[100px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center px-2.5 flex-1">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {report.field}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[80px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center px-2.5 flex-1">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {report.name}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[180px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center px-2.5 flex-[1.5]">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {report.id}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[64px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center px-2.5 flex-1">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {report.version}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[144px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center px-2.5 flex-[1.5]">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {report.createdAt}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[144px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center px-2.5 flex-[1.5]">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {report.updatedAt}
                 </span>
               </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, RotateCcw, Calendar } from "lucide-react";
@@ -28,10 +29,11 @@ function StatusBadge({ status }: { status: "정상" | "탈퇴" }) {
 // Sample data for the table
 const memberData = [
   {
+    id: "1",
     no: "12345",
     memberId: "user1234",
     name: "김이수",
-    id: "hong***@gmail.com",
+    email: "hong***@gmail.com",
     joinMethod: "이메일",
     company: "ABC스타트업",
     businessField: "IT/소프트웨어",
@@ -40,10 +42,11 @@ const memberData = [
     joinDate: "2023-11-15   12:22:23",
   },
   {
+    id: "2",
     no: "12345",
     memberId: "user1234",
     name: "김이수",
-    id: "hong***@gmail.com",
+    email: "hong***@gmail.com",
     joinMethod: "카카오",
     company: "ABC스타트업",
     businessField: "헬스케어",
@@ -54,11 +57,12 @@ const memberData = [
   // Add more sample data with same structure
   ...Array(8)
     .fill(null)
-    .map(() => ({
+    .map((_, index) => ({
+      id: (index + 3).toString(),
       no: "12345",
       memberId: "user1234",
       name: "김이수",
-      id: "hong***@gmail.com",
+      email: "hong***@gmail.com",
       joinMethod: "구글",
       company: "ABC스타트업",
       businessField: "핀테크",
@@ -69,7 +73,7 @@ const memberData = [
 ];
 
 export default function MembersPage() {
-  const [selectedRow, setSelectedRow] = useState<number | null>(1);
+  const router = useRouter();
 
   // 필터 상태
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -315,135 +319,97 @@ export default function MembersPage() {
         {/* Table */}
         <div className="flex flex-col">
           {/* Table Header */}
-          <div className="flex items-center px-4 py-4 bg-[#EEE] rounded-t-sm">
-            <div className="flex items-center justify-center px-2.5 min-w-[60px]">
+          <div className="grid grid-cols-10 items-center px-4 py-4 bg-[#EEE] rounded-t-sm h-[50px]">
+            <div className="flex items-center justify-center">
               <span className="text-xs font-bold text-[#515151]">NO</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[92px]">
+            <div className="flex items-center justify-center">
               <span className="text-xs font-bold text-[#515151]">회원ID</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[80px]">
+            <div className="flex items-center justify-center">
               <span className="text-xs font-bold text-[#515151]">이름</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[180px]">
+            <div className="flex items-center justify-center">
               <span className="text-xs font-bold text-[#515151]">ID</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[80px]">
+            <div className="flex items-center justify-center">
               <span className="text-xs font-bold text-[#515151]">가입방식</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[120px]">
+            <div className="flex items-center justify-center">
               <span className="text-xs font-bold text-[#515151]">
                 소속 (회사명)
               </span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[100px]">
+            <div className="flex items-center justify-center">
               <span className="text-xs font-bold text-[#515151]">사업분야</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[116px]">
+            <div className="flex items-center justify-center">
               <span className="text-xs font-bold text-[#515151]">
                 최근 로그인
               </span>
             </div>
-            <div className="flex items-center justify-center px-2.5 flex-1">
+            <div className="flex items-center justify-center">
               <span className="text-xs font-bold text-[#515151]">상태</span>
             </div>
-            <div className="flex items-center justify-center px-2.5 min-w-[144px]">
+            <div className="flex items-center justify-center">
               <span className="text-xs font-bold text-[#515151]">가입일시</span>
             </div>
           </div>
 
           {/* Table Body */}
-          {memberData.map((member, index) => (
+          {memberData.map((member) => (
             <div
-              key={index}
-              className={`flex items-center px-4 py-4 ${
-                selectedRow === index ? "bg-[#E3EFFE]" : "bg-white"
-              }`}
-              onClick={() =>
-                setSelectedRow(selectedRow === index ? null : index)
-              }
+              key={member.id}
+              className="group grid grid-cols-10 items-center px-4 h-[50px] cursor-pointer border-b border-gray-100 bg-white hover:bg-[#E3EFFE] transition-colors duration-200"
+              onClick={() => {
+                router.push(`/admin/members/${member.id}`);
+              }}
             >
-              <div className="flex items-center justify-center px-2.5 min-w-[60px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {member.no}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[92px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {member.memberId}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[80px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {member.name}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[180px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
-                  {member.id}
+              <div className="flex items-center justify-center">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
+                  {member.email}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[80px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {member.joinMethod}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[120px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {member.company}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[100px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {member.businessField}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[116px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {member.lastLogin}
                 </span>
               </div>
-              <div className="flex items-center justify-center px-2.5 flex-1">
+              <div className="flex items-center justify-center">
                 <StatusBadge status={member.status} />
               </div>
-              <div className="flex items-center justify-center px-2.5 min-w-[144px]">
-                <span
-                  className={`text-xs font-medium ${
-                    selectedRow === index ? "text-[#07F]" : "text-[#686868]"
-                  }`}
-                >
+              <div className="flex items-center justify-center">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                   {member.joinDate}
                 </span>
               </div>

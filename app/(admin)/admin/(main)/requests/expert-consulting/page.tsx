@@ -1,26 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import {
-  Search,
-  RotateCcw,
-  Calendar,
-  ChevronDown,
-  FileSpreadsheet,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Search, RotateCcw, Calendar } from "lucide-react";
 import FilterDropdown from "@/components/ui/filter-dropdown";
+import SearchInputWithFilter from "@/components/ui/search-input-with-filter";
 import Pagination from "@/components/ui/pagination";
+import DateEdit from "@/components/ui/date-edit";
 
 interface ConsultingRequest {
   id: string;
@@ -38,12 +27,24 @@ interface ConsultingRequest {
 }
 
 const ExpertConsultingPage = () => {
-  const [startDate, setStartDate] = useState<string>("2025-08-08");
-  const [endDate, setEndDate] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("전체");
-  const [expertFilter, setExpertFilter] = useState<string>("전문가");
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const router = useRouter();
+
+  // 필터 상태
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    new Date(2025, 7, 8)
+  );
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("전체");
+  const [expertFilter, setExpertFilter] = useState("전문가");
+
+  // 검색 상태
+  const [searchFilter, setSearchFilter] = useState("이름");
+  const [searchValue, setSearchValue] = useState("");
+
+  // 페이지네이션 상태
+  const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState("10개씩 보기");
 
   // Mock data
@@ -65,6 +66,10 @@ const ExpertConsultingPage = () => {
     })
   );
 
+  // 옵션들
+  const statusOptions = ["전체", "완료", "대기"];
+  const expertOptions = ["전문가", "김이수"];
+  const searchFilterOptions = ["이름", "ID", "대상 보고서"];
   const itemsPerPageOptions = [
     "10개씩 보기",
     "20개씩 보기",
@@ -72,16 +77,32 @@ const ExpertConsultingPage = () => {
     "100개씩 보기",
   ];
 
-  const handleSearch = () => {
-    setCurrentPage(1);
+  // 날짜 포맷 함수
+  const formatDate = (date: Date | undefined) => {
+    if (!date) {
+      return "날짜 입력";
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   };
 
+  // 초기화 함수
   const handleReset = () => {
-    setStartDate("2025-08-08");
-    setEndDate("");
+    setStartDate(undefined);
+    setEndDate(undefined);
     setStatusFilter("전체");
     setExpertFilter("전문가");
-    setSearchTerm("");
+    setSearchFilter("이름");
+    setSearchValue("");
+    setCurrentPage(1);
+    setItemsPerPage("10개씩 보기");
+  };
+
+  // 검색 함수
+  const handleSearch = () => {
+    setCurrentPage(1);
   };
 
   // const totalRequests = consultingRequests.length
@@ -118,184 +139,248 @@ const ExpertConsultingPage = () => {
   const currentRequests = consultingRequests.slice(startIndex, endIndex);
 
   return (
-    <div className="p-11 bg-white min-h-screen">
+    <div className="flex flex-col items-center gap-8 p-11 bg-white min-h-screen font-['Pretendard']">
+      {/* Page Title */}
       <div className="w-full">
-        {/* Page Title */}
-        <h1 className="text-2xl font-bold text-[#2A2A2A] mb-8 font-pretendard">
+        <h1 className="text-2xl font-bold text-[#2A2A2A]">
           전문가 컨설팅 요청
         </h1>
+      </div>
 
-        {/* Search/Filter Section */}
-        <div className="bg-[#ECF5FF] rounded-lg p-8 mb-8">
-          <div className="flex items-start gap-6 mb-5">
-            {/* Date Range Picker */}
-            <div className="flex items-center gap-2">
-              <span className="text-base font-bold text-[#555] font-pretendard">
-                기간 검색
-              </span>
-              <div className="flex items-center gap-2.5">
-                <div className="relative">
-                  <Input
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-[140px] h-[38px] px-3 border border-[#EBEBEB] rounded-md text-sm font-bold text-[#0077FF] font-pretendard bg-white"
-                    placeholder="날짜 입력"
-                  />
-                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 text-[#727272]" />
-                </div>
-                <span className="text-xs font-bold text-[#727272] font-pretendard">
-                  -
-                </span>
-                <div className="relative">
-                  <Input
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-[140px] h-[38px] px-3 border border-[#EBEBEB] rounded-md text-sm text-[#727272] font-pretendard bg-white"
-                    placeholder="날짜 입력"
-                  />
-                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 text-[#727272]" />
-                </div>
+      {/* Filter Section */}
+      <div className="w-full p-8 rounded-lg bg-[#ECF5FF] flex flex-col gap-4">
+        {/* Top Row Filters */}
+        <div className="flex items-center gap-6">
+          {/* Period Search */}
+          <div className="flex items-center gap-2">
+            <label className="text-base font-semibold text-[#555] whitespace-nowrap">
+              기간 검색
+            </label>
+            <div className="flex items-center gap-2.5">
+              <div className="relative">
+                <button
+                  onClick={() => setShowStartDatePicker(!showStartDatePicker)}
+                  className="relative flex items-center justify-between w-[140px] px-3 py-3 bg-white border border-[#EBEBEB] rounded-md hover:bg-[#E8F3FF]"
+                >
+                  <span
+                    className={`text-sm font-semibold ${
+                      startDate ? "text-[#07F]" : "text-[#727272]"
+                    }`}
+                  >
+                    {formatDate(startDate)}
+                  </span>
+                  <Calendar className="w-3 h-3 text-[#727272]" />
+                </button>
+                {showStartDatePicker && (
+                  <div className="absolute top-full mt-2 z-50">
+                    <DateEdit
+                      value={startDate}
+                      onChange={setStartDate}
+                      onConfirm={(date) => {
+                        setStartDate(date);
+                        setShowStartDatePicker(false);
+                      }}
+                      onCancel={() => setShowStartDatePicker(false)}
+                    />
+                  </div>
+                )}
+              </div>
+              <span className="text-xs font-semibold text-[#727272]">-</span>
+              <div className="relative">
+                <button
+                  onClick={() => setShowEndDatePicker(!showEndDatePicker)}
+                  className="relative flex items-center justify-between w-[140px] px-3 py-3 bg-white border border-[#EBEBEB] rounded-md hover:bg-[#E8F3FF]"
+                >
+                  <span
+                    className={`text-sm font-medium ${
+                      endDate ? "text-[#07F]" : "text-[#727272]"
+                    }`}
+                  >
+                    {formatDate(endDate)}
+                  </span>
+                  <Calendar className="w-3 h-3 text-[#727272]" />
+                </button>
+                {showEndDatePicker && (
+                  <div className="absolute top-full mt-2 z-50">
+                    <DateEdit
+                      value={endDate}
+                      onChange={setEndDate}
+                      onConfirm={(date) => {
+                        setEndDate(date);
+                        setShowEndDatePicker(false);
+                      }}
+                      onCancel={() => setShowEndDatePicker(false)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
-
-            {/* Status Filter */}
-            <div className="flex items-center gap-2 flex-1">
-              <span className="text-base font-bold text-[#555] font-pretendard">
-                상태
-              </span>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="flex-1 h-[38px] px-3 border border-[#EBEBEB] rounded-md bg-white">
-                  <SelectValue />
-                  <ChevronDown className="w-2.5 h-2.5 text-[#0077FF]" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="전체">전체</SelectItem>
-                  <SelectItem value="완료">완료</SelectItem>
-                  <SelectItem value="대기">대기</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
-          {/* Expert Filter and Search */}
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3 flex-1">
-              <Select value={expertFilter} onValueChange={setExpertFilter}>
-                <SelectTrigger className="w-auto px-3 h-[38px] border border-[#EBEBEB] rounded-md bg-white">
-                  <SelectValue />
-                  <ChevronDown className="w-2.5 h-2.5 text-[#0077FF]" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="전문��">전문가</SelectItem>
-                  <SelectItem value="김이수">김이수</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="검색어를 입력해주세요."
-                className="flex-1 h-[38px] px-3 border border-[#EBEBEB] rounded-md text-sm text-[#727272] font-pretendard bg-white"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={handleSearch}
-                className="w-[120px] h-[38px] bg-[#0077FF] hover:bg-[#0066DD] text-white rounded px-0 py-3 flex items-center justify-center gap-2.5 text-base font-bold font-pretendard"
-              >
-                <Search className="w-4 h-4" />
-                검색
-              </Button>
-              <Button
-                onClick={handleReset}
-                variant="outline"
-                className="w-[120px] h-[38px] border-[1.3px] border-[#0077FF] bg-white hover:bg-gray-50 text-[#0077FF] rounded px-0 py-3 flex items-center justify-center gap-2.5 text-base font-bold font-pretendard"
-              >
-                <RotateCcw className="w-4 h-4" />
-                초기화
-              </Button>
-            </div>
+          {/* Status Filter */}
+          <div className="flex items-center gap-2 flex-1">
+            <label className="text-base font-semibold text-[#555] whitespace-nowrap">
+              상태
+            </label>
+            <FilterDropdown
+              value={statusFilter}
+              options={statusOptions}
+              onChange={setStatusFilter}
+            />
           </div>
         </div>
 
-        {/* Status Cards */}
-        <div className="flex items-start gap-4 mb-6">
-          <Card className="p-4 border border-[#d9d9d9] rounded-lg bg-white flex flex-col items-center gap-4 min-w-[188px]">
-            <Badge className="bg-[#ECF5FF] text-[#0077FF] hover:bg-[#ECF5FF] rounded-full px-2.5 py-1.5 text-xs font-normal">
-              전체
-            </Badge>
-            <span className="text-xl font-bold text-[#303030] font-pretendard">
+        {/* Search Row */}
+        <div className="flex items-center gap-6">
+          {/* Expert Filter */}
+
+          {/* Search Bar */}
+          <SearchInputWithFilter
+            filterValue={searchFilter}
+            filterOptions={searchFilterOptions}
+            onFilterChange={setSearchFilter}
+            searchValue={searchValue}
+            onSearchChange={setSearchValue}
+            placeholder="검색어를 입력해주세요."
+          />
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleSearch}
+              className="w-[120px] h-[43px] bg-[#07F] text-white font-semibold text-base rounded hover:bg-[#0066CC]"
+            >
+              <Search className="w-4 h-4" />
+              검색
+            </Button>
+            <Button
+              onClick={handleReset}
+              variant="outline"
+              className="w-[120px] h-[43px] border-[1.3px] border-[#07F] bg-white text-[#07F] font-semibold text-base rounded hover:bg-[#F8FBFF] hover:text-none"
+            >
+              <RotateCcw className="w-4 h-4" />
+              초기화
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Cards */}
+      <div className="flex items-start gap-4">
+        <div className="flex flex-col items-center gap-4 border border-[rgba(217,217,217,1)] bg-white rounded-[8px] w-[180px] h-[98px] justify-center items-center">
+          <div className="w-[41px] h-[26px] bg-[#ECF5FF] rounded-full flex items-center justify-center">
+            <span className="text-xs font-normal text-[#07F]">전체</span>
+          </div>
+          <div className="w-[100px] text-center">
+            <span className="text-xl font-semibold text-[rgba(48,48,48,1)]">
               52건
             </span>
-          </Card>
+          </div>
+        </div>
 
-          <Card className="p-4 border border-[#d9d9d9] rounded-lg bg-white flex flex-col items-center gap-4 min-w-[188px]">
-            <Badge className="bg-[#cff7d3] text-[#025420] hover:bg-[#cff7d3] rounded-full px-2.5 py-1.5 text-xs font-normal">
+        {/* Completed Status Card */}
+        <div className="flex flex-col items-center gap-4 border border-[rgba(217,217,217,1)] bg-white rounded-[8px] w-[180px] h-[98px] justify-center items-center">
+          <div className="w-[41px] h-[26px] bg-[rgba(207,247,211,1)] rounded-full flex items-center justify-center">
+            <span className="text-xs font-normal text-[rgba(2,84,45,1)]">
               완료
-            </Badge>
-            <span className="text-xl font-bold text-[#303030] font-pretendard">
+            </span>
+          </div>
+          <div className="w-[100px] text-center">
+            <span className="text-xl font-semibold text-[rgba(48,48,48,1)]">
               52건
             </span>
-          </Card>
-
-          <Card className="p-4 border border-[#d9d9d9] rounded-lg bg-white flex flex-col items-center gap-4 min-w-[188px]">
-            <Badge className="bg-[#fff1c2] text-[#975102] hover:bg-[#fff1c2] rounded-full px-2.5 py-1.5 text-xs font-normal">
-              대기
-            </Badge>
-            <span className="text-xl font-bold text-[#303030] font-pretendard">
-              52건
-            </span>
-          </Card>
+          </div>
         </div>
 
+        {/* Waiting Status Card */}
+        <div className="flex flex-col items-center gap-4 border border-[rgba(217,217,217,1)] bg-white rounded-[8px] w-[180px] h-[98px] justify-center items-center">
+          <div className="w-[41px] h-[26px] bg-[rgba(255,241,194,1)] rounded-full flex items-center justify-center">
+            <span className="text-xs font-normal text-[rgba(151,81,2,1)]">
+              대기
+            </span>
+          </div>
+          <div className="w-[100px] text-center">
+            <span className="text-xl font-semibold text-[rgba(48,48,48,1)]">
+              52건
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Results Section */}
+      <div className="w-full flex flex-col gap-6">
         {/* Results Header */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="text-xl font-normal text-[#6d6d6d] font-pretendard">
-            총 <span className="text-[#0077FF]">12,345</span>건
+        <div className="flex items-center justify-between">
+          <div className="text-xl font-medium">
+            <span className="text-[#6D6D6D]">총 </span>
+            <span className="text-[#07F]">12,345</span>
+            <span className="text-[#6D6D6D]">건</span>
           </div>
           <Button
             onClick={handleExcelDownload}
-            variant="outline"
-            className="border-[1.6px] border-[#4CA452] bg-white hover:bg-gray-50 text-[#4CA452] rounded px-3 py-2.5 flex items-center gap-3 text-sm font-bold font-pretendard"
+            className="flex items-center gap-3 px-3 py-2.5 border-[1.6px] border-[#4CA452] bg-white text-[#4CA452] font-semibold text-sm rounded hover:bg-[#F8FFF9]"
           >
-            <FileSpreadsheet className="w-4 h-4" />
+            <svg className="w-4 h-4" viewBox="0 0 16 17" fill="none">
+              <path
+                d="M2.66797 5.47233V2.47233C2.66797 2.29552 2.73821 2.12595 2.86323 2.00093C2.98826 1.8759 3.15782 1.80566 3.33464 1.80566H12.668C12.8448 1.80566 13.0143 1.8759 13.1394 2.00093C13.2644 2.12595 13.3346 2.29552 13.3346 2.47233V14.4723C13.3346 14.6491 13.2644 14.8187 13.1394 14.9437C13.0143 15.0688 12.8448 15.139 12.668 15.139H3.33464C3.15782 15.139 2.98826 15.0688 2.86323 14.9437C2.73821 14.8187 2.66797 14.6491 2.66797 14.4723V11.4723"
+                stroke="#4CA452"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M10.334 5.47266H11.334M9.33398 8.13932H11.334M9.33398 10.806H11.334"
+                stroke="#4CA452"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+              />
+              <path
+                d="M3.33398 7.47266L5.33398 9.47266M5.33398 7.47266L3.33398 9.47266M1.33398 5.47266H7.33398V11.4727H1.33398V5.47266Z"
+                stroke="#4CA452"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
             엑셀 다운로드
           </Button>
         </div>
 
-        {/* Data Table */}
-        <div className="rounded-lg border border-gray-200 overflow-hidden mb-6">
+        {/* Table */}
+        <div className="flex flex-col">
           {/* Table Header */}
-          <div className="h-[50px] bg-[#EEE] flex items-center px-4">
-            <div className="flex items-center justify-center w-[60px] text-xs font-bold text-[#515151] font-pretendard">
-              NO
+          <div className="flex items-center px-4 py-4 bg-[#EEE] rounded-t-sm">
+            <div className="flex items-center justify-center px-2.5 flex-1">
+              <span className="text-xs font-bold text-[#515151]">NO</span>
             </div>
-            <div className="flex items-center justify-center w-[68px] text-xs font-bold text-[#515151] font-pretendard">
-              보고서ID
+            <div className="flex items-center justify-center px-2.5 flex-1">
+              <span className="text-xs font-bold text-[#515151]">보고서ID</span>
             </div>
-            <div className="flex items-center justify-center w-[80px] text-xs font-bold text-[#515151] font-pretendard">
-              이름
+            <div className="flex items-center justify-center px-2.5 flex-1">
+              <span className="text-xs font-bold text-[#515151]">이름</span>
             </div>
-            <div className="flex items-center justify-center w-[180px] text-xs font-bold text-[#515151] font-pretendard">
-              ID
+            <div className="flex items-center justify-center px-2.5 flex-[1.5]">
+              <span className="text-xs font-bold text-[#515151]">ID</span>
             </div>
-            <div className="flex items-center justify-center w-[140px] text-xs font-bold text-[#515151] font-pretendard">
-              대상 보고서
+            <div className="flex items-center justify-center px-2.5 flex-[1.5]">
+              <span className="text-xs font-bold text-[#515151]">
+                대상 보고서
+              </span>
             </div>
-            <div className="flex items-center justify-center w-[80px] text-xs font-bold text-[#515151] font-pretendard">
-              전문가
+            <div className="flex items-center justify-center px-2.5 flex-1">
+              <span className="text-xs font-bold text-[#515151]">전문가</span>
             </div>
-            <div className="flex items-center justify-center w-[140px] text-xs font-bold text-[#515151] font-pretendard">
-              분야
+            <div className="flex items-center justify-center px-2.5 flex-[1.5]">
+              <span className="text-xs font-bold text-[#515151]">분야</span>
             </div>
-            <div className="flex items-center justify-center w-[281px] text-xs font-bold text-[#515151] font-pretendard">
-              상태
+            <div className="flex items-center justify-center px-2.5 flex-1">
+              <span className="text-xs font-bold text-[#515151]">상태</span>
             </div>
-            <div className="flex items-center justify-center w-[140px] text-xs font-bold text-[#515151] font-pretendard">
-              요청일시
+            <div className="flex items-center justify-center px-2.5 flex-[1.5]">
+              <span className="text-xs font-bold text-[#515151]">요청일시</span>
             </div>
-            <div className="flex items-center justify-center w-[140px] text-xs font-bold text-[#515151] font-pretendard">
-              완료일시
+            <div className="flex items-center justify-center px-2.5 flex-[1.5]">
+              <span className="text-xs font-bold text-[#515151]">완료일시</span>
             </div>
           </div>
 
@@ -303,75 +388,58 @@ const ExpertConsultingPage = () => {
           {currentRequests.map((request) => (
             <div
               key={request.id}
-              className={`h-[50px] flex items-center px-4 ${
-                request.isSelected ? "bg-[#E3EFFE]" : "bg-white"
-              }`}
+              className="flex items-center px-4 h-[50px] bg-white cursor-pointer hover:bg-[#E3EFFE] group transition-colors duration-200"
+              onClick={() =>
+                router.push(`/admin/requests/expert-consulting/${request.id}`)
+              }
             >
-              <div
-                className={`flex items-center justify-center w-[60px] text-xs ${
-                  request.isSelected ? "text-[#0077FF]" : "text-[#686868]"
-                } font-pretendard`}
-              >
-                {request.no}
+              <div className="flex items-center justify-center px-2.5 flex-1">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
+                  {request.no}
+                </span>
               </div>
-              <div
-                className={`flex items-center justify-center w-[68px] text-xs ${
-                  request.isSelected ? "text-[#0077FF]" : "text-[#686868]"
-                } font-pretendard`}
-              >
-                {request.reportId}
+              <div className="flex items-center justify-center px-2.5 flex-1">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
+                  {request.reportId}
+                </span>
               </div>
-              <div
-                className={`flex items-center justify-center w-[80px] text-xs ${
-                  request.isSelected ? "text-[#0077FF]" : "text-[#686868]"
-                } font-pretendard truncate`}
-              >
-                {request.name}
+              <div className="flex items-center justify-center px-2.5 flex-1">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
+                  {request.name}
+                </span>
               </div>
-              <div
-                className={`flex items-center justify-center w-[180px] text-xs ${
-                  request.isSelected ? "text-[#0077FF]" : "text-[#686868]"
-                } font-pretendard`}
-              >
-                {request.email}
+              <div className="flex items-center justify-center px-2.5 flex-[1.5]">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
+                  {request.email}
+                </span>
               </div>
-              <div
-                className={`flex items-center justify-center w-[140px] text-xs ${
-                  request.isSelected ? "text-[#0077FF]" : "text-[#686868]"
-                } font-pretendard truncate`}
-              >
-                {request.targetReport}
+              <div className="flex items-center justify-center px-2.5 flex-[1.5]">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] max-h-[14px] overflow-hidden text-center truncate transition-colors duration-200">
+                  {request.targetReport}
+                </span>
               </div>
-              <div
-                className={`flex items-center justify-center w-[80px] text-xs ${
-                  request.isSelected ? "text-[#0077FF]" : "text-[#686868]"
-                } font-pretendard truncate`}
-              >
-                {request.expert}
+              <div className="flex items-center justify-center px-2.5 flex-1">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
+                  {request.expert}
+                </span>
               </div>
-              <div
-                className={`flex items-center justify-center w-[140px] text-xs ${
-                  request.isSelected ? "text-[#0077FF]" : "text-[#686868]"
-                } font-pretendard truncate`}
-              >
-                {request.field}
+              <div className="flex items-center justify-center px-2.5 flex-[1.5]">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
+                  {request.field}
+                </span>
               </div>
-              <div className="flex items-center justify-center w-[281px]">
+              <div className="flex items-center justify-center px-2.5 flex-1">
                 <StatusBadge status={request.status} />
               </div>
-              <div
-                className={`flex items-center justify-center w-[140px] text-xs ${
-                  request.isSelected ? "text-[#0077FF]" : "text-[#686868]"
-                } font-pretendard`}
-              >
-                {request.requestDate}
+              <div className="flex items-center justify-center px-2.5 flex-[1.5]">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
+                  {request.requestDate}
+                </span>
               </div>
-              <div
-                className={`flex items-center justify-center w-[140px] text-xs ${
-                  request.isSelected ? "text-[#0077FF]" : "text-[#686868]"
-                } font-pretendard`}
-              >
-                {request.completionDate || "-"}
+              <div className="flex items-center justify-center px-2.5 flex-[1.5]">
+                <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
+                  {request.completionDate || "-"}
+                </span>
               </div>
             </div>
           ))}

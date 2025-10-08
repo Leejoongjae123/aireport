@@ -7,10 +7,10 @@ export default function AdminMainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background ">
       <AdminHeader />
       <AdminSidebar />
-      <main className="pt-[78px] pl-[220px]">{children}</main>
+      <main className="pt-[78px] pl-[220px] min-h-screen bg-[#FBFCFD]">{children}</main>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -11,6 +12,8 @@ import Pagination from "@/components/ui/pagination";
 import DateEdit from "@/components/ui/date-edit";
 
 export default function ExpertsPage() {
+  const router = useRouter();
+
   // 필터 상태
   const [startDate, setStartDate] = useState<Date | undefined>(
     new Date(2025, 7, 8)
@@ -84,7 +87,6 @@ export default function ExpertsPage() {
     keywords: "헬스케어, AI의료기기, 빅데이터...",
     status: index === 1 ? "비공개" : "공개",
     embeddingDate: "2025-09-10 15:32",
-    isHighlighted: index === 1,
   }));
 
   return (
@@ -221,26 +223,26 @@ export default function ExpertsPage() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="flex items-start gap-[16px]">
-          <Card className="flex p-[16px_44px] flex-col justify-center items-center gap-[16px] rounded-[8px] border border-[#D9D9D9] bg-white">
-            <Badge className="flex p-[6px_10px] justify-center items-center rounded-full bg-[#ECF5FF] text-[12px] font-normal text-[#07F] font-['Pretendard'] hover:bg-[#ECF5FF]">
+        <div className="w-full flex items-start justify-center gap-4">
+        <div className="flex flex-col items-center gap-4 border border-[rgba(217,217,217,1)] bg-white rounded-[8px] w-[180px] h-[98px] justify-center items-center">
+        <Badge className="flex p-[6px_10px] justify-center items-center rounded-full bg-[#ECF5FF] text-[12px] font-normal text-[#07F] font-['Pretendard'] hover:bg-[#ECF5FF]">
               등록 전문가
             </Badge>
             <div className="w-[100px] text-center text-[20px] font-bold text-[#303030] font-['Pretendard']">
               85명
             </div>
-          </Card>
+          </div>
 
-          <Card className="flex p-[16px_44px] flex-col justify-center items-center gap-[16px] rounded-[8px] border border-[#D9D9D9] bg-white">
+          <div className="flex flex-col items-center gap-4 border border-[rgba(217,217,217,1)] bg-white rounded-[8px] w-[180px] h-[98px] justify-center items-center">
             <Badge className="flex p-[6px_10px] justify-center items-center rounded-full bg-[#ECF5FF] text-[12px] font-normal text-[#07F] font-['Pretendard'] hover:bg-[#ECF5FF]">
               이번달 신규
             </Badge>
             <div className="w-[100px] text-center text-[20px] font-bold text-[#303030] font-['Pretendard']">
               5명
             </div>
-          </Card>
+          </div>
 
-          <Card className="flex p-[16px_44px] flex-col justify-center items-center gap-[16px] rounded-[8px] border border-[#D9D9D9] bg-white">
+          <div className="flex flex-col items-center gap-4 border border-[rgba(217,217,217,1)] bg-white rounded-[8px] w-[180px] h-[98px] justify-center items-center">
             <Badge className="flex p-[6px_10px] justify-center items-center rounded-full bg-[#ECF5FF] text-[12px] font-normal text-[#07F] font-['Pretendard'] hover:bg-[#ECF5FF]">
               최신 임베딩일
             </Badge>
@@ -252,16 +254,16 @@ export default function ExpertsPage() {
                 15:32
               </div>
             </div>
-          </Card>
+          </div>
         </div>
 
         {/* Main Content */}
         <div className="flex flex-col items-center gap-[24px] w-full">
           {/* Header with Total Count and Action Buttons */}
-          <div className="flex flex-col items-end gap-[16px] w-full">
+          <div className="flex flex-col items-end gap-6 w-full">
             <div className="flex justify-between items-center w-full">
               <div className="text-[20px] font-normal text-[#6D6D6D] font-['Pretendard'] leading-[24px] tracking-[-0.4px]">
-                총 <span className="text-[#07F]">12,345</span>건
+                총 <span className="text-[#07F] font-bold">12,345</span>건
               </div>
               <div className="flex justify-end items-start gap-[12px]">
                 <Button
@@ -310,54 +312,54 @@ export default function ExpertsPage() {
             {/* Table */}
             <div className="flex flex-col items-start w-full">
               {/* Table Header */}
-              <div className="flex h-[50px] px-[16px] justify-between items-center w-full rounded-[2px] bg-[#EEE]">
-                <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                  <div className="w-[40px] text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
+              <div className="flex h-[50px] px-[16px] items-center w-full rounded-[2px] bg-[#EEE]">
+                <div className="flex-1 flex justify-center items-center">
+                  <div className="text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
                     NO
                   </div>
                 </div>
-                <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                  <div className="w-[80px] text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
+                <div className="flex-1 flex justify-center items-center">
+                  <div className="text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
                     전문가ID
                   </div>
                 </div>
-                <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                  <div className="w-[60px] max-w-[60px] text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
+                <div className="flex-1 flex justify-center items-center">
+                  <div className="text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
                     이름
                   </div>
                 </div>
-                <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                  <div className="w-[160px] text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
+                <div className="flex-1 flex justify-center items-center">
+                  <div className="text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
                     소속/직책
                   </div>
                 </div>
-                <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                  <div className="w-[32px] text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
+                <div className="flex-1 flex justify-center items-center">
+                  <div className="text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
                     경력
                   </div>
                 </div>
-                <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                  <div className="w-[100px] max-w-[100px] text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
+                <div className="flex-1 flex justify-center items-center">
+                  <div className="text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
                     전문 분야
                   </div>
                 </div>
-                <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                  <div className="w-[160px] text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
+                <div className="flex-1 flex justify-center items-center">
+                  <div className="text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
                     키워드
                   </div>
                 </div>
-                <div className="flex w-[72px] p-[16px_10px] justify-center items-center gap-[10px]">
-                  <div className="w-[41px] max-w-[41px] text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
+                <div className="flex-1 flex justify-center items-center">
+                  <div className="text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
                     상태
                   </div>
                 </div>
-                <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                  <div className="w-[58px] max-w-[58px] text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
+                <div className="flex-1 flex justify-center items-center">
+                  <div className="text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
                     파일
                   </div>
                 </div>
-                <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                  <div className="w-[120px] text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
+                <div className="flex-1 flex justify-center items-center">
+                  <div className="text-center text-[12px] font-bold text-[#515151] font-['Pretendard']">
                     임베딩 일시
                   </div>
                 </div>
@@ -367,77 +369,50 @@ export default function ExpertsPage() {
               {experts.map((expert) => (
                 <div
                   key={expert.id}
-                  className={`flex h-[50px] px-[16px] justify-between items-center w-full ${
-                    expert.isHighlighted
-                      ? "rounded-[2px] bg-[#E3EFFE]"
-                      : "rounded-[4px]"
-                  }`}
+                  className="flex h-[50px] px-[16px] items-center w-full rounded-[4px] cursor-pointer hover:bg-[#E3EFFE] group"
+                  onClick={() =>
+                    router.push(`/admin/embeddings/experts/${expert.id}`)
+                  }
                 >
-                  <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                    <div
-                      className={`w-[40px] text-center text-[12px] font-normal font-['Pretendard'] ${
-                        expert.isHighlighted ? "text-[#07F]" : "text-[#686868]"
-                      }`}
-                    >
+                  <div className="flex-1 flex justify-center items-center">
+                    <div className="text-center text-[12px] font-normal font-['Pretendard'] text-[#686868] group-hover:text-[#07F]">
                       12345
                     </div>
                   </div>
-                  <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                    <div
-                      className={`w-[80px] text-center text-[12px] font-normal font-['Pretendard'] ${
-                        expert.isHighlighted ? "text-[#07F]" : "text-[#686868]"
-                      }`}
-                    >
+                  <div className="flex-1 flex justify-center items-center">
+                    <div className="text-center text-[12px] font-normal font-['Pretendard'] text-[#686868] group-hover:text-[#07F]">
                       {expert.expertId}
                     </div>
                   </div>
-                  <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                    <div
-                      className={`w-[60px] max-w-[60px] text-center text-[12px] font-normal font-['Pretendard'] ${
-                        expert.isHighlighted ? "text-[#07F]" : "text-[#686868]"
-                      }`}
-                    >
+                  <div className="flex-1 flex justify-center items-center">
+                    <div className="text-center text-[12px] font-normal font-['Pretendard'] text-[#686868] group-hover:text-[#07F]">
                       {expert.name}
                     </div>
                   </div>
-                  <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                    <div
-                      className={`w-[160px] max-h-[14px] text-center text-[12px] font-normal font-['Pretendard'] ${
-                        expert.isHighlighted ? "text-[#07F]" : "text-[#686868]"
-                      }`}
-                    >
+                  <div className="flex-1 flex justify-center items-center">
+                    <div className="text-center text-[12px] font-normal font-['Pretendard'] text-[#686868] group-hover:text-[#07F] truncate px-2">
                       {expert.affiliation}
                     </div>
                   </div>
-                  <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                    <div
-                      className={`w-[32px] text-center text-[12px] font-normal font-['Pretendard'] ${
-                        expert.isHighlighted ? "text-[#07F]" : "text-[#686868]"
-                      }`}
-                    >
+                  <div className="flex-1 flex justify-center items-center">
+                    <div className="text-center text-[12px] font-normal font-['Pretendard'] text-[#686868] group-hover:text-[#07F]">
                       {expert.experience}
                     </div>
                   </div>
-                  <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                    <div
-                      className={`w-[100px] max-w-[100px] text-center text-[12px] font-normal font-['Pretendard'] ${
-                        expert.isHighlighted ? "text-[#07F]" : "text-[#686868]"
-                      }`}
-                    >
+                  <div className="flex-1 flex justify-center items-center">
+                    <div className="text-center text-[12px] font-normal font-['Pretendard'] text-[#686868] group-hover:text-[#07F] truncate px-2">
                       {expert.specialization}
                     </div>
                   </div>
-                  <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
+                  <div className="flex-1 flex justify-center items-center">
                     <div
-                      className={`w-[160px] max-h-[14px] text-center text-[12px] font-normal leading-[16px] ${
-                        expert.isHighlighted ? "text-[#07F]" : "text-[#313131]"
-                      }`}
+                      className="text-center text-[12px] font-normal leading-[16px] text-[#313131] group-hover:text-[#07F] truncate px-2"
                       style={{ fontFamily: "Inter" }}
                     >
                       {expert.keywords}
                     </div>
                   </div>
-                  <div className="flex w-[72px] p-[16px_10px] justify-center items-center gap-[10px]">
+                  <div className="flex-1 flex justify-center items-center">
                     <Badge
                       className={`flex p-[6px_10px] justify-center items-center rounded-full text-[12px] font-normal font-['Pretendard'] hover:bg-current ${
                         expert.status === "공개"
@@ -448,22 +423,22 @@ export default function ExpertsPage() {
                       {expert.status}
                     </Badge>
                   </div>
-                  <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
+                  <div className="flex-1 flex justify-center items-center">
                     <Button
                       variant="outline"
                       className="flex h-[24px] p-[4px_8px] justify-center items-center gap-[4px] rounded-[4px] border border-[#BAD1EC] bg-white hover:bg-gray-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // 다운로드 기능 추가
+                      }}
                     >
                       <span className="text-[12px] font-normal text-[#5A5A5A] font-['Pretendard'] leading-[16px]">
                         다운로드
                       </span>
                     </Button>
                   </div>
-                  <div className="flex p-[16px_10px] justify-center items-center gap-[10px]">
-                    <div
-                      className={`w-[120px] text-center text-[12px] font-normal font-['Pretendard'] ${
-                        expert.isHighlighted ? "text-[#07F]" : "text-[#686868]"
-                      }`}
-                    >
+                  <div className="flex-1 flex justify-center items-center">
+                    <div className="text-center text-[12px] font-normal font-['Pretendard'] text-[#686868] group-hover:text-[#07F]">
                       {expert.embeddingDate}
                     </div>
                   </div>
