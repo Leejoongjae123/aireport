@@ -4,20 +4,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 
-interface ExpertDetailPageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function ExpertDetailPage({ params }: ExpertDetailPageProps) {
+export default function ExpertDetailPage() {
   const router = useRouter();
 
   return (
     <div className="flex w-full p-8 items-start gap-2.5 min-h-screen bg-[rgba(245,245,245,1)]">
       <div className="flex p-11 flex-col items-end gap-20 flex-1 rounded-[5px] bg-white">
         <div className="flex flex-col items-start gap-10 self-stretch">
-          
           {/* 전문가 임베딩 섹션 */}
           <div className="flex flex-col items-end gap-4 self-stretch">
             <div className="flex justify-between items-center self-stretch">
@@ -72,7 +65,8 @@ export default function ExpertDetailPage({ params }: ExpertDetailPageProps) {
                 </div>
                 <div className="flex p-6 items-center gap-2.5 flex-1">
                   <div className="text-[rgba(48,48,48,1)] font-['Pretendard'] text-base font-normal leading-6 tracking-[-0.32px]">
-                    삼성 의료원 디지털 헬스 케어팀 출신, AI 의료기기 개발 다수 경험
+                    삼성 의료원 디지털 헬스 케어팀 출신, AI 의료기기 개발 다수
+                    경험
                   </div>
                 </div>
               </div>
@@ -286,7 +280,7 @@ export default function ExpertDetailPage({ params }: ExpertDetailPageProps) {
         {/* 하단 버튼들 */}
         <div className="flex justify-between items-center self-stretch">
           <Button
-            variant="outline" 
+            variant="outline"
             onClick={() => router.back()}
             className="flex p-[10px_12px] justify-center items-center gap-1.5 rounded border border-[#A0A0A0] bg-white hover:bg-gray-50"
           >

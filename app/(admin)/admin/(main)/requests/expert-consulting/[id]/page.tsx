@@ -4,15 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { FileText, BarChart3, Menu } from "lucide-react";
 
-interface ExpertConsultingDetailPageProps {
-  params: {
-    id: string;
-  };
-}
-
-const ExpertConsultingDetailPage = ({
-  params, // eslint-disable-line @typescript-eslint/no-unused-vars
-}: ExpertConsultingDetailPageProps) => {
+const ExpertConsultingDetailPage = () => {
   const router = useRouter();
 
   // Mock data - in real implementation, this would be fetched based on params.id

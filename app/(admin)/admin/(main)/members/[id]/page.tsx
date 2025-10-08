@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { List } from "lucide-react";
 
 interface RequestRecord {
@@ -23,7 +22,7 @@ const memberData = {
   field: "IT소프트웨어",
   joinDate: "2023-11-15 12:22:23",
   lastLogin: "2025-05-10 18:41",
-  status: "정상"
+  status: "정상",
 };
 
 // Sample data for request records
@@ -34,7 +33,7 @@ const requestRecords: RequestRecord[] = [
     id: "REQ-250216-032",
     reportName: "Series-A IR",
     requestDate: "2025-08-25",
-    status: "진행중"
+    status: "진행중",
   },
   {
     no: 2,
@@ -42,7 +41,7 @@ const requestRecords: RequestRecord[] = [
     id: "MT-250216-007",
     reportName: "플랫폼 전략",
     requestDate: "2025-08-25",
-    status: "완료"
+    status: "완료",
   },
   {
     no: 1,
@@ -50,15 +49,17 @@ const requestRecords: RequestRecord[] = [
     id: "MT-250216-007",
     reportName: "Workflow Copilot",
     requestDate: "2025-08-25",
-    status: "완료"
-  }
+    status: "완료",
+  },
 ];
 
 // Status badge component
 function StatusBadge({ status }: { status: string }) {
   return (
     <div className="inline-flex px-2.5 py-1.5 items-center justify-center rounded-full bg-[rgba(207,247,211,1)]">
-      <span className="text-xs font-medium text-[rgba(2,84,45,1)]">{status}</span>
+      <span className="text-xs font-medium text-[rgba(2,84,45,1)]">
+        {status}
+      </span>
     </div>
   );
 }

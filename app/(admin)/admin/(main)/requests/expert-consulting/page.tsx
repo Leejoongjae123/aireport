@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Search, RotateCcw, Calendar } from "lucide-react";
 import FilterDropdown from "@/components/ui/filter-dropdown";
 import SearchInputWithFilter from "@/components/ui/search-input-with-filter";
@@ -37,7 +36,6 @@ const ExpertConsultingPage = () => {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [statusFilter, setStatusFilter] = useState("전체");
-  const [expertFilter, setExpertFilter] = useState("전문가");
 
   // 검색 상태
   const [searchFilter, setSearchFilter] = useState("이름");
@@ -68,7 +66,6 @@ const ExpertConsultingPage = () => {
 
   // 옵션들
   const statusOptions = ["전체", "완료", "대기"];
-  const expertOptions = ["전문가", "김이수"];
   const searchFilterOptions = ["이름", "ID", "대상 보고서"];
   const itemsPerPageOptions = [
     "10개씩 보기",
@@ -93,7 +90,6 @@ const ExpertConsultingPage = () => {
     setStartDate(undefined);
     setEndDate(undefined);
     setStatusFilter("전체");
-    setExpertFilter("전문가");
     setSearchFilter("이름");
     setSearchValue("");
     setCurrentPage(1);

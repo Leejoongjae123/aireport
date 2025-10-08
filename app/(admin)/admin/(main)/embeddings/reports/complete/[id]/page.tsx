@@ -4,13 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 
-interface ReportDetailPageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function ReportDetailPage({ params }: ReportDetailPageProps) {
+export default function ReportDetailPage() {
   const router = useRouter();
 
   return (
@@ -118,7 +112,7 @@ export default function ReportDetailPage({ params }: ReportDetailPageProps) {
                     <div className="flex flex-col items-start flex-1 self-stretch bg-gray-100 bg-[url('https://api.builder.io/api/v1/image/assets/TEMP/c5358080b3abe8820812fbd862c746a62c726290?width=1624')] bg-cover bg-center bg-no-repeat">
                       <div className="h-[689px] self-stretch"></div>
                     </div>
-                    
+
                     {/* Scrollbar */}
                     <div className="absolute right-2.5 top-[153px] flex w-1.5 h-[371px] flex-col items-center rounded-full bg-[#F5F5F5]">
                       <div className="w-1.5 h-[317px] rounded-full bg-[#B2B2B2]"></div>
@@ -166,7 +160,7 @@ export default function ReportDetailPage({ params }: ReportDetailPageProps) {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Version */}
                 <div className="flex h-[72px] items-center flex-1 border-b border-[#F5F5F5]">
                   <div className="flex w-[160px] px-6 py-6 items-center gap-2.5 bg-[#F5F5F5]">
@@ -197,7 +191,7 @@ export default function ReportDetailPage({ params }: ReportDetailPageProps) {
               목록으로
             </span>
           </Button>
-          
+
           <div className="flex items-start gap-3">
             <Button
               variant="outline"
@@ -207,7 +201,7 @@ export default function ReportDetailPage({ params }: ReportDetailPageProps) {
                 삭제
               </span>
             </Button>
-            
+
             <Button className="flex w-[79px] h-[45px] justify-center items-center gap-1.5 rounded-lg bg-[#07F] hover:bg-[#0066CC]">
               <span className="text-lg font-bold text-white font-pretendard tracking-[-0.36px]">
                 수정

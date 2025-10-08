@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Search, RotateCcw, Calendar } from "lucide-react";
 import FilterDropdown from "@/components/ui/filter-dropdown";
 import SearchInputWithFilter from "@/components/ui/search-input-with-filter";
@@ -224,8 +223,8 @@ export default function ExpertsPage() {
 
         {/* Statistics Cards */}
         <div className="w-full flex items-start justify-center gap-4">
-        <div className="flex flex-col items-center gap-4 border border-[rgba(217,217,217,1)] bg-white rounded-[8px] w-[180px] h-[98px] justify-center items-center">
-        <Badge className="flex p-[6px_10px] justify-center items-center rounded-full bg-[#ECF5FF] text-[12px] font-normal text-[#07F] font-['Pretendard'] hover:bg-[#ECF5FF]">
+          <div className="flex flex-col items-center gap-4 border border-[rgba(217,217,217,1)] bg-white rounded-[8px] w-[180px] h-[98px] justify-center items-center">
+            <Badge className="flex p-[6px_10px] justify-center items-center rounded-full bg-[#ECF5FF] text-[12px] font-normal text-[#07F] font-['Pretendard'] hover:bg-[#ECF5FF]">
               등록 전문가
             </Badge>
             <div className="w-[100px] text-center text-[20px] font-bold text-[#303030] font-['Pretendard']">

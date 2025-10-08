@@ -3,10 +3,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronDown, Plus, Minus } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Minus } from "lucide-react";
 
 interface CoreCareerEntry {
   id: string;
@@ -33,12 +37,16 @@ export default function ExpertEmbeddingPage() {
     isPublic: true,
   });
 
-  const [coreCareerEntries, setCoreCareerEntries] = useState<CoreCareerEntry[]>([
-    { id: "1", workYear: "", workMonth: "", position: "" },
-    { id: "2", workYear: "", workMonth: "", position: "" },
-  ]);
+  const [coreCareerEntries, setCoreCareerEntries] = useState<CoreCareerEntry[]>(
+    [
+      { id: "1", workYear: "", workMonth: "", position: "" },
+      { id: "2", workYear: "", workMonth: "", position: "" },
+    ]
+  );
 
-  const [achievementEntries, setAchievementEntries] = useState<AchievementEntry[]>([
+  const [achievementEntries, setAchievementEntries] = useState<
+    AchievementEntry[]
+  >([
     { id: "1", year: "", field: "", description: "" },
     { id: "2", year: "", field: "", description: "" },
   ]);
@@ -55,7 +63,9 @@ export default function ExpertEmbeddingPage() {
 
   const removeCoreCareerEntry = (id: string) => {
     if (coreCareerEntries.length > 1) {
-      setCoreCareerEntries(coreCareerEntries.filter((entry) => entry.id !== id));
+      setCoreCareerEntries(
+        coreCareerEntries.filter((entry) => entry.id !== id)
+      );
     }
   };
 
@@ -69,7 +79,9 @@ export default function ExpertEmbeddingPage() {
 
   const removeAchievementEntry = (id: string) => {
     if (achievementEntries.length > 1) {
-      setAchievementEntries(achievementEntries.filter((entry) => entry.id !== id));
+      setAchievementEntries(
+        achievementEntries.filter((entry) => entry.id !== id)
+      );
     }
   };
 
@@ -106,7 +118,7 @@ export default function ExpertEmbeddingPage() {
                 전문가 임베딩
               </h1>
             </div>
-            
+
             <div className="flex flex-col items-start self-stretch border border-[#F5F5F5]">
               {/* 이름/연락처 Row */}
               <div className="flex items-start self-stretch">
@@ -121,13 +133,15 @@ export default function ExpertEmbeddingPage() {
                       <Input
                         placeholder="전문가 성함을 입력해주세요"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
                         className="flex-1 rounded-lg border border-[#E3E5E5] bg-white p-4 text-base h-[56px]"
                       />
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start flex-1">
                   <div className="flex items-center flex-1 border-b border-[#F5F5F5]">
                     <div className="flex w-40 p-6 items-center gap-2.5 self-stretch bg-[#F5F5F5]">
@@ -139,7 +153,9 @@ export default function ExpertEmbeddingPage() {
                       <Input
                         placeholder="연락처를 입력해주세요"
                         value={formData.contact}
-                        onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, contact: e.target.value })
+                        }
                         className="flex-1 rounded-lg border border-[#E3E5E5] bg-white p-4 text-base h-[56px]"
                       />
                     </div>
@@ -155,7 +171,12 @@ export default function ExpertEmbeddingPage() {
                   </div>
                 </div>
                 <div className="flex p-4 px-6 items-center gap-2.5 flex-1">
-                  <Select value={formData.expertise} onValueChange={(value) => setFormData({ ...formData, expertise: value })}>
+                  <Select
+                    value={formData.expertise}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, expertise: value })
+                    }
+                  >
                     <SelectTrigger className="flex-1 h-[56px] rounded-lg border border-[#E3E5E5] bg-white p-4 text-base">
                       <SelectValue placeholder="선택" />
                     </SelectTrigger>
@@ -181,7 +202,9 @@ export default function ExpertEmbeddingPage() {
                     <textarea
                       placeholder="예 : 삼성 의료원 디지털헬스 케어팀 출신, AI 의료기기 개발 다수 경험"
                       value={formData.summary}
-                      onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, summary: e.target.value })
+                      }
                       className="flex h-[138px] p-4 items-start gap-2.5 flex-1 rounded-lg border border-[#E3E5E5] bg-white text-base placeholder:text-[#A6A6A6] resize-none"
                     />
                   </div>
@@ -197,7 +220,7 @@ export default function ExpertEmbeddingPage() {
                 소속 및 주요 경력
               </h2>
             </div>
-            
+
             <div className="flex flex-col items-start self-stretch border border-[#F5F5F5]">
               {/* 경력 년수 Row */}
               <div className="flex w-full h-[88px] items-center border-b border-[#F5F5F5]">
@@ -207,9 +230,14 @@ export default function ExpertEmbeddingPage() {
                   </div>
                 </div>
                 <div className="flex p-4 px-6 items-center gap-2.5 flex-1">
-                  <Select value={formData.experienceYears} onValueChange={(value) => setFormData({ ...formData, experienceYears: value })}>
+                  <Select
+                    value={formData.experienceYears}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, experienceYears: value })
+                    }
+                  >
                     <SelectTrigger className="flex-1 rounded-lg border border-[#E3E5E5] bg-white p-4 text-base h-[56px]">
-                      <SelectValue placeholder="선택" />    
+                      <SelectValue placeholder="선택" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1-3">1-3년</SelectItem>
@@ -233,7 +261,12 @@ export default function ExpertEmbeddingPage() {
                     <Input
                       placeholder="예: 삼성의료원 디지털헬스케어팀"
                       value={formData.recentAffiliation}
-                      onChange={(e) => setFormData({ ...formData, recentAffiliation: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          recentAffiliation: e.target.value,
+                        })
+                      }
                       className="flex-1 rounded-lg border border-[#E3E5E5] bg-white p-4 text-base h-[56px]"
                     />
                   </div>
@@ -255,10 +288,13 @@ export default function ExpertEmbeddingPage() {
                 <Plus className="w-6 h-6 text-[#0077FF]" strokeWidth={3} />
               </button>
             </div>
-            
+
             <div className="flex flex-col items-start gap-4 self-stretch">
               {coreCareerEntries.map((entry) => (
-                <div key={entry.id} className="flex items-center gap-4 self-stretch">
+                <div
+                  key={entry.id}
+                  className="flex items-center gap-4 self-stretch"
+                >
                   <div className="flex items-center gap-4 flex-1 self-stretch">
                     <Select>
                       <SelectTrigger className="flex-1 rounded-lg border border-[#E3E5E5] bg-white p-4 text-base h-[56px]">
@@ -272,7 +308,7 @@ export default function ExpertEmbeddingPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    
+
                     <Select>
                       <SelectTrigger className="flex-1 rounded-lg border border-[#E3E5E5] bg-white p-4 text-base h-[56px]">
                         <SelectValue placeholder="근무 개월" />
@@ -286,12 +322,12 @@ export default function ExpertEmbeddingPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <Input
                     placeholder="예: 사단법인 한국창업융합컨설팅학회 상임이사"
                     className="flex-1 rounded-lg border border-[#E3E5E5] bg-white p-4 text-base h-[56px]"
                   />
-                  
+
                   <button
                     onClick={() => removeCoreCareerEntry(entry.id)}
                     className="flex w-11 h-11 items-center justify-center rounded-md bg-[#ECF5FF]"
@@ -316,10 +352,13 @@ export default function ExpertEmbeddingPage() {
                 <Plus className="w-6 h-6 text-[#0077FF]" strokeWidth={3} />
               </button>
             </div>
-            
+
             <div className="flex flex-col items-start gap-4 self-stretch">
               {achievementEntries.map((entry) => (
-                <div key={entry.id} className="flex items-center gap-4 self-stretch">
+                <div
+                  key={entry.id}
+                  className="flex items-center gap-4 self-stretch"
+                >
                   <div className="flex items-center gap-4 flex-1 self-stretch">
                     <Select>
                       <SelectTrigger className="flex-1 rounded-lg border border-[#E3E5E5] bg-white p-4 text-base h-[56px]">
@@ -336,7 +375,7 @@ export default function ExpertEmbeddingPage() {
                         })}
                       </SelectContent>
                     </Select>
-                    
+
                     <Select>
                       <SelectTrigger className="flex-1 rounded-lg border border-[#E3E5E5] bg-white p-4 text-base h-[56px]">
                         <SelectValue placeholder="분야" />
@@ -349,12 +388,12 @@ export default function ExpertEmbeddingPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <Input
                     placeholder="예 : 지역특화산업육성+(R&D) 지역주력사업(중소기업벤처부)"
                     className="flex-1 rounded-lg border border-[#E3E5E5] bg-white p-4 text-base h-[56px]"
                   />
-                  
+
                   <button
                     onClick={() => removeAchievementEntry(entry.id)}
                     className="flex w-11 h-11 items-center justify-center rounded-md bg-[#ECF5FF]"
@@ -373,7 +412,7 @@ export default function ExpertEmbeddingPage() {
                 첨부자료
               </h2>
             </div>
-            
+
             <div className="flex flex-col items-start self-stretch border border-[#F5F5F5]">
               {/* 파일첨부 Row */}
               <div className="flex w-full items-center border-b border-[#F5F5F5]">
@@ -388,7 +427,10 @@ export default function ExpertEmbeddingPage() {
                       htmlFor="file-upload"
                       className="flex p-3 px-6 justify-center items-center gap-1.5 rounded-lg bg-[#E8F3FF] cursor-pointer"
                     >
-                      <Plus className="w-6 h-6 text-[#0077FF]" strokeWidth={2} />
+                      <Plus
+                        className="w-6 h-6 text-[#0077FF]"
+                        strokeWidth={2}
+                      />
                       <span className="text-[#07F] font-pretendard text-lg font-bold tracking-[-0.36px]">
                         파일 첨부
                       </span>
@@ -402,7 +444,9 @@ export default function ExpertEmbeddingPage() {
                     />
                     <div className="flex p-3 px-4.5 items-center gap-2.5 flex-1 rounded-lg border border-[#E3E5E5] bg-white">
                       <div className="text-[#A6A6A6] font-pretendard text-base font-normal leading-6 tracking-[-0.064px]">
-                        {uploadedFile ? uploadedFile.name : "첨부파일을 업로드해주세요."}
+                        {uploadedFile
+                          ? uploadedFile.name
+                          : "첨부파일을 업로드해주세요."}
                       </div>
                     </div>
                   </div>
@@ -427,7 +471,9 @@ export default function ExpertEmbeddingPage() {
                           type="radio"
                           name="visibility"
                           checked={formData.isPublic}
-                          onChange={() => setFormData({ ...formData, isPublic: true })}
+                          onChange={() =>
+                            setFormData({ ...formData, isPublic: true })
+                          }
                           className="sr-only"
                         />
                         <div className="w-6 h-6 rounded-full border-[1.6px] border-[#07F] flex items-center justify-center">
@@ -440,14 +486,16 @@ export default function ExpertEmbeddingPage() {
                         공개
                       </span>
                     </label>
-                    
+
                     <label className="flex p-2 items-center gap-2.5 cursor-pointer">
                       <div className="relative">
                         <input
                           type="radio"
                           name="visibility"
                           checked={!formData.isPublic}
-                          onChange={() => setFormData({ ...formData, isPublic: false })}
+                          onChange={() =>
+                            setFormData({ ...formData, isPublic: false })
+                          }
                           className="sr-only"
                         />
                         <div className="w-6 h-6 rounded-full border-[1.6px] border-[#6D6D6D] flex items-center justify-center">

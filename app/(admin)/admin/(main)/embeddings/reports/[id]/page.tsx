@@ -1,20 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, ChevronDown } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus } from "lucide-react";
 
-interface PageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function ReportEmbeddingPage({ params }: PageProps) {
+export default function ReportEmbeddingPage() {
   const [reportTitle, setReportTitle] = useState("");
   const [category, setCategory] = useState("");
   const [field, setField] = useState("");
@@ -76,7 +75,10 @@ export default function ReportEmbeddingPage({ params }: PageProps) {
                 <div className="flex flex-1 p-4 px-6 items-center">
                   <Select value={category} onValueChange={setCategory}>
                     <SelectTrigger className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-white">
-                      <SelectValue placeholder="선택" className="text-[#A6A6A6] text-base leading-6 tracking-[-0.064px]" />
+                      <SelectValue
+                        placeholder="선택"
+                        className="text-[#A6A6A6] text-base leading-6 tracking-[-0.064px]"
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="category1">카테고리 1</SelectItem>
@@ -97,7 +99,10 @@ export default function ReportEmbeddingPage({ params }: PageProps) {
                 <div className="flex flex-1 p-4 px-6 items-center">
                   <Select value={field} onValueChange={setField}>
                     <SelectTrigger className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-white">
-                      <SelectValue placeholder="선택" className="text-[#A6A6A6] text-base leading-6 tracking-[-0.064px]" />
+                      <SelectValue
+                        placeholder="선택"
+                        className="text-[#A6A6A6] text-base leading-6 tracking-[-0.064px]"
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="field1">분야 1</SelectItem>
@@ -147,7 +152,10 @@ export default function ReportEmbeddingPage({ params }: PageProps) {
                   <div className="flex items-center gap-2 w-full">
                     <label htmlFor="file-upload">
                       <div className="flex p-3 px-6 justify-center items-center gap-[6px] rounded-lg bg-[#E8F3FF] cursor-pointer">
-                        <Plus className="w-6 h-6 text-[#0077FF]" strokeWidth={2} />
+                        <Plus
+                          className="w-6 h-6 text-[#0077FF]"
+                          strokeWidth={2}
+                        />
                         <span className="text-[#07F] text-lg font-semibold tracking-[-0.36px]">
                           파일 첨부
                         </span>
@@ -162,7 +170,9 @@ export default function ReportEmbeddingPage({ params }: PageProps) {
                     />
                     <div className="flex flex-1 p-3 px-[18px] items-center border border-[#E3E5E5] rounded-lg bg-white">
                       <span className="text-[#A6A6A6] text-base leading-6 tracking-[-0.064px]">
-                        {uploadedFile ? uploadedFile.name : "첨부파일을 업로드해주세요."}
+                        {uploadedFile
+                          ? uploadedFile.name
+                          : "첨부파일을 업로드해주세요."}
                       </span>
                     </div>
                   </div>
@@ -185,7 +195,9 @@ export default function ReportEmbeddingPage({ params }: PageProps) {
                       <div className="flex flex-col items-start flex-1 w-full bg-gray-50 bg-cover bg-center relative">
                         <div className="h-full w-full bg-gradient-to-b from-white to-gray-100 flex items-center justify-center">
                           <div className="text-gray-500 text-center">
-                            <div className="text-lg font-medium mb-2">문서 미리보기</div>
+                            <div className="text-lg font-medium mb-2">
+                              문서 미리보기
+                            </div>
                             <div className="text-sm">{uploadedFile.name}</div>
                           </div>
                         </div>
@@ -195,7 +207,7 @@ export default function ReportEmbeddingPage({ params }: PageProps) {
                         <div className="h-full w-full"></div>
                       </div>
                     )}
-                    
+
                     {/* Scrollbar */}
                     <div className="absolute right-3 top-5 bottom-5 w-[6px] bg-[#f5f5f5] rounded-full">
                       <div className="w-[6px] h-[317px] bg-[#b2b2b2] rounded-full"></div>
@@ -223,8 +235,6 @@ export default function ReportEmbeddingPage({ params }: PageProps) {
             임베딩
           </Button>
         </div>
-
-
       </div>
     </div>
   );
