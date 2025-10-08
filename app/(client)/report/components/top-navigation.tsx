@@ -89,7 +89,7 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
             </Button>
             <Button
               variant="default"
-              className="w-[79px] h-12 text-[18px] font-semibold"
+              className="w-[79px] h-12 text-[18px] font-semibold bg-primary text-white hover:bg-primary/90"
               onClick={handleNextClick}
             >
               다음
