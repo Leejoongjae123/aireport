@@ -9,7 +9,7 @@ import {
   List,
   AlignLeft,
   Link,
-  Image,
+  Image as ImageIcon,
   Edit,
   RotateCcw,
 } from "lucide-react";
@@ -153,6 +153,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
 export default function ReportEditorPage() {
   // const [expandedSections, setExpandedSections] = useState<string[]>(['business-overview']);
   const [activeTab, setActiveTab] = useState<"chat" | "diagnosis">("chat");
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const tableOfContents: TableOfContentsItem[] = [
     {
@@ -257,8 +258,11 @@ export default function ReportEditorPage() {
                 {item.children!.map((child) => (
                   <div
                     key={child.id}
-                    className={`flex items-center gap-3 p-3 rounded-md ${
-                      child.completed && !child.hasError ? "bg-[#E8F3FF]" : ""
+                    onClick={() => setSelectedItemId(child.id)}
+                    className={`flex items-center gap-3 p-3 rounded-md cursor-pointer transition-colors ${
+                      selectedItemId === child.id
+                        ? "bg-[#E8F3FF]"
+                        : "bg-white hover:bg-gray-50"
                     }`}
                   >
                     <div className="flex flex-col justify-center items-start gap-0.5 flex-1">
@@ -367,7 +371,7 @@ export default function ReportEditorPage() {
                 {/* Attachments */}
                 <div className="flex justify-center items-center gap-6">
                   <Link className="w-5 h-5 text-[#232325]" />
-                  <Image className="w-5 h-5 text-[#232325]" />
+                  <ImageIcon className="w-5 h-5 text-[#232325]" />
                 </div>
               </div>
             </div>
@@ -427,8 +431,8 @@ export default function ReportEditorPage() {
                   • 재고 관리 최적화 – 과잉재고 및 품절을 최소화하여 비용 절감
                   및 매출 기회 극대화
                   <br />
-                  • 공급망 효���화 – 유통 단계별 수요 변동을 사전에 예측하여 운영
-                  효율성 제고
+                  • 공급망 효���화 – 유통 단계별 수요 변동을 사전에 예측하여
+                  운영 효율성 제고
                   <br />
                   • 춤형 마케팅 강화 – 고객 세그먼트별 구매 패턴 분석을 기반으로
                   한 타겟 마케팅 전략 수립
@@ -461,10 +465,7 @@ export default function ReportEditorPage() {
 
       {/* Right Sidebar - AI Agent */}
       <Card className="w-[322px] p-6 flex-shrink-0 border-[#EEF1F7] shadow-[0_0_10px_0_rgba(60,123,194,0.12)]">
-        {activeTab === "chat" ? (
-          <AgentChat activeTab={activeTab} setActiveTab={setActiveTab} />
-        ) : (
-          <div className="flex flex-col">
+        <div className="flex flex-col">
           {/* Agent Header */}
           <div className="flex flex-col gap-3 mb-5">
             <div className="flex items-center gap-1">
@@ -479,7 +480,7 @@ export default function ReportEditorPage() {
               <button
                 className={`flex-1 py-2 px-2.5 text-sm font-semibold rounded-full transition-colors ${
                   activeTab === "chat"
-                    ? "text-[#0077FF] bg-transparent"
+                    ? "text-white bg-[#0077FF]"
                     : "text-[#0077FF] bg-transparent"
                 }`}
                 onClick={() => setActiveTab("chat")}
@@ -499,109 +500,119 @@ export default function ReportEditorPage() {
             </div>
           </div>
 
-          {/* Overall Score */}
-          <div className="flex py-5 gap-2 flex-wrap mb-5">
-            <Card className="flex-1 p-5 border-[#BAD1EC]">
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="flex flex-col justify-center items-center gap-1">
-                    <div className="text-[#0077FF] font-bold text-2xl">
-                      71점
+          {activeTab === "chat" ? (
+            <AgentChat />
+          ) : (
+            <div>
+              {/* Overall Score */}
+              <div className="flex py-5 gap-2 flex-wrap mb-5">
+                <Card className="flex-1 p-5 border-[#BAD1EC]">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex flex-col justify-center items-center gap-1">
+                        <div className="text-[#0077FF] font-bold text-2xl">
+                          71점
+                        </div>
+                        <div className="text-[#878A8F] text-xs opacity-80">
+                          전체 평가 점수
+                        </div>
+                      </div>
+                      <ProgressBar value={71} className="w-full" />
                     </div>
-                    <div className="text-[#878A8F] text-xs opacity-80">
-                      전체 평가 점수
+                    <div className="text-[#6B6B6B] text-xs leading-4 opacity-80">
+                      본 사업은 리테일 시장 내 수요예측의 정확성과 실시간 분석
+                      역량에서 높은 경쟁 우위를 보임. 다만, 데이터 품질관리 및
+                      글로벌 진출 전략 구체화가 필요함.
                     </div>
                   </div>
-                  <ProgressBar value={71} className="w-full" />
-                </div>
-                <div className="text-[#6B6B6B] text-xs leading-4 opacity-80">
-                  본 사업은 리테일 시장 내 수요예측의 정확성과 실시간 분석
-                  역량에서 높은 경쟁 우위를 보임. 다만, 데이터 품질관리 및
-                  글로벌 진출 전략 구체화가 필요함.
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Technology Section */}
-          <div className="flex pb-5 gap-2 flex-wrap mb-5">
-            <Card className="flex-1 p-5 border-[#BAD1EC]">
-              <div className="flex justify-between items-center mb-5 border-b border-[#D9D9D9] pb-5">
-                <h3 className="text-[#303030] font-semibold text-lg">기술성</h3>
-                <ChevronDown className="w-5 h-5 text-[#878A8F]" />
+                </Card>
               </div>
 
-              <div className="flex flex-col gap-5">
-                {[
-                  {
-                    title: "핵심 기술의 독창성 및 차별성",
-                    score: 80,
-                    description:
-                      "기존 리테일 예측 모델 대비 정밀도가 높으며,\n데이터 처리 알고리즘의 차별성이 명확함",
-                  },
-                  {
-                    title: "기술 성숙도(TRL) 및 적용 가능성",
-                    score: 80,
-                    description: "TRL 6~7 수준으로 상용화 단계 진입 가능.",
-                  },
-                  {
-                    title: "AI 모델/알고리즘의 정확도·성능·신뢰성",
-                    score: 80,
-                    description: "데이터셋 확장 시 안정성 추가 검증 필요.",
-                  },
-                  {
-                    title: "데이터 확보 수준 및 품질 관리 체계",
-                    score: 80,
-                    description:
-                      "리테일 POS/CRM 데이터 연동 우수, 외부데이터 보강 필요",
-                  },
-                  {
-                    title: "시스�� 아키텍처의 안정성 및 확장성",
-                    score: 80,
-                    description: "클라우드 기반 확장성 확보, 보안 강화 필요",
-                  },
-                ].map((item, index) => (
-                  <div key={index} className="flex flex-col gap-3">
-                    <div className="flex justify-between items-center">
-                      <div className="text-[#2B2B2B] font-semibold text-xs opacity-80">
-                        {item.title}
-                      </div>
-                      <div className="text-[#2B2B2B] text-xs opacity-80">
-                        {item.score}/100
-                      </div>
-                    </div>
-                    <ProgressBar value={item.score} className="w-full" />
-                    <div className="text-[#6B6B6B] text-xs leading-4 opacity-80 whitespace-pre-line">
-                      {item.description}
-                    </div>
+              {/* Technology Section */}
+              <div className="flex pb-5 gap-2 flex-wrap mb-5">
+                <Card className="flex-1 p-5 border-[#BAD1EC]">
+                  <div className="flex justify-between items-center mb-5 border-b border-[#D9D9D9] pb-5">
+                    <h3 className="text-[#303030] font-semibold text-lg">
+                      기술성
+                    </h3>
+                    <ChevronDown className="w-5 h-5 text-[#878A8F]" />
                   </div>
-                ))}
-              </div>
-            </Card>
-          </div>
 
-          {/* Business Section */}
-          <div className="flex pb-5 gap-2 flex-wrap mb-5">
-            <Card className="flex-1 p-5 border-[#BAD1EC]">
-              <div className="flex justify-between items-center">
-                <h3 className="text-[#303030] font-semibold text-lg">사업성</h3>
-                <ChevronRight className="w-5 h-5 text-[#878A8F]" />
+                  <div className="flex flex-col gap-5">
+                    {[
+                      {
+                        title: "핵심 기술의 독창성 및 차별성",
+                        score: 80,
+                        description:
+                          "기존 리테일 예측 모델 대비 정밀도가 높으며,\n데이터 처리 알고리즘의 차별성이 명확함",
+                      },
+                      {
+                        title: "기술 성숙도(TRL) 및 적용 가능성",
+                        score: 80,
+                        description: "TRL 6~7 수준으로 상용화 단계 진입 가능.",
+                      },
+                      {
+                        title: "AI 모델/알고리즘의 정확도·성능·신뢰성",
+                        score: 80,
+                        description: "데이터셋 확장 시 안정성 추가 검증 필요.",
+                      },
+                      {
+                        title: "데이터 확보 수준 및 품질 관리 체계",
+                        score: 80,
+                        description:
+                          "리테일 POS/CRM 데이터 연동 우수, 외부데이터 보강 필요",
+                      },
+                      {
+                        title: "시스�� 아키텍처의 안정성 및 확장성",
+                        score: 80,
+                        description:
+                          "클라우드 기반 확장성 확보, 보안 강화 필요",
+                      },
+                    ].map((item, index) => (
+                      <div key={index} className="flex flex-col gap-3">
+                        <div className="flex justify-between items-center">
+                          <div className="text-[#2B2B2B] font-semibold text-xs opacity-80">
+                            {item.title}
+                          </div>
+                          <div className="text-[#2B2B2B] text-xs opacity-80">
+                            {item.score}/100
+                          </div>
+                        </div>
+                        <ProgressBar value={item.score} className="w-full" />
+                        <div className="text-[#6B6B6B] text-xs leading-4 opacity-80 whitespace-pre-line">
+                          {item.description}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
               </div>
-            </Card>
-          </div>
 
-          {/* Refresh Button */}
-          <Button
-            variant="outline"
-            className="w-full gap-3 border-[#D9D9D9] h-12"
-          >
-            <RotateCcw className="w-4 h-4 text-[#6C6C6C]" />
-            <span className="text-[#757575] font-semibold text-base">
-              새로고침
-            </span>
-          </Button>
-          </div>
-        )}
+              {/* Business Section */}
+              <div className="flex pb-5 gap-2 flex-wrap mb-5">
+                <Card className="flex-1 p-5 border-[#BAD1EC]">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-[#303030] font-semibold text-lg">
+                      사업성
+                    </h3>
+                    <ChevronRight className="w-5 h-5 text-[#878A8F]" />
+                  </div>
+                </Card>
+              </div>
+
+              {/* Refresh Button */}
+              <Button
+                variant="outline"
+                className="w-full gap-3 border-[#D9D9D9] h-12"
+              >
+                <RotateCcw className="w-4 h-4 text-[#6C6C6C]" />
+                <span className="text-[#757575] font-semibold text-base">
+                  새로고침
+                </span>
+              </Button>
+            </div>
+          )}
+        </div>
       </Card>
     </div>
   );
