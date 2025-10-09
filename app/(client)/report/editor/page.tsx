@@ -13,6 +13,7 @@ import {
   Edit,
   RotateCcw,
 } from "lucide-react";
+import AgentChat from "../components/agent-chat";
 
 // Custom Icons as SVG components
 const CheckIcon = () => (
@@ -22,6 +23,7 @@ const CheckIcon = () => (
     viewBox="0 0 18 18"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    className="w-[18px] h-[18px] flex-shrink-0"
   >
     <g clipPath="url(#clip0_920_1621)">
       <mask
@@ -150,7 +152,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
 
 export default function ReportEditorPage() {
   // const [expandedSections, setExpandedSections] = useState<string[]>(['business-overview']);
-  const [activeTab, setActiveTab] = useState<"chat" | "diagnosis">("diagnosis");
+  const [activeTab, setActiveTab] = useState<"chat" | "diagnosis">("chat");
 
   const tableOfContents: TableOfContentsItem[] = [
     {
@@ -255,7 +257,7 @@ export default function ReportEditorPage() {
                 {item.children!.map((child) => (
                   <div
                     key={child.id}
-                    className={`flex items-center gap-5 p-3 rounded-md ${
+                    className={`flex items-center gap-3 p-3 rounded-md ${
                       child.completed && !child.hasError ? "bg-[#E8F3FF]" : ""
                     }`}
                   >
@@ -296,7 +298,7 @@ export default function ReportEditorPage() {
   };
 
   return (
-    <div className="flex items-start gap-3 w-full max-w-[1200px] mx-auto min-h-screen">
+    <div className="flex items-stretch gap-3 w-full max-w-[1200px] mx-auto min-h-screen total-content-wrapper pb-12">
       {/* Left Sidebar - Table of Contents */}
       <Card className="w-[248px] p-6 flex-shrink-0 border-[#EEF1F7] shadow-[0_0_10px_0_rgba(60,123,194,0.12)]">
         <div className="flex flex-col">
@@ -316,8 +318,8 @@ export default function ReportEditorPage() {
         <Card className="p-8 border-[#EEF1F7] shadow-[0_0_10px_0_rgba(60,123,194,0.12)] h-full">
           <div className="flex flex-col h-full">
             {/* Rich Text Editor Toolbar */}
-            <div className="flex flex-col gap-2.5 pb-9 border-b border-[#D9D9D9] mb-8">
-              <div className="flex justify-center items-center gap-4">
+            <div className="flex flex-col gap-2.5 border-b border-[#D9D9D9] mb-8 pb-2">
+              <div className="flex justify-center items-center gap-4 ">
                 {/* Text Style */}
                 <div className="flex items-center gap-4">
                   <div className="text-[#232325] text-base">Heading</div>
@@ -425,7 +427,7 @@ export default function ReportEditorPage() {
                   • 재고 관리 최적화 – 과잉재고 및 품절을 최소화하여 비용 절감
                   및 매출 기회 극대화
                   <br />
-                  • 공급망 효율화 – 유통 단계별 수요 변동을 사전에 예측하여 운영
+                  • 공급망 효���화 – 유통 단계별 수요 변동을 사전에 예측하여 운영
                   효율성 제고
                   <br />
                   • 춤형 마케팅 강화 – 고객 세그먼트별 구매 패턴 분석을 기반으로
@@ -436,7 +438,7 @@ export default function ReportEditorPage() {
                   <br />
                   <br />
                   따라서, 본 사업은 리테일 산업의 디지털 경쟁력 강화와 지속
-                  가능한 성장 기반 마련을 위해 추진이 필요하며, 향후 관련 산업
+                  가능한 성장 기반 마련을 위해 추진이 필요하며, 향�� 관련 산업
                   전반에 걸쳐 확장성과 파급 효과가 기대됩니다.
                 </div>
 
@@ -456,13 +458,13 @@ export default function ReportEditorPage() {
       </div>
 
       {/* Scrollbar */}
-      <div className="w-1.5 bg-[#F5F5F5] rounded-full relative h-[329px] mt-5">
-        <div className="w-1.5 h-[317px] bg-[#B2B2B2] rounded-full absolute top-0 left-0" />
-      </div>
 
       {/* Right Sidebar - AI Agent */}
       <Card className="w-[322px] p-6 flex-shrink-0 border-[#EEF1F7] shadow-[0_0_10px_0_rgba(60,123,194,0.12)]">
-        <div className="flex flex-col">
+        {activeTab === "chat" ? (
+          <AgentChat activeTab={activeTab} setActiveTab={setActiveTab} />
+        ) : (
+          <div className="flex flex-col">
           {/* Agent Header */}
           <div className="flex flex-col gap-3 mb-5">
             <div className="flex items-center gap-1">
@@ -591,14 +593,15 @@ export default function ReportEditorPage() {
           {/* Refresh Button */}
           <Button
             variant="outline"
-            className="w-full gap-3 border-[#D9D9D9] py-3"
+            className="w-full gap-3 border-[#D9D9D9] h-12"
           >
             <RotateCcw className="w-4 h-4 text-[#6C6C6C]" />
             <span className="text-[#757575] font-semibold text-base">
               새로고침
             </span>
           </Button>
-        </div>
+          </div>
+        )}
       </Card>
     </div>
   );

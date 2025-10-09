@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import { TopNavigation } from "./components/top-navigation";
+import { ReportSidebar } from "./components/report-sidebar";
 import { useSidebarStore } from "./components/store/sidebar-store";
 
 export default function ReportLayout({
@@ -18,7 +19,10 @@ export default function ReportLayout({
       <Suspense fallback={<div className="h-[60px]" />}>
         <TopNavigation onMenuClick={toggle} />
       </Suspense>
-      {children}
+      <div className="relative w-full max-w-[1200px] mx-auto">
+        <ReportSidebar />
+        {children}
+      </div>
     </div>
   );
 }
