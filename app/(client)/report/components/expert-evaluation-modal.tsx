@@ -27,7 +27,7 @@ export function ExpertEvaluationModal({
   const [experts, setExperts] = useState<Expert[]>([
     {
       id: "1",
-      name: "김○○ 박사",
+      name: "김준환 박사",
       specialty: "헬스케어 IT전문가",
       experience: "15년 경력",
       description:
@@ -36,20 +36,20 @@ export function ExpertEvaluationModal({
     },
     {
       id: "2",
-      name: "김○○ 박사",
-      specialty: "헬스케어 IT전문가",
-      experience: "15년 경력",
+      name: "박철민 전문가",
+      specialty: "바이오텍전문가",
+      experience: "10년 경력",
       description:
-        "삼성의료원 디지털헬스 케어팀 출신, AI 의료기기 개발 다수 경험",
+        "영화 바이오테크 전문가, 10년 경력",
       selected: false,
     },
     {
       id: "3",
-      name: "김○○ 박사",
-      specialty: "헬스케어 IT전문가",
-      experience: "15년 경력",
+      name: "최은혜 전문가",
+      specialty: "핀테크 전문가",
+      experience: "8년 경력",
       description:
-        "삼성의료원 디지털헬스 케어팀 출신, AI 의료기기 개발 다수 경험",
+        "핀테크 전문가, 8년 경력",
       selected: false,
     },
   ]);
