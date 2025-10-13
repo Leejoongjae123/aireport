@@ -44,9 +44,32 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: If you remove getClaims() and you use server-side rendering
   // with the Supabase client, your users may be randomly logged out.
-  // const { data } = await supabase.auth.getClaims();
-  await supabase.auth.getClaims();
-  // const user = data?.claims;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const pathname = request.nextUrl.pathname;
+
+  // API 경로와 /register/complete 페이지는 체크에서 제외
+  if (pathname.startsWith("/api/") || pathname === "/register/complete") {
+    return supabaseResponse;
+  }
+
+  // 로그인한 사용자의 프로필 완성 여부 체크
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("profile_completed")
+      .eq("id", user.id)
+      .single();
+
+    // 프로필이 완성되지 않았으면 /register/complete로 리다이렉트
+    if (profile && !profile.profile_completed) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/register/complete";
+      return NextResponse.redirect(url);
+    }
+  }
 
   // 인증이 필요한 경로 정의
   // const protectedPaths = ["/report", "/review", "/mypage"];

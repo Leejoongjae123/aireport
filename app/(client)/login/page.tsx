@@ -5,14 +5,55 @@ import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PasswordResetModal } from "./components/password-reset-modal";
+import { createClient } from "@/lib/supabase/client";
 
 const LoginPage = () => {
   const router = useRouter();
-  const [email, setEmail] = useState("useremail@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberPassword, setRememberPassword] = useState(false);
   const [isPasswordResetModalOpen, setIsPasswordResetModalOpen] =
     useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setErrorMessage("이메일과 비밀번호를 입력해주세요.");
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage("");
+
+    const supabase = createClient();
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setErrorMessage(error.message || "로그인에 실패했습니다.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!data.user) {
+      setErrorMessage("사용자 정보를 찾을 수 없습니다.");
+      setIsLoading(false);
+      return;
+    }
+
+    // 로그인 성공 시 메인 페이지로 이동
+    // onAuthStateChange가 자동으로 상태를 업데이트합니다
+    router.push("/");
+    setIsLoading(false);
+  };
+
+  const handleOAuthLogin = (provider: "google" | "kakao") => {
+    window.location.href = `/api/auth/oauth?provider=${provider}`;
+  };
 
   return (
     <div
@@ -53,6 +94,13 @@ const LoginPage = () => {
           <div className="flex flex-col gap-8 w-full">
             <div className="flex flex-col gap-6 w-full">
               <div className="flex flex-col gap-5 w-full">
+                {/* Error Message */}
+                {errorMessage && (
+                  <div className="text-red-500 text-[14px] font-pretendard font-medium text-center">
+                    {errorMessage}
+                  </div>
+                )}
+
                 {/* Email Input */}
                 <div className="flex flex-col gap-3 w-full">
                   <Label className="text-[#202224] font-pretendard text-[14px] font-semibold leading-normal tracking-[-0.064px] opacity-80">
@@ -65,9 +113,18 @@ const LoginPage = () => {
                     <input
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setErrorMessage("");
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleLogin();
+                        }
+                      }}
                       className="flex-1 text-[#303030] font-pretendard text-[16px] font-medium leading-6 tracking-[-0.064px] bg-transparent border-none outline-none"
                       placeholder="이메일을 입력해주세요"
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -84,9 +141,18 @@ const LoginPage = () => {
                     <input
                       type="password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setErrorMessage("");
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleLogin();
+                        }
+                      }}
                       className="flex-1 font-pretendard text-[16px] font-normal leading-6 tracking-[-0.064px] bg-transparent border-none outline-none placeholder:text-[#A6A6A6]"
                       placeholder="비밀번호를 입력해주세요."
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -116,9 +182,13 @@ const LoginPage = () => {
             </div>
 
             {/* Login Button */}
-            <button className="flex p-[20px_52px] justify-center items-center gap-2 w-full rounded-[10px] bg-[#07F]">
+            <button
+              onClick={handleLogin}
+              disabled={isLoading}
+              className="flex p-[20px_52px] justify-center items-center gap-2 w-full rounded-[10px] bg-[#07F] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <span className="text-white font-pretendard text-[18px] font-bold leading-normal tracking-[-0.36px]">
-                지금 시작하기
+                {isLoading ? "로그인 중..." : "지금 시작하기"}
               </span>
             </button>
           </div>
@@ -137,7 +207,10 @@ const LoginPage = () => {
             {/* Social Login Buttons */}
             <div className="flex flex-col gap-4 w-full">
               {/* Google Login */}
-              <button className="flex p-4 justify-center items-center gap-[10px] w-full rounded-[10px] border border-[#EEEEEF] bg-white">
+              <button
+                onClick={() => handleOAuthLogin("google")}
+                className="flex p-4 justify-center items-center gap-[10px] w-full rounded-[10px] border border-[#EEEEEF] bg-white"
+              >
                 <div className="w-6 h-6">
                   <svg
                     width="24"
@@ -171,6 +244,7 @@ const LoginPage = () => {
 
               {/* Kakao Login */}
               <button
+                onClick={() => handleOAuthLogin("kakao")}
                 className="flex p-4 justify-center items-center gap-[10px] w-full rounded-[10px]"
                 style={{ backgroundColor: "#FBE84C" }}
               >

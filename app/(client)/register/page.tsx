@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
+import { createClient } from "@/lib/supabase/client";
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -10,6 +11,65 @@ const RegisterPage = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleRegister = async () => {
+    if (!email || !password || !confirmPassword) {
+      setErrorMessage("모든 필드를 입력해주세요.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      const supabase = createClient();
+
+      // 회원가입 처리
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/register/complete`,
+        },
+      });
+
+      if (error) {
+        setErrorMessage(error.message || "회원가입에 실패했습니다.");
+        return;
+      }
+
+      // 프로필에 이메일 업데이트
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({
+            email: email,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", data.user.id);
+
+        if (profileError) {
+          setErrorMessage("프로필 이메일 업데이트에 실패했습니다.");
+          return;
+        }
+      }
+
+      // 회원가입 성공 시 완료 페이지로 이동
+      // onAuthStateChange가 자동으로 상태를 업데이트합니다
+      router.push("/register/complete");
+    } catch {
+      setErrorMessage("회원가입 처리 중 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div
@@ -139,6 +199,13 @@ const RegisterPage = () => {
               {/* Remember Password & Forgot Password */}
             </div>
 
+            {/* Error Message */}
+            {errorMessage && (
+              <p className="text-[#FF3B30] font-pretendard text-[14px] font-medium leading-normal text-center">
+                {errorMessage}
+              </p>
+            )}
+
             {/* Register Button */}
             <button
               disabled={
@@ -146,13 +213,14 @@ const RegisterPage = () => {
                 !password ||
                 !confirmPassword ||
                 passwordError !== "" ||
-                password !== confirmPassword
+                password !== confirmPassword ||
+                isLoading
               }
-              onClick={() => router.push("/register/complete")}
+              onClick={handleRegister}
               className="flex p-[20px_52px] justify-center items-center gap-2 w-full rounded-[10px] disabled:bg-gray-300 disabled:cursor-not-allowed bg-[#07F]"
             >
               <span className="text-white font-pretendard text-[18px] font-bold leading-normal tracking-[-0.36px]">
-                이메일로 회원가입
+                {isLoading ? "처리 중..." : "이메일로 회원가입"}
               </span>
             </button>
           </div>

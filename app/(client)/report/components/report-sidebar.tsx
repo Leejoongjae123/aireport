@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,6 +19,7 @@ interface Report {
 }
 
 export function ReportSidebar() {
+  const router = useRouter();
   const [reports] = useState<Report[]>([
     { id: "1", title: "AI 헬스케어 사업계획서", isSelected: true },
     { id: "2", title: "핀테크 스타트업 사업계획 및 투자 제안서" },
@@ -39,7 +41,7 @@ export function ReportSidebar() {
         <Button
           className="w-full bg-[#0077FF] hover:bg-[#0077FF]/90 text-white font-semibold text-[18px] h-[48px] rounded-lg gap-1.5 justify-start px-6"
           onClick={() => {
-            // Create new report logic
+            router.push("/report/start");
           }}
         >
           <Plus className="w-6 h-6" />새 보고서 생성
