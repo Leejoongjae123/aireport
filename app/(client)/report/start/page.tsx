@@ -23,7 +23,7 @@ export default function ReportStartPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center" style={{ minHeight: "calc(100vh - 300px)" }}>
+    <div className="flex flex-col items-center justify-center" style={{ minHeight: "calc(100vh - 207px)" }}>
       {/* Logo */}
       <div className="flex items-center gap-[15px] mb-10">
         {/* <div className="w-[38px] h-[38px] bg-[#B2B2B2] rounded-full" /> */}

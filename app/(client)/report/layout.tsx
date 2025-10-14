@@ -16,7 +16,7 @@ export default function ReportLayout({
   );
 
   return (
-    <div className="min-h-screen bg-[#FAFAFD] mt-[131px]">
+    <div className="bg-[#FAFAFD] mt-[131px]">
       <Toaster position="top-center" richColors />
       <Suspense fallback={<div className="h-[60px]" />}>
         <TopNavigation onMenuClick={toggle} />

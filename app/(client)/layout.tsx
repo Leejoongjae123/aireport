@@ -10,8 +10,29 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "AI 사업계획서",
-  description: "AI 사업계획서",
+  title: "리포트 어시스턴트",
+  description: "리포트 어시스턴트",
+  icons: {
+    icon: "/images/logo_meta.png",
+  },
+  openGraph: {
+    title: "AI 사업계획서",
+    description: "AI 사업계획서",
+    images: [
+      {
+        url: "/images/logo_meta.png",
+        width: 1200,
+        height: 630,
+        alt: "AI 사업계획서",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI 사업계획서",
+    description: "AI 사업계획서",
+    images: ["/images/logo_meta.png"],
+  },
 };
 
 export default function RootLayout({
@@ -28,9 +49,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="min-h-screen w-full max-w-[1440px] mx-auto bg-[#FBFCFD]">
+          <div className="max-h-screen w-full max-w-[1440px] mx-auto bg-[#FBFCFD]">
             <Navbar />
-            <div className="">{children}</div>
+            <main className="min-h-[calc(100vh-131px)]">{children}</main>
           </div>
           <Toaster position="top-center" />
         </ThemeProvider>

@@ -120,7 +120,7 @@ function ReportEditorContent() {
   };
 
   return (
-    <div className="flex items-stretch gap-3 w-full max-w-[1200px] mx-auto h-[calc(100vh-210px)] pb-6">
+    <div className="flex items-stretch gap-3 w-full max-w-[1200px] mx-auto h-[calc(100vh-220px)] pb-6">
       {/* Left Sidebar - Table of Contents */}
       <TableOfContents
         procedureModify={procedureModify}
@@ -174,7 +174,7 @@ function ReportEditorContent() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 pb-6 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+          <div className="flex-1 overflow-y-auto px-6 px-6 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
             {activeTab === "chat" ? (
               <AgentChat />
             ) : (
