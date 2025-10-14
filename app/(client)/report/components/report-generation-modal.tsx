@@ -31,37 +31,177 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
       return;
     }
 
-    // Step 1: 5초 후 완료
-    const timer1 = setTimeout(() => {
-      setStep1Status("completed");
-      setStep2Status("loading");
-    }, 5000);
+    let isCancelled = false;
+    let pollingInterval: NodeJS.Timeout | null = null;
+    let fallbackTimer2: NodeJS.Timeout | null = null;
+    let fallbackTimer3: NodeJS.Timeout | null = null;
+    let fallbackTimer4: NodeJS.Timeout | null = null;
 
-    // Step 2: 10초 후 완료 (Step 1 완료 후 5초)
-    const timer2 = setTimeout(() => {
-      setStep2Status("completed");
-      setStep3Status("loading");
+    // Polling 함수: is_complete 확인
+    const startPolling = () => {
+      if (!reportId) return;
+
+      pollingInterval = setInterval(async () => {
+        if (isCancelled) return;
+
+        try {
+          const statusResponse = await fetch(`/api/reports/${reportId}/status`);
+          if (!statusResponse.ok) return;
+
+          const statusData = await statusResponse.json();
+
+          if (statusData.isComplete) {
+            // 완료되면 모든 단계를 즉시 완료 처리
+            if (isCancelled) return;
+
+            setStep1Status("completed");
+            setStep2Status("completed");
+            setStep3Status("completed");
+
+            // polling 중지
+            if (pollingInterval) {
+              clearInterval(pollingInterval);
+              pollingInterval = null;
+            }
+
+            // fallback 타이머들 중지
+            if (fallbackTimer2) clearTimeout(fallbackTimer2);
+            if (fallbackTimer3) clearTimeout(fallbackTimer3);
+            if (fallbackTimer4) clearTimeout(fallbackTimer4);
+
+            // 3초 후 페이지 이동
+            setTimeout(() => {
+              if (isCancelled) return;
+              router.push(`/report/editor?reportId=${reportId}`);
+            }, 3000);
+          }
+        } catch {
+          // polling 중 오류는 무시하고 계속 시도
+        }
+      }, 3000); // 3초마다 확인
+    };
+
+    // Step 1: 입력값 확인 및 AI 보고서 생성 요청
+    const runStep1 = async () => {
+      if (!reportId) {
+        setStep1Status("completed");
+        setStep2Status("loading");
+        return;
+      }
+
+      try {
+        // 1. reportId로 입력 데이터 가져오기
+        const inputResponse = await fetch(`/api/reports/${reportId}/inputs`);
+
+        if (!inputResponse.ok) {
+          if (isCancelled) return;
+          setStep1Status("completed");
+          setStep2Status("loading");
+          return;
+        }
+
+        const inputData = await inputResponse.json();
+
+        // 입력값 확인 완료
+        if (isCancelled) return;
+        setStep1Status("completed");
+        setStep2Status("loading");
+
+        // 2. 유사 보고서 검색 API 호출
+        const searchResponse = await fetch(`/api/reports/search`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reportId: reportId,
+            topK: 5,
+          }),
+        });
+        
+
+        if (!searchResponse.ok) {
+          if (isCancelled) return;
+          // 검색 실패해도 계속 진행
+          return;
+        }
+
+        const searchData = await searchResponse.json();
+        console.log("searchData:", searchData);
+        // 검색 결과가 있는 경우 첫 번째 결과 사용
+        const firstResult =
+          searchData.results && searchData.results.length > 0
+            ? searchData.results[0]
+            : null;
+
+        if (!firstResult) {
+          if (isCancelled) return;
+          // 검색 결과가 없어도 계속 진행
+          return;
+        }
+
+        // 3. 로컬 API를 통한 AI 보고서 생성 요청 (환경변수 체크 포함)
+        const generateResponse = await fetch(`${process.env.NEXT_PUBLIC_AI_END_POINT}/api/business-plan/generate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reportId: reportId,
+            보고서파일명: firstResult.보고서파일명 || "사업계획서",
+            분야: firstResult.분야 || inputData.businessField || "",
+            분야번호: firstResult.분야번호 || searchData.분류번호 || 1,
+            사업아이디어: inputData.businessIdea || "",
+            핵심가치제안: inputData.coreValue || "",
+            top_k: 3,
+          }),
+        });
+
+        if (isCancelled) return;
+
+        if (generateResponse.ok) {
+          // 생성 요청 성공 시 polling 시작
+          startPolling();
+        } else {
+          // 실패해도 계속 진행 (fallback 타이머로)
+        }
+      } catch {
+        if (isCancelled) return;
+        // 오류가 발생해도 계속 진행 (fallback 타이머로)
+      }
+    };
+
+    runStep1();
+
+    // Fallback 타이머들 (AI 요청이 실패하거나 응답이 없을 경우를 대비)
+    fallbackTimer2 = setTimeout(() => {
+      if (isCancelled) return;
+      // 이미 완료되지 않았다면 완료 처리
+      setStep2Status((prev) => (prev === "completed" ? prev : "completed"));
+      setStep3Status((prev) => (prev === "pending" ? "loading" : prev));
     }, 10000);
 
-    // Step 3: 15초 후 완료 (Step 2 완료 후 5초)
-    const timer3 = setTimeout(() => {
-      setStep3Status("completed");
+    fallbackTimer3 = setTimeout(() => {
+      if (isCancelled) return;
+      setStep3Status((prev) => (prev === "completed" ? prev : "completed"));
     }, 15000);
 
-    // Step 3 완료 후 3초 뒤에 페이지 이동 (18초 후)
-    const timer4 = setTimeout(() => {
+    fallbackTimer4 = setTimeout(() => {
+      if (isCancelled) return;
+      // fallback: 일정 시간 후 무조건 페이지 이동
       if (reportId) {
         router.push(`/report/editor?reportId=${reportId}`);
       } else {
         router.push("/report/editor");
       }
-    }, 18000);
+    }, 180000); // 3분 (180초) 후
 
     return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      clearTimeout(timer4);
+      isCancelled = true;
+      if (pollingInterval) clearInterval(pollingInterval);
+      if (fallbackTimer2) clearTimeout(fallbackTimer2);
+      if (fallbackTimer3) clearTimeout(fallbackTimer3);
+      if (fallbackTimer4) clearTimeout(fallbackTimer4);
     };
   }, [isOpen, router, reportId]);
 

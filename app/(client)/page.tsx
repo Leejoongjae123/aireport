@@ -67,9 +67,9 @@ export default function Home() {
 
             <div className="flex flex-col items-start gap-[142px] self-stretch">
               {/* Feature 1: AI Report Generator */}
-              <div className="flex items-center self-stretch">
+              <div className="flex items-center gap-x-12">
                 {/* <Image src="/images/main_banner1.png" alt="Feature 1" width={300} height={100}></Image> */}
-                <svg
+                {/* <svg
                   width="558"
                   height="372"
                   viewBox="0 0 558 372"
@@ -134,7 +134,8 @@ export default function Home() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
-                </svg>
+                </svg> */}
+                <Image src="/images/main_banner1.png" alt="Feature 1" width={500} height={400}></Image>
                 <div className="flex w-[590px] flex-col items-start gap-6">
                   <div className="flex flex-col items-start gap-3 self-stretch">
                     <h3 className="self-stretch text-4xl font-bold leading-[50px] tracking-[-0.72px] text-[#303030]">
