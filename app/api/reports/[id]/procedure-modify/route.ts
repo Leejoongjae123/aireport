@@ -38,7 +38,7 @@ export async function PATCH(
       success: true,
       data: data,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "서버 오류가 발생했습니다." },
       { status: 500 }
@@ -72,7 +72,7 @@ export async function GET(
       success: true,
       data: data.procedure_modify,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "서버 오류가 발생했습니다." },
       { status: 500 }

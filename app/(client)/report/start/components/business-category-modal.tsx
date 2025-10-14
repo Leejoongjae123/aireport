@@ -256,7 +256,7 @@ export function BusinessCategoryModal({
         onBusinessFieldChange?.(categoryTitle);
         onOpenChange?.(false);
       }
-    } catch (error) {
+    } catch {
       alert(
         mode === "create"
           ? "보고서 생성 중 오류가 발생했습니다."

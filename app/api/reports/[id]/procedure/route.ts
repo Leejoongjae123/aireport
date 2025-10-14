@@ -45,7 +45,7 @@ export async function GET(
         procedure_modify: reportData.procedure_modify,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "서버 오류가 발생했습니다." },
       { status: 500 }

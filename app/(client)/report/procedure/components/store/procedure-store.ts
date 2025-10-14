@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import {
   ProcedureModifyData,
-  ProcedureModifySection,
   ProcedureModifySubsection,
 } from "../../types";
 
