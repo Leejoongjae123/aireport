@@ -1,4 +1,5 @@
 import Image from "next/image";
+import FAQSection from "./components/faq-section";
 
 export default function Home() {
   return (
@@ -135,7 +136,12 @@ export default function Home() {
                     strokeLinejoin="round"
                   />
                 </svg> */}
-                <Image src="/images/main_banner1.png" alt="Feature 1" width={500} height={400}></Image>
+                <Image
+                  src="/images/main_banner1.png"
+                  alt="Feature 1"
+                  width={500}
+                  height={400}
+                ></Image>
                 <div className="flex w-[590px] flex-col items-start gap-6">
                   <div className="flex flex-col items-start gap-3 self-stretch">
                     <h3 className="self-stretch text-4xl font-bold leading-[50px] tracking-[-0.72px] text-[#303030]">
@@ -222,7 +228,12 @@ export default function Home() {
                   alt="Expert Evaluation"
                   className="h-[372px] w-[558px]"
                 /> */}
-                <Image src="/images/main_banner3.png" alt="Feature 2" width={600} height={300}></Image>
+                <Image
+                  src="/images/main_banner3.png"
+                  alt="Feature 2"
+                  width={600}
+                  height={300}
+                ></Image>
                 <div className="flex w-[590px] flex-col items-start gap-6">
                   <div className="flex w-[590px] flex-col items-start gap-3">
                     <h3 className="self-stretch text-4xl font-bold leading-[50px] tracking-[-0.72px] text-[#303030]">
@@ -264,150 +275,12 @@ export default function Home() {
       </div>
 
       {/* FAQ Section */}
-      <div className="h-[646px] self-stretch bg-[#ECF5FF]">
-        <div className="flex h-[646px] w-full items-start gap-2.5 px-[115px] py-[88px]">
-          <img
-            src="https://api.builder.io/api/v1/image/assets/TEMP/9073062cccf15823c36145fae19fb14b90cd9e14?width=1180"
-            alt="MacBook"
-            className="h-[443px] w-[590px]"
-          />
-          <div className="flex w-[591px] flex-col items-start gap-2.5 p-2.5">
-            <div className="flex flex-col items-start gap-6 self-stretch">
-              <h2 className="self-stretch text-[30px] font-semibold text-[#262626]">
-                자주 묻는 질문 (FAQ)
-              </h2>
-              <div className="flex flex-col items-start gap-2 self-stretch">
-                {/* FAQ Item 1 - Expanded */}
-                <div className="flex flex-col items-start gap-2.5 self-stretch rounded-md bg-white p-6">
-                  <div className="flex w-[523px] items-center justify-between">
-                    <span className="text-lg font-semibold text-[#0077FF]">
-                      AI가 생성한 보고서 품질은 어느 정도인가요?
-                    </span>
-                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#ECF5FF]">
-                      <svg
-                        width="12"
-                        height="2"
-                        viewBox="0 0 12 2"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M0.857178 1.11353H11.1429"
-                          stroke="#0077FF"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                  <p className="w-[523px] text-base font-normal leading-6 text-[#606060]">
-                    AI가 자동으로 초안을 생성하지만, 내부 진단 기능과 전문가
-                    피드백을 통해 완성도를 높일 수 있습니다.
-                  </p>
-                </div>
-
-                {/* FAQ Item 2 */}
-                <div className="flex flex-col items-start gap-2.5 self-stretch rounded-md bg-white p-6">
-                  <div className="flex w-[523px] items-center justify-between">
-                    <span className="text-lg font-normal text-[#303030]">
-                      보고서 작성에 얼마나 걸리나요?
-                    </span>
-                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#ECF5FF]">
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 12 12"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M0.857178 6.11353H11.1429"
-                          stroke="#0077FF"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        />
-                        <path
-                          d="M6.00488 0.975586V11.2613"
-                          stroke="#0077FF"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* FAQ Item 3 */}
-                <div className="flex flex-col items-start gap-2.5 self-stretch rounded-md bg-white p-6">
-                  <div className="flex w-[523px] items-center justify-between">
-                    <span className="text-lg font-normal text-[#303030]">
-                      전문가 평가는 어떻게 진행되나요?
-                    </span>
-                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#ECF5FF]">
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 12 12"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M0.857178 6.11353H11.1429"
-                          stroke="#0077FF"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        />
-                        <path
-                          d="M6.00488 0.975586V11.2613"
-                          stroke="#0077FF"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* FAQ Item 4 */}
-                <div className="flex flex-col items-start gap-2.5 self-stretch rounded-md bg-white p-6">
-                  <div className="flex w-[523px] items-center justify-between">
-                    <span className="text-lg font-normal text-[#303030]">
-                      투자자 매칭 기능은 어떻게 활용하나요?
-                    </span>
-                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#ECF5FF]">
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 12 12"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M0.857178 6.11353H11.1429"
-                          stroke="#0077FF"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        />
-                        <path
-                          d="M6.00488 0.975586V11.2613"
-                          stroke="#0077FF"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <FAQSection />
 
       {/* Footer */}
       <footer className="relative h-[236px] self-stretch bg-[#121212]">
         {/* Decorative Star */}
-        <svg
+        {/* <svg
           width="571"
           height="577"
           viewBox="0 0 571 577"
@@ -444,14 +317,21 @@ export default function Home() {
               />
             </filter>
           </defs>
-        </svg>
+        </svg> */}
 
-        <div className="absolute bottom-[118.205px] w-[212px] text-center text-4xl font-bold leading-[160%] text-[#A6A6A6]">
+        {/* <div className="absolute bottom-[118.205px] w-[212px] text-center text-4xl font-bold leading-[160%] text-[#A6A6A6]">
           LOGO
+        </div> */}
+        <div className="absolute top-[50px] left-[60px] text-center text-4xl font-bold leading-[160%] text-[#A6A6A6]">
+          <Image
+            src="/images/logo.png"
+            alt="logo"
+            width={150}
+            height={100}
+          ></Image>
         </div>
-
         <div className="absolute bottom-[25px] left-[60px] h-[26px] w-[187px] text-base font-normal leading-[160%] text-[#A6A6A6]">
-          © 2025 AI Report Service
+          © 2025 레포트 어시스턴트
         </div>
 
         <div className="absolute bottom-[120px] right-[97px] h-[26px] w-[179px] text-base font-normal leading-[160%] text-[#A6A6A6]">
