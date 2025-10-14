@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { TopNavigation } from "./components/top-navigation";
 import { ReportSidebar } from "./components/report-sidebar";
 import { useSidebarStore } from "./components/store/sidebar-store";
+import { Toaster } from "sonner";
 
 export default function ReportLayout({
   children,
@@ -16,6 +17,7 @@ export default function ReportLayout({
 
   return (
     <div className="min-h-screen bg-[#FAFAFD] mt-[131px]">
+      <Toaster position="top-center" richColors />
       <Suspense fallback={<div className="h-[60px]" />}>
         <TopNavigation onMenuClick={toggle} />
       </Suspense>

@@ -72,17 +72,18 @@ export async function updateSession(request: NextRequest) {
   }
 
   // 인증이 필요한 경로 정의
-  // const protectedPaths = ["/report", "/review", "/mypage"];
-  // const isProtectedPath = protectedPaths.some((path) =>
-  //   request.nextUrl.pathname.startsWith(path)
-  // );
+  const protectedPaths = ["/report", "/review", "/mypage"];
+  const isProtectedPath = protectedPaths.some((path) =>
+    pathname.startsWith(path)
+  );
 
   // 인증이 필요한 경로에서 로그인되지 않은 경우에만 리다이렉트
-  // if (isProtectedPath && !user) {
-  //   const url = request.nextUrl.clone();
-  //   url.pathname = "/login";
-  //   return NextResponse.redirect(url);
-  // }
+  if (isProtectedPath && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("fail", "로그인 후 사용해주세요");
+    return NextResponse.redirect(url);
+  }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:

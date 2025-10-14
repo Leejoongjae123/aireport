@@ -10,22 +10,100 @@ import { useReportStore } from "../components/store/report-store";
 
 function ReportInputsContent() {
   const searchParams = useSearchParams();
-  const setReportType = useReportStore((state) => state.setReportType);
+  const {
+    setReportType,
+    setReportId,
+    setBusinessField,
+    setInputData,
+    resetInputData,
+  } = useReportStore();
   const [investmentAmount, setInvestmentAmount] = useState("");
   const [businessIdea, setBusinessIdea] = useState("");
   const [coreValue, setCoreValue] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-  // URL에서 reportType 가져와서 store에 저장
+  // reportId로 데이터 가져오기
   useEffect(() => {
-    const reportType = searchParams.get("reportType");
-    if (reportType) {
-      setReportType(reportType);
+    const fetchReportData = async () => {
+      const reportId = searchParams.get("reportId");
+      const reportType = searchParams.get("reportType");
+
+      if (!reportId) {
+        // reportId가 없으면 초기화
+        resetInputData();
+        setInvestmentAmount("");
+        setBusinessIdea("");
+        setCoreValue("");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/reports/${reportId}/inputs`);
+
+        if (!response.ok) {
+          // 데이터가 없으면 초기화
+          resetInputData();
+          setInvestmentAmount("");
+          setBusinessIdea("");
+          setCoreValue("");
+          setIsLoading(false);
+          return;
+        }
+
+        const data = await response.json();
+
+        // 가져온 데이터로 상태 업데이트
+        setInvestmentAmount(data.investmentAmount || "");
+        setBusinessIdea(data.businessIdea || "");
+        setCoreValue(data.coreValue || "");
+
+        // store에도 저장
+        setReportId(reportId);
+        setReportType(data.reportType || reportType || "");
+        setBusinessField(data.businessField || "");
+        setInputData({
+          investmentAmount: data.investmentAmount || "",
+          businessIdea: data.businessIdea || "",
+          coreValue: data.coreValue || "",
+        });
+      } catch {
+        // 에러 발생 시 초기화
+        resetInputData();
+        setInvestmentAmount("");
+        setBusinessIdea("");
+        setCoreValue("");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReportData();
+  }, [
+    searchParams,
+    setReportType,
+    setReportId,
+    setBusinessField,
+    setInputData,
+    resetInputData,
+  ]);
+
+  // 입력값 변경 시 store에도 저장
+  useEffect(() => {
+    if (!isLoading) {
+      setInputData({
+        investmentAmount,
+        businessIdea,
+        coreValue,
+      });
     }
-  }, [searchParams, setReportType]);
+  }, [investmentAmount, businessIdea, coreValue, setInputData, isLoading]);
 
   const formatNumber = (value: string) => {
     const numericValue = value.replace(/[^0-9]/g, "");
-    if (numericValue === "") return "";
+    if (numericValue === "") {
+      return "";
+    }
     return new Intl.NumberFormat("ko-KR").format(parseInt(numericValue));
   };
 
@@ -36,8 +114,16 @@ function ReportInputsContent() {
     setInvestmentAmount(formatted);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex w-full justify-center items-center min-h-[400px]">
+        <div className="text-lg text-[#767676]">데이터를 불러오는 중...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex w-full justify-center px-4 ">
+    <div className="flex w-full justify-center">
       <Card className="w-full max-w-[1200px] p-6 border border-[#EEF1F7] bg-white shadow-[0_0_10px_0_rgba(60,123,194,0.12)] rounded-xl">
         <div className="flex flex-col gap-6">
           {/* 목표 투자 금액 */}

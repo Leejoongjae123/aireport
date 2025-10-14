@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PasswordResetModal } from "./components/password-reset-modal";
 import { createClient } from "@/lib/supabase/client";
 
-const LoginPage = () => {
+const LoginPageContent = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberPassword, setRememberPassword] = useState(false);
@@ -16,6 +18,22 @@ const LoginPage = () => {
     useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const toastShown = useRef(false);
+
+  useEffect(() => {
+    // 이미 toast를 보여줬다면 리턴
+    if (toastShown.current) return;
+
+    const failMessage = searchParams.get("fail");
+    if (failMessage) {
+      toast.error(failMessage);
+      toastShown.current = true;
+      // URL에서 fail 파라미터 제거
+      const url = new URL(window.location.href);
+      url.searchParams.delete("fail");
+      window.history.replaceState({}, "", url.pathname);
+    }
+  }, [searchParams]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -274,6 +292,23 @@ const LoginPage = () => {
         onClose={() => setIsPasswordResetModalOpen(false)}
       />
     </div>
+  );
+};
+
+const LoginPage = () => {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="min-h-screen flex items-center justify-center"
+          style={{ backgroundColor: "#FBFCFD" }}
+        >
+          <div className="text-center">로딩 중...</div>
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 };
 

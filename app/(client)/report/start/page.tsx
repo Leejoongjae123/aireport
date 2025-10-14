@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BusinessCategoryModal } from "./components/business-category-modal";
 import { Send } from "lucide-react";
-
+import Image from "next/image";
 export default function ReportStartPage() {
   const [reportTitle, setReportTitle] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,13 +23,14 @@ export default function ReportStartPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-[709px]">
+    <div className="flex flex-col items-center justify-center" style={{ minHeight: "calc(100vh - 300px)" }}>
       {/* Logo */}
-      <div className="flex items-center gap-[15px] mb-[70px]">
-        <div className="w-[38px] h-[38px] bg-[#B2B2B2] rounded-full" />
-        <span className="text-[#B3B3B3] font-bold text-[32px] font-['Pretendard']">
+      <div className="flex items-center gap-[15px] mb-10">
+        {/* <div className="w-[38px] h-[38px] bg-[#B2B2B2] rounded-full" /> */}
+        <Image src="/images/logo.png" alt="logo" width={200} height={100} />
+        {/* <span className="text-[#B3B3B3] font-bold text-[32px] font-['Pretendard']">
           LOGO
-        </span>
+        </span> */}
       </div>
 
       {/* Search Input */}
@@ -41,7 +42,11 @@ export default function ReportStartPage() {
           placeholder="생성하려는 보고서 제목을 입력해주세요."
           className="w-full h-[62px] rounded-[100px] border border-[#E3E5E5] bg-white px-6 text-base placeholder:text-[#A6A6A6] pr-[60px] focus-visible:ring-1 focus-visible:ring-[#0077FF]"
         />
-        <BusinessCategoryModal open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <BusinessCategoryModal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          reportTitle={reportTitle}
+        >
           <Button
             onClick={handleCreateReport}
             size="icon"

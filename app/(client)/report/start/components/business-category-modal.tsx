@@ -8,11 +8,16 @@ import {
 } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface BusinessCategoryModalProps {
   children: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  reportTitle?: string;
+  mode?: "create" | "update";
+  reportId?: string;
+  onBusinessFieldChange?: (businessField: string) => void;
 }
 
 const GlobalIcon = () => (
@@ -183,12 +188,83 @@ export function BusinessCategoryModal({
   children,
   open,
   onOpenChange,
+  reportTitle,
+  mode = "create",
+  reportId,
+  onBusinessFieldChange,
 }: BusinessCategoryModalProps) {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleCategoryClick = (categoryId: string) => {
-    router.push(`/report/inputs?reportType=${categoryId}`);
-    onOpenChange?.(false);
+  const handleCategoryClick = async (categoryTitle: string) => {
+    if (isLoading) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (mode === "create") {
+        // 새 리포트 생성 모드
+        if (!reportTitle) {
+          alert("보고서 제목을 입력해주세요.");
+          setIsLoading(false);
+          return;
+        }
+
+        const response = await fetch("/api/reports/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: reportTitle,
+            businessField: categoryTitle,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          alert(result.error || "보고서 생성에 실패했습니다.");
+          return;
+        }
+
+        onOpenChange?.(false);
+        router.push(`/report/inputs?reportId=${result.reportId}`);
+      } else {
+        // 기존 리포트 업데이트 모드
+        const response = await fetch("/api/reports/update-business-field", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reportId: reportId,
+            businessField: categoryTitle,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          alert(result.error || "사업분야 업데이트에 실패했습니다.");
+          return;
+        }
+
+        // 콜백으로 선택된 business field 전달
+        onBusinessFieldChange?.(categoryTitle);
+        onOpenChange?.(false);
+      }
+    } catch (error) {
+      alert(
+        mode === "create"
+          ? "보고서 생성 중 오류가 발생했습니다."
+          : "사업분야 업데이트 중 오류가 발생했습니다."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -218,8 +294,10 @@ export function BusinessCategoryModal({
             return (
               <div
                 key={category.id}
-                className="w-[296px] h-[168px] p-5 flex flex-col gap-2 bg-[#F9FAFC] rounded-[10px] cursor-pointer hover:bg-[#F0F6FF] transition-colors"
-                onClick={() => handleCategoryClick(category.id)}
+                className={`w-[296px] h-[168px] p-5 flex flex-col gap-2 bg-[#F9FAFC] rounded-[10px] cursor-pointer hover:bg-[#F0F6FF] transition-colors ${
+                  isLoading ? "opacity-50 pointer-events-none" : ""
+                }`}
+                onClick={() => handleCategoryClick(category.title)}
               >
                 {/* Icon */}
                 <div className="w-[38px] h-[38px] p-[7px] flex items-center justify-center bg-[#DBE7FF] rounded-full mb-2">

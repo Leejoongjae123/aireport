@@ -68,6 +68,7 @@ export default function Home() {
             <div className="flex flex-col items-start gap-[142px] self-stretch">
               {/* Feature 1: AI Report Generator */}
               <div className="flex items-center self-stretch">
+                {/* <Image src="/images/main_banner1.png" alt="Feature 1" width={300} height={100}></Image> */}
                 <svg
                   width="558"
                   height="372"
@@ -170,7 +171,7 @@ export default function Home() {
               </div>
 
               {/* Feature 2: AI Diagnosis & Insights */}
-              <div className="flex items-start">
+              <div className="flex items-center">
                 <div className="flex w-[590px] flex-col items-start gap-6">
                   <div className="flex flex-col items-start gap-3 self-stretch">
                     <h3 className="self-stretch text-4xl font-bold leading-[50px] tracking-[-0.72px] text-[#303030]">
@@ -205,58 +206,22 @@ export default function Home() {
                     </svg>
                   </button>
                 </div>
-                <svg
-                  width="558"
-                  height="372"
-                  viewBox="0 0 558 372"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g clipPath="url(#clip0_900_2851)">
-                    <path
-                      d="M289.61 333.672H274.888C274.419 333.672 274.04 330.475 274.04 326.533V248.869C274.04 244.927 274.419 241.73 274.888 241.73H289.61C290.079 241.73 290.458 244.927 290.458 248.869V326.533C290.458 330.475 290.079 333.672 289.61 333.672Z"
-                      fill="white"
-                      stroke="#E1E4E5"
-                      strokeWidth="11"
-                    />
-                    <path
-                      d="M428.889 274.955H135.913C126.596 274.955 119.04 267.42 119.04 258.128V75.0622C119.04 65.7702 126.596 58.2354 135.913 58.2354H428.889C438.206 58.2354 445.762 65.7702 445.762 75.0622V258.128C445.762 267.42 438.206 274.955 428.889 274.955Z"
-                      fill="white"
-                      stroke="#E1E4E5"
-                      strokeWidth="11"
-                    />
-                    <path
-                      d="M278.178 94.3503H160.158C156.734 94.3503 153.958 97.1262 153.958 100.55V205.125C153.958 208.549 156.734 211.325 160.158 211.325H278.178C281.603 211.325 284.378 208.549 284.378 205.125V100.55C284.378 97.1262 281.603 94.3503 278.178 94.3503Z"
-                      fill="#0077FF"
-                    />
-                    <path
-                      d="M198.327 164.266C198.327 157.212 192.609 151.493 185.555 151.493C178.5 151.493 172.782 157.212 172.782 164.266V169.644C172.782 176.699 178.5 182.418 185.555 182.418C192.609 182.418 198.327 176.699 198.327 169.644V164.266Z"
-                      fill="white"
-                    />
-                    <path
-                      d="M231.88 133.459C231.88 126.44 226.19 120.749 219.17 120.749C212.15 120.749 206.46 126.44 206.46 133.459V169.419C206.46 176.439 212.15 182.129 219.17 182.129C226.19 182.129 231.88 176.439 231.88 169.419V133.459Z"
-                      fill="white"
-                    />
-                    <path
-                      d="M264.74 150.199C264.74 143.18 259.05 137.489 252.03 137.489C245.01 137.489 239.32 143.18 239.32 150.199V169.419C239.32 176.439 245.01 182.129 252.03 182.129C259.05 182.129 264.74 176.439 264.74 169.419V150.199Z"
-                      fill="white"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_900_2851">
-                      <rect width="558" height="372" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
+                <Image
+                  src="/images/main_banner2.png"
+                  alt="Feature 2"
+                  width={400}
+                  height={300}
+                />
               </div>
 
               {/* Feature 3: Expert Evaluation */}
-              <div className="flex items-center gap-0.5 self-stretch">
-                <img
+              <div className="flex items-center gap-16 ">
+                {/* <img
                   src="https://api.builder.io/api/v1/image/assets/TEMP/0e6b3dc02d840114d831c900856abe3284fba3a9?width=1116"
                   alt="Expert Evaluation"
                   className="h-[372px] w-[558px]"
-                />
+                /> */}
+                <Image src="/images/main_banner3.png" alt="Feature 2" width={600} height={300}></Image>
                 <div className="flex w-[590px] flex-col items-start gap-6">
                   <div className="flex w-[590px] flex-col items-start gap-3">
                     <h3 className="self-stretch text-4xl font-bold leading-[50px] tracking-[-0.72px] text-[#303030]">

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CustomModal } from "@/components/ui/custom-modal";
+import { useReportStore } from "./store/report-store";
 
 interface ReportGenerationModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
   onClose,
 }) => {
   const router = useRouter();
+  const { reportId } = useReportStore();
   const [step1Status, setStep1Status] = useState<StepStatus>("loading");
   const [step2Status, setStep2Status] = useState<StepStatus>("pending");
   const [step3Status, setStep3Status] = useState<StepStatus>("pending");
@@ -48,7 +50,11 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
 
     // Step 3 완료 후 3초 뒤에 페이지 이동 (18초 후)
     const timer4 = setTimeout(() => {
-      router.push("/report/editor");
+      if (reportId) {
+        router.push(`/report/editor?reportId=${reportId}`);
+      } else {
+        router.push("/report/editor");
+      }
     }, 18000);
 
     return () => {
@@ -57,7 +63,7 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
       clearTimeout(timer3);
       clearTimeout(timer4);
     };
-  }, [isOpen, router]);
+  }, [isOpen, router, reportId]);
 
   // 스텝 상태에 따른 아이콘 렌더링
   const renderStepIcon = (status: StepStatus) => {

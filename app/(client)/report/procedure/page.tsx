@@ -1,68 +1,57 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
-import { GripVertical, RotateCcw } from "lucide-react";
-import { ReportGenerationModal } from "../components/report-generation-modal";
 import { useSearchParams } from "next/navigation";
 import { useReportStore } from "../components/store/report-store";
-
-// Custom Toggle Component
-interface ToggleProps {
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-  className?: string;
-}
-
-const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
-  ({ checked, onCheckedChange, className }, ref) => {
-    return (
-      <button
-        ref={ref}
-        type="button"
-        onClick={() => onCheckedChange(!checked)}
-        className={cn(
-          "relative inline-flex h-[18px] w-8 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-          checked ? "bg-[#07F]" : "bg-neutral-400",
-          className
-        )}
-      >
-        <span
-          className={cn(
-            "pointer-events-none block h-3.5 w-3.5 rounded-full bg-white shadow-lg ring-0 transition-transform",
-            checked ? "translate-x-4" : "translate-x-0.5"
-          )}
-        />
-      </button>
-    );
-  }
-);
-Toggle.displayName = "Toggle";
-
-interface SectionItem {
-  id: string;
-  name: string;
-  enabled: boolean;
-}
-
-interface TableOfContentItem {
-  id: string;
-  name: string;
-  enabled: boolean;
-  highlighted?: boolean;
-}
-
+import { useProcedureStore } from "./components/store/procedure-store";
+import { BusinessCategoryModal } from "../start/components/business-category-modal";
+import { ReportGenerationModal } from "../components/report-generation-modal";
+import { SectionList } from "./components/section-list";
+import { TableOfContentsList } from "./components/table-of-contents-list";
+import { ItemSettings } from "./components/item-settings";
+import {
+  SectionItem,
+  TableOfContentItem,
+  ProcedureData,
+  FlatSubsectionItem,
+  ProcedureModifyData,
+  ProcedureModifySection,
+  ProcedureModifySubsection,
+} from "./types";
 function ReportProcedureContent() {
   const searchParams = useSearchParams();
   const {
+    reportId,
     setReportType,
     setReportId,
+    businessField,
+    setBusinessField,
     isGenerationModalOpen,
     setGenerationModalOpen,
   } = useReportStore();
+
+  const {
+    procedureData,
+    setProcedureData,
+    updateSection,
+    updateSubsection,
+    reorderSubsections,
+  } = useProcedureStore();
+
+  const [isBusinessModalOpen, setIsBusinessModalOpen] = useState(false);
+  const [sections, setSections] = useState<SectionItem[]>([]);
+  const [flatSubsections, setFlatSubsections] = useState<FlatSubsectionItem[]>(
+    []
+  );
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
+    null
+  );
+  const [selectedSubsectionId, setSelectedSubsectionId] = useState<
+    string | null
+  >(null);
+  const [selectedItemName, setSelectedItemName] = useState<string>("");
+  const [minCharCount, setMinCharCount] = useState("300");
+  const [maxCharCount, setMaxCharCount] = useState("500");
 
   // URL에서 reportType과 reportId 가져와서 store에 저장
   useEffect(() => {
@@ -76,26 +65,192 @@ function ReportProcedureContent() {
     }
   }, [searchParams, setReportType, setReportId]);
 
-  const [sections, setSections] = useState<SectionItem[]>([
-    { id: "1", name: "사업 개요", enabled: true },
-    { id: "2", name: "연구개발 목표 및 전략", enabled: true },
-    { id: "3", name: "기술 및 서비스 개요", enabled: true },
-    { id: "4", name: "추진체계 및 수행역량", enabled: false },
-    { id: "5", name: "사업 추진계획", enabled: true },
-    { id: "6", name: "자원 및 예산 계획", enabled: true },
-    { id: "7", name: "안전 및 보안 관리", enabled: false },
-    { id: "8", name: "성과 및 기대효과", enabled: true },
-  ]);
+  // TableOfContents를 FlatSubsections로 변환
+  const convertToFlatSubsections = (
+    toc: TableOfContentItem[]
+  ): FlatSubsectionItem[] => {
+    const flat: FlatSubsectionItem[] = [];
+    toc.forEach((mainItem) => {
+      mainItem.소목차.forEach((subItem) => {
+        flat.push({
+          id: `${mainItem.id}-${subItem.id}`,
+          mainId: mainItem.id,
+          subId: subItem.id,
+          name: subItem.소목차명,
+          enabled: subItem.enabled ?? true,
+        });
+      });
+    });
+    return flat;
+  };
 
-  const [tableOfContents, setTableOfContents] = useState<TableOfContentItem[]>([
-    { id: "1", name: "추진 배경 및 필요성", enabled: true, highlighted: true },
-    { id: "2", name: "사업 목적 및 비전", enabled: false },
-    { id: "3", name: "목표 시장 및 수요 분석", enabled: false },
-  ]);
+  // ProcedureData를 ProcedureModifyData로 변환
+  const convertToProcedureModifyData = (
+    toc: TableOfContentItem[],
+    sectionsData: SectionItem[],
+    flatSubs: FlatSubsectionItem[]
+  ): ProcedureModifyData => {
+    const sections: ProcedureModifySection[] = toc.map((mainItem) => {
+      const sectionData = sectionsData.find(
+        (s) => s.id === mainItem.id.toString()
+      );
+      const subsectionsForSection = flatSubs.filter(
+        (sub) => sub.mainId === mainItem.id
+      );
 
-  const [itemName] = useState("추천 배경 및 필요성");
-  const [minCharCount, setMinCharCount] = useState("300");
-  const [maxCharCount, setMaxCharCount] = useState("300");
+      const subsections: ProcedureModifySubsection[] =
+        subsectionsForSection.map((sub, index) => ({
+          id: sub.id,
+          name: sub.name,
+          enabled: sub.enabled,
+          order: index,
+          minChar: 300,
+          maxChar: 500,
+        }));
+
+      return {
+        id: mainItem.id.toString(),
+        name: mainItem.대목차,
+        enabled: sectionData?.enabled ?? true,
+        subsections,
+      };
+    });
+
+    return { sections };
+  };
+
+  // reportId가 있으면 DB에서 procedure 정보 가져오기
+  useEffect(() => {
+    const fetchProcedureData = async () => {
+      if (!reportId) {
+        return;
+      }
+
+      try {
+        // 1. procedure 기본 구조 가져오기
+        const response = await fetch(`/api/reports/${reportId}/procedure`);
+        const result = await response.json();
+
+        if (response.ok && result.data) {
+          const procedureDataFromDb: ProcedureData = result.data;
+          setBusinessField(getBusinessFieldId(procedureDataFromDb.field_name));
+
+          // 대목차 기반으로 sections 생성
+          const newSections: SectionItem[] =
+            procedureDataFromDb.table_of_contents.map((item) => ({
+              id: item.id.toString(),
+              name: item.대목차,
+              enabled: true,
+            }));
+          setSections(newSections);
+
+          // FlatSubsections 생성
+          const flat = convertToFlatSubsections(
+            procedureDataFromDb.table_of_contents
+          );
+          setFlatSubsections(flat);
+
+          // 2. 저장된 procedure_modify 데이터가 있는지 확인
+          const modifyResponse = await fetch(
+            `/api/reports/${reportId}/procedure-modify`
+          );
+          const modifyResult = await modifyResponse.json();
+
+          if (modifyResponse.ok && modifyResult.data) {
+            // 저장된 데이터가 있으면 그것을 사용
+            const savedData: ProcedureModifyData = modifyResult.data;
+            setProcedureData(savedData);
+
+            // UI 상태도 저장된 데이터로 업데이트
+            const updatedSections = newSections.map((section) => {
+              const savedSection = savedData.sections.find(
+                (s) => s.id === section.id
+              );
+              return savedSection
+                ? { ...section, enabled: savedSection.enabled }
+                : section;
+            });
+            setSections(updatedSections);
+
+            // flatSubsections도 저장된 데이터로 업데이트
+            const updatedFlat: FlatSubsectionItem[] = [];
+            savedData.sections.forEach((section) => {
+              section.subsections.forEach((sub) => {
+                const [mainId, subId] = sub.id.split("-").map(Number);
+                updatedFlat.push({
+                  id: sub.id,
+                  mainId,
+                  subId,
+                  name: sub.name,
+                  enabled: sub.enabled,
+                });
+              });
+            });
+            setFlatSubsections(updatedFlat);
+
+            // 첫 번째 소목차의 글자수 설정
+            if (
+              savedData.sections.length > 0 &&
+              savedData.sections[0].subsections.length > 0
+            ) {
+              const firstSub = savedData.sections[0].subsections[0];
+              setMinCharCount(firstSub.minChar.toString());
+              setMaxCharCount(firstSub.maxChar.toString());
+            }
+          } else {
+            // 저장된 데이터가 없으면 기본 데이터로 초기화
+            const initialData = convertToProcedureModifyData(
+              procedureDataFromDb.table_of_contents,
+              newSections,
+              flat
+            );
+            setProcedureData(initialData);
+          }
+
+          // 첫 번째 대목차를 기본 선택
+          if (newSections.length > 0) {
+            setSelectedSectionId(newSections[0].id);
+          }
+
+          // 첫 번째 소목차를 기본 선택
+          if (flat.length > 0) {
+            setSelectedSubsectionId(flat[0].id);
+            setSelectedItemName(flat[0].name);
+          }
+        }
+      } catch {
+        // 에러 처리는 조용히
+      }
+    };
+
+    fetchProcedureData();
+  }, [reportId, setBusinessField, setProcedureData]);
+
+  // Business field ID를 한글 이름으로 변환
+  const getBusinessFieldName = (fieldId: string | null) => {
+    const fieldMap: Record<string, string> = {
+      "digital-ict-ai": "디지털·ICT·AI 산업",
+      "manufacturing-tech": "제조·산업기술·혁신",
+      "culture-content-tourism": "문화·콘텐츠·관광",
+      "public-urban-infrastructure": "공공·도시·인프라",
+      "energy-environment": "에너지·환경",
+    };
+    return fieldId
+      ? fieldMap[fieldId] || "디지털·ICT·AI 산업"
+      : "디지털·ICT·AI 산업";
+  };
+
+  // 한글 이름을 Business field ID로 변환
+  const getBusinessFieldId = (fieldName: string) => {
+    const reverseFieldMap: Record<string, string> = {
+      "디지털·ICT·AI 산업": "digital-ict-ai",
+      "제조·산업기술·혁신": "manufacturing-tech",
+      "문화·콘텐츠·관광": "culture-content-tourism",
+      "공공·도시·인프라": "public-urban-infrastructure",
+      "에너지·환경": "energy-environment",
+    };
+    return reverseFieldMap[fieldName] || "digital-ict-ai";
+  };
 
   const toggleSection = (id: string) => {
     setSections((prev) =>
@@ -103,170 +258,230 @@ function ReportProcedureContent() {
         section.id === id ? { ...section, enabled: !section.enabled } : section
       )
     );
+    // zustand store 업데이트
+    const section = sections.find((s) => s.id === id);
+    if (section) {
+      updateSection(id, !section.enabled);
+    }
   };
 
-  const toggleTableItem = (id: string) => {
-    setTableOfContents((prev) =>
+  const handleSelectSection = (id: string) => {
+    setSelectedSectionId(id);
+
+    // 선택된 대목차에 해당하는 첫 번째 소목차를 자동 선택
+    const filteredSubsections = flatSubsections.filter(
+      (sub) => sub.mainId.toString() === id
+    );
+    if (filteredSubsections.length > 0) {
+      setSelectedSubsectionId(filteredSubsections[0].id);
+      setSelectedItemName(filteredSubsections[0].name);
+
+      // 선택된 소목차의 글자수 정보 로드
+      if (procedureData) {
+        const section = procedureData.sections.find((s) => s.id === id);
+        if (section && section.subsections.length > 0) {
+          setMinCharCount(section.subsections[0].minChar.toString());
+          setMaxCharCount(section.subsections[0].maxChar.toString());
+        }
+      }
+    }
+  };
+
+  const handleSelectSubsection = (id: string) => {
+    setSelectedSubsectionId(id);
+
+    // 선택된 소목차의 이름 찾기
+    const item = flatSubsections.find((sub) => sub.id === id);
+    if (item) {
+      setSelectedItemName(item.name);
+
+      // 선택된 소목차의 글자수 정보 로드
+      if (procedureData && selectedSectionId) {
+        const section = procedureData.sections.find(
+          (s) => s.id === selectedSectionId
+        );
+        if (section) {
+          const subsection = section.subsections.find((s) => s.id === id);
+          if (subsection) {
+            setMinCharCount(subsection.minChar.toString());
+            setMaxCharCount(subsection.maxChar.toString());
+          }
+        }
+      }
+    }
+  };
+
+  const handleToggleSubsection = (id: string) => {
+    setFlatSubsections((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, enabled: !item.enabled } : item
       )
     );
+
+    // zustand store 업데이트
+    if (selectedSectionId) {
+      const item = flatSubsections.find((sub) => sub.id === id);
+      if (item) {
+        updateSubsection(selectedSectionId, id, { enabled: !item.enabled });
+      }
+    }
   };
+
+  const handleReorderSubsections = (newItems: FlatSubsectionItem[]) => {
+    setFlatSubsections((prevAll) => {
+      // 현재 선택된 섹션의 소목차만 업데이트
+      const otherSections = prevAll.filter(
+        (item) => item.mainId.toString() !== selectedSectionId
+      );
+      return [...otherSections, ...newItems];
+    });
+
+    // zustand store 업데이트 (order 포함)
+    if (selectedSectionId && procedureData) {
+      const updatedSubsections: ProcedureModifySubsection[] = newItems.map(
+        (item, index) => {
+          const section = procedureData.sections.find(
+            (s) => s.id === selectedSectionId
+          );
+          const existingSub = section?.subsections.find(
+            (s) => s.id === item.id
+          );
+
+          return {
+            id: item.id,
+            name: item.name,
+            enabled: item.enabled,
+            order: index,
+            minChar: existingSub?.minChar ?? 300,
+            maxChar: existingSub?.maxChar ?? 500,
+          };
+        }
+      );
+
+      reorderSubsections(selectedSectionId, updatedSubsections);
+    }
+  };
+
+  const handleMinCharCountChange = (value: string) => {
+    setMinCharCount(value);
+    // zustand store 업데이트
+    if (selectedSectionId && selectedSubsectionId) {
+      updateSubsection(selectedSectionId, selectedSubsectionId, {
+        minChar: parseInt(value) || 0,
+      });
+    }
+  };
+
+  const handleMaxCharCountChange = (value: string) => {
+    setMaxCharCount(value);
+    // zustand store 업데이트
+    if (selectedSectionId && selectedSubsectionId) {
+      updateSubsection(selectedSectionId, selectedSubsectionId, {
+        maxChar: parseInt(value) || 0,
+      });
+    }
+  };
+
+  const handleBusinessFieldChange = async (newField: string) => {
+    setBusinessField(newField);
+
+    // 새로운 분야의 목차 데이터 가져오기
+    if (reportId) {
+      try {
+        const response = await fetch(`/api/reports/${reportId}/procedure`);
+        const result = await response.json();
+
+        if (response.ok && result.data) {
+          const procedureDataFromDb: ProcedureData = result.data;
+
+          // 대목차 기반으로 sections 생성
+          const newSections: SectionItem[] =
+            procedureDataFromDb.table_of_contents.map((item) => ({
+              id: item.id.toString(),
+              name: item.대목차,
+              enabled: true,
+            }));
+          setSections(newSections);
+
+          // FlatSubsections 생성
+          const flat = convertToFlatSubsections(
+            procedureDataFromDb.table_of_contents
+          );
+          setFlatSubsections(flat);
+
+          // ProcedureModifyData 초기화
+          const initialData = convertToProcedureModifyData(
+            procedureDataFromDb.table_of_contents,
+            newSections,
+            flat
+          );
+          setProcedureData(initialData);
+
+          // 첫 번째 대목차를 기본 선택
+          if (newSections.length > 0) {
+            setSelectedSectionId(newSections[0].id);
+          }
+
+          // 첫 번째 소목차를 기본 선택
+          if (flat.length > 0) {
+            setSelectedSubsectionId(flat[0].id);
+            setSelectedItemName(flat[0].name);
+          }
+        }
+      } catch {
+        // 에러 처리는 조용히
+      }
+    }
+  };
+
+  // 선택된 대목차에 해당하는 소목차만 필터링
+  const filteredSubsections = flatSubsections.filter(
+    (sub) => sub.mainId.toString() === selectedSectionId
+  );
 
   return (
     <div className="flex w-full flex-col gap-8 max-w-[1200px] mx-auto">
       <div className="flex w-full items-start gap-6">
-        {/* Left Panel - Digital ICT AI Industry */}
-        <div className="flex h-[709px] flex-1 flex-col justify-between rounded-xl border border-[#EEF1F7] bg-white p-6 shadow-[0_0_10px_0_rgba(60,123,194,0.12)]">
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-1">
-              <h2 className="text-xl font-bold leading-8 tracking-[-0.4px] text-[#303030]">
-                디지털·ICT·AI 산업
-              </h2>
-            </div>
+        {/* Left Panel - 대목차 */}
+        <SectionList
+          sections={sections}
+          selectedSectionId={selectedSectionId}
+          onToggle={toggleSection}
+          onSelect={handleSelectSection}
+          businessFieldName={getBusinessFieldName(businessField)}
+          onChangeCategory={() => setIsBusinessModalOpen(true)}
+        />
 
-            <div className="flex flex-col gap-2.5">
-              {sections.map((section) => (
-                <div
-                  key={section.id}
-                  className="flex items-center justify-between py-1"
-                >
-                  <span
-                    className={cn(
-                      "flex-1 text-base font-semibold leading-[29px]",
-                      section.enabled ? "text-[#303030]" : "text-[#B3B3B3]"
-                    )}
-                  >
-                    {section.name}
-                  </span>
-                  <Toggle
-                    checked={section.enabled}
-                    onCheckedChange={() => toggleSection(section.id)}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* Middle Panel - 선택된 대목차의 소목차만 표시 */}
+        <TableOfContentsList
+          flatSubsections={filteredSubsections}
+          selectedSubsectionId={selectedSubsectionId}
+          onSelectSubsection={handleSelectSubsection}
+          onToggleSubsection={handleToggleSubsection}
+          onReorder={handleReorderSubsections}
+        />
 
-          <Button
-            variant="outline"
-            className="flex items-center justify-center gap-1.5 self-stretch rounded-lg border border-[#B2B2B2] bg-white px-6 py-3 text-lg font-semibold tracking-[-0.36px] text-[#757575] hover:bg-gray-50"
-          >
-            <RotateCcw className="h-6 w-6" />
-            다른분야 선택
-          </Button>
-        </div>
-
-        {/* Middle Panel - Current Table of Contents */}
-        <div className="flex h-[709px] flex-1 flex-col gap-2.5 rounded-xl border border-[#EEF1F7] bg-white p-6 shadow-[0_0_10px_0_rgba(60,123,194,0.12)]">
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-1">
-              <h2 className="text-xl font-bold leading-8 tracking-[-0.4px] text-[#303030]">
-                현재 목차 구성
-              </h2>
-            </div>
-
-            <div className="flex flex-col gap-2.5">
-              {tableOfContents.map((item) => (
-                <div
-                  key={item.id}
-                  className={cn(
-                    "flex items-center justify-between rounded-md p-3",
-                    item.highlighted
-                      ? "bg-[#E8F3FF]"
-                      : "border border-[#D9D9D9] bg-white"
-                  )}
-                >
-                  <div className="flex items-center gap-4">
-                    <GripVertical className="h-6 w-6 text-[#303030]" />
-                    <span
-                      className={cn(
-                        "text-base font-medium leading-[29px]",
-                        item.enabled ? "text-[#303030]" : "text-[#5A5A5A]"
-                      )}
-                    >
-                      {item.name}
-                    </span>
-                  </div>
-                  <Toggle
-                    checked={item.enabled}
-                    onCheckedChange={() => toggleTableItem(item.id)}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Panel - Settings */}
-        <div className="flex flex-1 flex-col gap-6 self-stretch rounded-xl border border-[#EEF1F7] bg-white p-6 shadow-[0_0_10px_0_rgba(60,123,194,0.12)]">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-xl font-bold leading-8 tracking-[-0.4px] text-[#303030]">
-              &ldquo;추진배경 및 필요성&rdquo; 설정
-            </h2>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <Label
-              htmlFor="item-name"
-              className="text-sm font-semibold tracking-[-0.064px] text-[#202224] opacity-80"
-            >
-              항목명
-            </Label>
-            <div className="flex items-center rounded-lg bg-[#FAFAFD] px-4 py-2.5">
-              <span className="text-sm font-medium leading-6 tracking-[-0.064px] text-[#303030]">
-                {itemName}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <div className="flex flex-col gap-3">
-              <Label
-                htmlFor="min-char-count"
-                className="text-sm font-semibold tracking-[-0.064px] text-[#202224] opacity-80"
-              >
-                글자수 가이드
-              </Label>
-              <div className="flex items-center rounded-lg bg-[#FAFAFD] px-4 py-2.5">
-                <Input
-                  id="min-char-count"
-                  value={minCharCount}
-                  onChange={(e) => setMinCharCount(e.target.value)}
-                  className="border-0 bg-transparent p-0 text-sm font-medium leading-6 tracking-[-0.064px] text-[#303030] focus-visible:ring-0"
-                />
-              </div>
-            </div>
-            <p className="text-xs font-medium leading-[29px] text-[#767676]">
-              최소권장 글자수를 입력하세요.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <div className="flex flex-col gap-3">
-              <Label
-                htmlFor="max-char-count"
-                className="text-sm font-semibold tracking-[-0.064px] text-[#202224] opacity-80"
-              >
-                글자수 가이드
-              </Label>
-              <div className="flex items-center rounded-lg bg-[#FAFAFD] px-4 py-2.5">
-                <Input
-                  id="max-char-count"
-                  value={maxCharCount}
-                  onChange={(e) => setMaxCharCount(e.target.value)}
-                  className="border-0 bg-transparent p-0 text-sm font-medium leading-6 tracking-[-0.064px] text-[#303030] focus-visible:ring-0"
-                />
-              </div>
-            </div>
-            <p className="text-xs font-medium leading-[29px] text-[#767676]">
-              최소권장 글자수를 입력하세요.
-            </p>
-          </div>
-        </div>
+        {/* Right Panel - 항목명과 글자수 */}
+        <ItemSettings
+          itemName={selectedItemName}
+          minCharCount={minCharCount}
+          maxCharCount={maxCharCount}
+          onMinCharCountChange={handleMinCharCountChange}
+          onMaxCharCountChange={handleMaxCharCountChange}
+        />
       </div>
 
-      {/* Report Generation Modal */}
+      {/* Modals */}
+      <BusinessCategoryModal
+        open={isBusinessModalOpen}
+        onOpenChange={setIsBusinessModalOpen}
+        mode="update"
+        reportId={reportId || undefined}
+        onBusinessFieldChange={handleBusinessFieldChange}
+      >
+        <div />
+      </BusinessCategoryModal>
+
       <ReportGenerationModal
         isOpen={isGenerationModalOpen}
         onClose={() => setGenerationModalOpen(false)}

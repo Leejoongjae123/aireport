@@ -6,8 +6,11 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useState } from "react";
 import { useReportStore } from "./store/report-store";
+import { useProcedureStore } from "../procedure/components/store/procedure-store";
 import { ExpertRecommendationModal } from "./expert-recommendation-modal";
 import { ExpertStepModal } from "./expert-step-modal";
+import { CustomModal } from "@/components/ui/custom-modal";
+import { toast } from "sonner";
 
 interface TopNavigationProps {
   onMenuClick: () => void;
@@ -19,8 +22,19 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
   const [isExpertStepModalOpen, setIsExpertStepModalOpen] = useState(false);
   const [isExpertRecommendationModalOpen, setIsExpertRecommendationModalOpen] =
     useState(false);
-  const { reportType, reportId, generateReportId, setGenerationModalOpen } =
-    useReportStore();
+  const [isSaving, setIsSaving] = useState(false);
+  const [isValidationErrorModalOpen, setIsValidationErrorModalOpen] =
+    useState(false);
+  const [validationErrorMessage, setValidationErrorMessage] = useState("");
+  const {
+    reportType,
+    reportId,
+    generateReportId,
+    setGenerationModalOpen,
+    inputData,
+  } = useReportStore();
+
+  const { procedureData } = useProcedureStore();
 
   const isInputsOrProcedurePage =
     pathname?.includes("/report/inputs") ||
@@ -28,21 +42,130 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
 
   const isEditorPage = pathname?.includes("/report/editor");
 
-  const handleNextClick = () => {
-    if (pathname?.includes("/report/inputs")) {
-      // inputs 페이지에서 다음 클릭 시
-      const newReportId = reportId || generateReportId();
-      router.push(
-        `/report/procedure?reportType=${reportType}&reportId=${newReportId}`
+  const validateInputs = () => {
+    if (inputData.businessIdea.length < 100) {
+      setValidationErrorMessage(
+        "사업 아이디어는 최소 100자 이상 작성해야 합니다."
       );
+      setIsValidationErrorModalOpen(true);
+      return false;
+    }
+    if (inputData.coreValue.length < 100) {
+      setValidationErrorMessage(
+        "핵심가치 제안은 최소 100자 이상 작성해야 합니다."
+      );
+      setIsValidationErrorModalOpen(true);
+      return false;
+    }
+    return true;
+  };
+
+  const saveInputs = async (currentReportId: string) => {
+    setIsSaving(true);
+    const response = await fetch("/api/reports/save-inputs", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        reportId: currentReportId,
+        investmentAmount: inputData.investmentAmount,
+        businessIdea: inputData.businessIdea,
+        coreValue: inputData.coreValue,
+      }),
+    });
+
+    const result = await response.json();
+    setIsSaving(false);
+
+    if (!response.ok) {
+      toast.error(result.error || "저장에 실패했습니다.");
+      return false;
+    }
+
+    toast.success(result.message || "저장되었습니다.");
+    return true;
+  };
+
+  const saveProcedure = async (currentReportId: string) => {
+    if (!procedureData) {
+      toast.error("저장할 데이터가 없습니다.");
+      return false;
+    }
+
+    setIsSaving(true);
+    const response = await fetch(
+      `/api/reports/${currentReportId}/procedure-modify`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          procedureModify: procedureData,
+        }),
+      }
+    );
+
+    const result = await response.json();
+    setIsSaving(false);
+
+    if (!response.ok) {
+      toast.error(result.error || "저장에 실패했습니다.");
+      return false;
+    }
+
+    toast.success("저장되었습니다.");
+    return true;
+  };
+
+  const handleNextClick = async () => {
+    if (pathname?.includes("/report/inputs")) {
+      // 입력값 검증
+      if (!validateInputs()) {
+        return;
+      }
+
+      // inputs 페이지에서 다음 클릭 시 저장
+      const newReportId = reportId || generateReportId();
+      const saved = await saveInputs(newReportId);
+
+      if (saved) {
+        router.push(
+          `/report/procedure?reportType=${reportType}&reportId=${newReportId}`
+        );
+      }
     } else if (pathname?.includes("/report/procedure")) {
-      // procedure 페이지에서 다음 클릭 시 모달 열기
-      setGenerationModalOpen(true);
+      // procedure 페이지에서 다음 클릭 시 저장 후 모달 열기
+      if (!reportId) {
+        toast.error("리포트 ID가 없습니다.");
+        return;
+      }
+
+      const saved = await saveProcedure(reportId);
+      if (saved) {
+        setGenerationModalOpen(true);
+      }
     }
   };
 
-  const handleTemporarySave = () => {
-    // TODO: 임시저장 로직 구현
+  const handleTemporarySave = async () => {
+    if (pathname?.includes("/report/inputs")) {
+      // 입력값 검증
+      if (!validateInputs()) {
+        return;
+      }
+
+      const currentReportId = reportId || generateReportId();
+      await saveInputs(currentReportId);
+    } else if (pathname?.includes("/report/procedure")) {
+      if (!reportId) {
+        toast.error("리포트 ID가 없습니다.");
+        return;
+      }
+
+      await saveProcedure(reportId);
+    }
   };
 
   const handleExport = () => {
@@ -83,14 +206,17 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
             <Button
               variant="outline"
               className="bg-white text-primary w-[144px] h-12 text-[18px] font-semibold border-primary hover:bg-white/90 hover:text-primary"
+              onClick={handleTemporarySave}
+              disabled={isSaving}
             >
               <Image src="/images/save.svg" alt="save" width={15} height={15} />
-              임시 저장
+              {isSaving ? "저장 중..." : "임시 저장"}
             </Button>
             <Button
               variant="default"
               className="w-[79px] h-12 text-[18px] font-semibold bg-primary text-white hover:bg-primary/90"
               onClick={handleNextClick}
+              disabled={isSaving}
             >
               다음
             </Button>
@@ -147,6 +273,26 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
         isOpen={isExpertRecommendationModalOpen}
         onClose={() => setIsExpertRecommendationModalOpen(false)}
       />
+      <CustomModal
+        isOpen={isValidationErrorModalOpen}
+        onClose={() => setIsValidationErrorModalOpen(false)}
+        title="입력 오류"
+        width="400px"
+        footer={
+          <div className="flex justify-center w-full">
+            <Button
+              onClick={() => setIsValidationErrorModalOpen(false)}
+              className="w-full h-12 text-[16px] font-semibold"
+            >
+              확인
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-center text-[16px] text-[#303030] leading-6">
+          {validationErrorMessage}
+        </p>
+      </CustomModal>
     </>
   );
 }

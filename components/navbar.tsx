@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import NavbarAuthButtons from "./navbar-auth-buttons";
+import Image from "next/image";
 
 export default async function Navbar() {
   const supabase = await createClient();
@@ -15,8 +16,10 @@ export default async function Navbar() {
       <nav className="flex w-[1200px] h-[79px] items-center justify-between rounded-full border border-[#EEF1F7] bg-white px-6 py-4 shadow-[0_0_10px_0_rgba(60,123,194,0.12)]">
         <div className="flex items-center gap-11">
           <Link href="/" className="flex items-center gap-[15px]">
-            <div className="h-[38px] w-[38px] rounded-full bg-[#B2B2B2]"></div>
-            <span className="text-[32px] font-bold text-[#B3B3B3]">LOGO</span>
+            {/* <div className="h-[38px] w-[38px] rounded-full bg-[#B2B2B2]"></div>
+            <span className="text-[32px] font-bold text-[#B3B3B3]">LOGO</span> */}
+            <Image src="/images/logo.png" alt="logo" width={120} height={60} />
+
           </Link>
           <div className="flex items-center">
             <Link
