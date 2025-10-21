@@ -3,8 +3,10 @@
 import { CustomModal } from "@/components/ui/custom-modal";
 import { X, Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { ExpertEvaluationModal } from "./expert-evaluation-modal";
 import { ExpertRecommendationCompleteModal } from "./expert-recommendation-complete-modal";
+import { Expert } from "./types";
+import { ExpertEvaluationRequestModal } from "./expert-evaluation-request-modal";
+import { useExpertStore } from "./store/expert-store";
 
 interface ExpertRecommendationModalProps {
   isOpen: boolean;
@@ -17,52 +19,81 @@ export function ExpertRecommendationModal({
   isOpen,
   onClose,
 }: ExpertRecommendationModalProps) {
+  const { expertMatchData } = useExpertStore();
   const [step1Status, setStep1Status] = useState<StepStatus>("loading");
   const [step2Status, setStep2Status] = useState<StepStatus>("pending");
   const [step3Status, setStep3Status] = useState<StepStatus>("pending");
   const [showExpertEvaluation, setShowExpertEvaluation] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [experts, setExperts] = useState<Expert[]>([]);
 
+  // 모달이 열릴 때 상태 초기화 및 스텝 진행
   useEffect(() => {
     if (!isOpen) {
-      // 모달이 닫히면 상태 초기화
-      setStep1Status("loading");
-      setStep2Status("pending");
-      setStep3Status("pending");
-      setShowExpertEvaluation(false);
-      setShowCompleteModal(false);
       return;
     }
 
-    // Step 1: 3초 후 완료
-    const timer1 = setTimeout(() => {
-      setStep1Status("completed");
-      setStep2Status("loading");
-    }, 3000);
+    // 상태 초기화
+    setStep1Status("loading");
+    setStep2Status("pending");
+    setStep3Status("pending");
+    setShowExpertEvaluation(false);
+    setExperts([]);
 
-    // Step 2: 6초 후 완료 (Step 1 완료 후 3초)
-    const timer2 = setTimeout(() => {
-      setStep2Status("completed");
-      setStep3Status("loading");
-    }, 6000);
+    const processSteps = async () => {
+      try {
+        // Step 1: 보고서 분석 시작
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        setStep1Status("completed");
+        setStep2Status("loading");
 
-    // Step 3: 9초 후 완료 (Step 2 완료 후 3초)
-    const timer3 = setTimeout(() => {
-      setStep3Status("completed");
-    }, 9000);
+        // Step 2: 전문가 분석중
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        setStep2Status("completed");
+        setStep3Status("loading");
 
-    // Step 3 완료 후 1초 뒤 전문가 평가 모달 표시
-    const timer4 = setTimeout(() => {
-      setShowExpertEvaluation(true);
-    }, 10000);
-
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      clearTimeout(timer4);
+        // Step 3: 매칭중
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        setStep3Status("completed");
+      } catch {
+        setStep1Status("pending");
+        setStep2Status("pending");
+        setStep3Status("pending");
+      }
     };
+
+    processSteps();
   }, [isOpen]);
+
+  // Store 데이터 감지 및 전문가 모달로 전환
+  useEffect(() => {
+    if (!isOpen || !expertMatchData) {
+      return;
+    }
+
+    // 전문가 데이터 변환
+    const transformedExperts: Expert[] = expertMatchData.final_ranking.map(
+      (ranking, index) => ({
+        id: `expert-${index}`,
+        name: ranking.이름,
+        specialty: ranking.분야.slice(0, 2).join(", "),
+        experience: `${ranking.매칭_개수}개 항목 매칭`,
+        description: ranking.경력.slice(0, 2).join(", "),
+        careers: ranking.경력,
+        fields: ranking.분야,
+        matchingCount: ranking.매칭_개수,
+        matchingDetails: ranking.매칭_상세,
+        selected: index === 0,
+      })
+    );
+
+    setExperts(transformedExperts);
+
+    // 전문가 평가 모달 표시
+    setTimeout(() => {
+      setShowExpertEvaluation(true);
+    }, 500);
+  }, [isOpen, expertMatchData]);
 
   // 스텝 상태에 따른 ��이콘 렌더링
   const renderStepIcon = (status: StepStatus) => {
@@ -275,10 +306,11 @@ export function ExpertRecommendationModal({
         </div>
       </CustomModal>
 
-      <ExpertEvaluationModal
+      <ExpertEvaluationRequestModal
         isOpen={showExpertEvaluation}
         onClose={handleExpertEvaluationClose}
         onEvaluationRequest={handleEvaluationRequest}
+        experts={experts}
       />
 
       <ExpertRecommendationCompleteModal

@@ -34,7 +34,7 @@ interface TextEditorProps {
 export const defaultContent = "";
 
 export function TextEditor({ content, onUpdate }: TextEditorProps) {
-  const { editorContent, isLoading, currentSection, selectedSubsectionId } = useEditorStore();
+  const { editorContent, isLoading, currentSection, selectedSubsectionId, forceUpdate } = useEditorStore();
   const [isHeadingMenuOpen, setIsHeadingMenuOpen] = useState(false);
   const [isBulletMenuOpen, setIsBulletMenuOpen] = useState(false);
   const [isAlignMenuOpen, setIsAlignMenuOpen] = useState(false);
@@ -134,6 +134,13 @@ export function TextEditor({ content, onUpdate }: TextEditorProps) {
       previousSubsectionIdRef.current = selectedSubsectionId;
     }
   }, [selectedSubsectionId]);
+
+  // forceUpdate가 변경되면 userModified 플래그 리셋
+  useEffect(() => {
+    if (forceUpdate > 0) {
+      setUserModified(false);
+    }
+  }, [forceUpdate]);
 
   // content prop 또는 zustand editorContent가 변경될 때 에디터 내용 업데이트
   useEffect(() => {

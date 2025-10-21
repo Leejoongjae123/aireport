@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, useRef } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Card } from "@/components/ui/card";
 import { useSearchParams } from "next/navigation";
 import AgentChat from "../components/agent-chat";
@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useLoadingOverlay } from "@/components/hooks/use-loading-overlay";
 import { DiagnosisResult } from "./components/types";
+import { IncompleteModal } from "./components/incomplete-modal";
 
 // Custom Icons as SVG components
 const AIIcon = () => (
@@ -49,12 +50,14 @@ interface GeneratedReportSection {
   section_name: string;
   subsection_id: string;
   subsection_name: string;
+  is_completed?: boolean;
+  character_count?: number;
 }
 
 function ReportEditorContent() {
   const searchParams = useSearchParams();
   const { reportId, setReportId, setReportType } = useReportStore();
-  const { editorContent, setEditorContent, setSelectedSubsectionId, updateCachedSections, getCachedSection } = useEditorStore();
+  const { editorContent, setEditorContent, setSelectedSubsectionId, updateCachedSectionsWithMatching, getCachedSection, resetEditorState } = useEditorStore();
 
   const [activeTab, setActiveTab] = useState<"chat" | "diagnosis">("chat");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -69,26 +72,38 @@ function ReportEditorContent() {
   const [generatedReport, setGeneratedReport] = useState<
     GeneratedReportSection[] | null
   >(null);
-  const completedSubsectionIdsRef = useRef<Set<string>>(new Set());
   const [diagnosisResult, setDiagnosisResult] =
     useState<DiagnosisResult | null>(null);
   const [isDiagnosing, setIsDiagnosing] = useState(false);
   const [diagnosisError, setDiagnosisError] = useState<string | null>(null);
+  const [showIncompleteModal, setShowIncompleteModal] = useState(false);
 
   const loadingOverlay = useLoadingOverlay({ isLoading: isDiagnosing });
+
+  // 페이지 최초 마운트 시 editor 상태 초기화
+  useEffect(() => {
+    resetEditorState();
+    setGeneratedReport(null);
+    setSelectedItemId(null);
+    setProcedureModify(null);
+    setDiagnosisResult(null);
+    setDiagnosisError(null);
+    setActiveTab("chat");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 빈 의존성 배열로 마운트 시 한 번만 실행
 
   // URL에서 reportId와 reportType 가져와서 store에 저장
   useEffect(() => {
     const urlReportId = searchParams.get("reportId");
     const urlReportType = searchParams.get("reportType");
 
-    if (urlReportId) {
+    if (urlReportId && urlReportId !== reportId) {
       setReportId(urlReportId);
     }
     if (urlReportType) {
       setReportType(urlReportType);
     }
-  }, [searchParams, setReportId, setReportType]);
+  }, [searchParams, setReportId, setReportType, reportId]);
 
   // 평가 기준 및 목차 데이터 불러오기
   useEffect(() => {
@@ -137,6 +152,28 @@ function ReportEditorContent() {
     fetchProcedureData();
   }, [reportId]);
 
+  // 저장된 진단 결과 불러오기
+  useEffect(() => {
+    if (!reportId) {
+      return;
+    }
+
+    const fetchDiagnosisResult = async () => {
+      try {
+        const response = await fetch(`/api/reports/${reportId}/diagnosis`);
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setDiagnosisResult(result.data);
+        }
+      } catch {
+        // 에러 처리 (저장된 진단 결과가 없는 경우는 정상)
+      }
+    };
+
+    fetchDiagnosisResult();
+  }, [reportId]);
+
   // generated_report 데이터 불러오기 (5초마다 polling)
   useEffect(() => {
     if (!reportId) {
@@ -156,35 +193,11 @@ function ReportEditorContent() {
         if (result.success && result.data) {
           const newData = result.data as GeneratedReportSection[];
           
-          // 캐시에 새 데이터 업데이트
-          updateCachedSections(newData);
+          // 캐시에 새 데이터 업데이트 (부분 매칭 포함)
+          updateCachedSectionsWithMatching(newData, procedureModify);
           
-          setGeneratedReport((prevReport) => {
-            if (!prevReport || prevReport.length === 0) {
-              // 기존 데이터가 없으면 새 데이터를 그대로 사용하고 완료 목록에 추가
-              newData.forEach(item => {
-                completedSubsectionIdsRef.current.add(item.subsection_id);
-              });
-              return newData;
-            }
-
-            // 기존 데이터의 subsection_id 맵 생성
-            const existingMap = new Map(
-              prevReport.map((item) => [item.subsection_id, item])
-            );
-
-            // 새로 추가된 항목만 찾기 (완료 목록에 없는 항목)
-            newData.forEach((newItem) => {
-              if (!completedSubsectionIdsRef.current.has(newItem.subsection_id)) {
-                existingMap.set(newItem.subsection_id, newItem);
-                // 완료 목록에 추가
-                completedSubsectionIdsRef.current.add(newItem.subsection_id);
-              }
-            });
-
-            // Map을 배열로 변환하여 반환
-            return Array.from(existingMap.values());
-          });
+          // 항상 최신 데이터로 업데이트 (API 응답이 전체 데이터를 포함하므로)
+          setGeneratedReport(newData);
 
           // procedureModify가 있을 때만 완료 여부 체크
           if (procedureModify) {
@@ -227,11 +240,11 @@ function ReportEditorContent() {
         clearInterval(intervalId);
       }
     };
-  }, [reportId, procedureModify, updateCachedSections]);
+  }, [reportId, procedureModify, updateCachedSectionsWithMatching]);
 
   // 선택된 목차에 맞는 content 찾기
   useEffect(() => {
-    if (!selectedItemId || !procedureModify) {
+    if (!selectedItemId) {
       setEditorContent("");
       return;
     }
@@ -251,54 +264,48 @@ function ReportEditorContent() {
       return;
     }
 
-    // procedureModify에서 선택된 아이템의 정보 찾기
-    let selectedItem: {
-      sectionName: string;
-      subsectionName: string;
-      subsectionId: string;
-    } | null = null;
-
-    for (const section of procedureModify.sections) {
-      if (!section.enabled) {
-        continue;
-      }
-
-      for (const subsection of section.subsections || []) {
-        if (subsection.enabled && subsection.id === selectedItemId) {
-          selectedItem = {
-            sectionName: section.name,
-            subsectionName: subsection.name,
-            subsectionId: subsection.id,
-          };
+    // procedureModify에서 선택된 subsection의 name 찾기
+    let selectedSubsectionName = "";
+    if (procedureModify) {
+      for (const section of procedureModify.sections) {
+        if (!section.enabled) continue;
+        const foundSubsection = section.subsections?.find(
+          (sub) => sub.enabled && sub.id === selectedItemId
+        );
+        if (foundSubsection) {
+          selectedSubsectionName = foundSubsection.name;
           break;
         }
       }
-      if (selectedItem) {
-        break;
-      }
     }
 
-    if (!selectedItem) {
-      setEditorContent("");
-      return;
-    }
-
-    // 숫자 부분 제거 함수 (예: "1. 사업 개요" -> "사업 개요", "1.1 추진 배경" -> "추진 배경")
+    // 숫자 부분 제거 함수
     const removeNumbering = (text: string): string => {
       return text.replace(/^\d+(\.\d+)?\s*/, "").trim();
     };
 
-    // 선택된 목차의 숫자를 제거한 텍스트
-    const cleanedSubsectionName = removeNumbering(selectedItem.subsectionName);
+    const cleanedSubsectionName = removeNumbering(selectedSubsectionName);
 
-    // generatedReport에서 query가 일치하는 항목 찾기
-    const matchingSection = generatedReport.find((section) => {
-      // query와 비교 (숫자 제거 후)
-      const cleanedQuery = removeNumbering(section.query);
-
-      // 매칭 여부 확인
-      return cleanedQuery === cleanedSubsectionName;
+    // 1차: subsection_id로 직접 매칭 시도
+    let matchingSection = generatedReport.find((section) => {
+      return section.subsection_id === selectedItemId;
     });
+
+    // 2차: subsection_id 매칭 실패 시, subsection_name으로 부분 매칭
+    if (!matchingSection && cleanedSubsectionName) {
+      matchingSection = generatedReport.find((section) => {
+        const cleanedApiSubsectionName = removeNumbering(section.subsection_name || "");
+        const cleanedApiQuery = removeNumbering(section.query || "");
+        
+        // subsection_name 또는 query에 목차명이 포함되어 있는지 확인
+        return (
+          cleanedApiSubsectionName.includes(cleanedSubsectionName) ||
+          cleanedSubsectionName.includes(cleanedApiSubsectionName) ||
+          cleanedApiQuery.includes(cleanedSubsectionName) ||
+          cleanedSubsectionName.includes(cleanedApiQuery)
+        );
+      });
+    }
 
     if (matchingSection && matchingSection.content) {
       // content를 그대로 사용 (이미 HTML 형식)
@@ -332,6 +339,30 @@ function ReportEditorContent() {
     if (!reportId) {
       setDiagnosisError("리포트 정보가 없습니다.");
       return;
+    }
+
+    // 목차 완성 여부 확인
+    if (procedureModify && generatedReport) {
+      // enabled된 subsection 개수 계산
+      let totalEnabledSubsections = 0;
+      for (const section of procedureModify.sections) {
+        if (section.enabled && section.subsections) {
+          totalEnabledSubsections += section.subsections.filter(
+            (sub) => sub.enabled
+          ).length;
+        }
+      }
+
+      // 완성된 섹션 개수 계산 (is_completed && content가 있는 것만)
+      const completedCount = generatedReport.filter(
+        (section) => section.is_completed && section.content && section.content.trim()
+      ).length;
+
+      // 모든 목차가 완성되지 않았으면 모달 띄우기
+      if (completedCount < totalEnabledSubsections) {
+        setShowIncompleteModal(true);
+        return;
+      }
     }
 
     setActiveTab("diagnosis");
@@ -452,6 +483,12 @@ function ReportEditorContent() {
           </div>
         </div>
       </Card>
+
+      {/* 보고서 미완성 모달 */}
+      <IncompleteModal
+        isOpen={showIncompleteModal}
+        onClose={() => setShowIncompleteModal(false)}
+      />
     </div>
   );
 }

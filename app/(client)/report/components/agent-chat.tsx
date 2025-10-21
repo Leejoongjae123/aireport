@@ -21,7 +21,7 @@ export default function AgentChat() {
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
   const [completionMessage, setCompletionMessage] = useState("");
 
-  const { editorContent, setEditorContent, isLoading, setIsLoading, setCurrentSection, selectedSubsectionId } = useEditorStore();
+  const { editorContent, setEditorContent, isLoading, setIsLoading, setCurrentSection, selectedSubsectionId, updateCachedSections, triggerForceUpdate } = useEditorStore();
   const { reportId } = useReportStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -111,11 +111,12 @@ export default function AgentChat() {
           : data.contents;
         
         setEditorContent(newContent);
+        triggerForceUpdate(); // 에디터 강제 업데이트 트리거
         
-        // DB에 수정된 내용 저장
+        // DB에 수정된 내용 저장 및 캐시 업데이트
         if (reportId && selectedSubsectionId) {
           try {
-            await fetch(`/api/reports/${reportId}/sections/${selectedSubsectionId}`, {
+            const updateResponse = await fetch(`/api/reports/${reportId}/sections/${selectedSubsectionId}`, {
               method: "PATCH",
               headers: {
                 "Content-Type": "application/json",
@@ -124,18 +125,61 @@ export default function AgentChat() {
                 content: newContent,
               }),
             });
-          } catch {
+
+            if (updateResponse.ok) {
+              const updateResult = await updateResponse.json();
+              if (updateResult.success && updateResult.data) {
+                // 캐시 업데이트: DB에 저장된 최신 데이터로 캐시 갱신
+                updateCachedSections([updateResult.data]);
+                
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === aiGeneratingMessage.id
+                      ? { ...msg, content: `[${action}] 요청이 완료되어 에디터 및 DB에 저장되었습니다.`, isGenerating: false }
+                      : msg
+                  )
+                );
+              } else {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === aiGeneratingMessage.id
+                      ? { ...msg, content: `[${action}] 요청이 완료되어 에디터에 반영되었으나 DB 저장에 실패했습니다.`, isGenerating: false }
+                      : msg
+                  )
+                );
+              }
+            } else {
+              const errorData = await updateResponse.json().catch(() => ({}));
+              const errorMsg = errorData.message || 'DB 저장 실패';
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === aiGeneratingMessage.id
+                    ? { ...msg, content: `[${action}] 요청이 완료되어 에디터에 반영되었으나 DB 저장 중 오류가 발생했습니다: ${errorMsg}`, isGenerating: false }
+                    : msg
+                )
+              );
+            }
+          } catch (error) {
             // DB 저장 실패해도 에디터에는 반영됨
+            const errorMsg = error instanceof Error ? error.message : 'DB 저장 실패';
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === aiGeneratingMessage.id
+                  ? { ...msg, content: `[${action}] 요청이 완료되어 에디터에 반영되었으나 DB 저장 중 오류가 발생했습니다: ${errorMsg}`, isGenerating: false }
+                  : msg
+              )
+            );
           }
+        } else {
+          // reportId 또는 selectedSubsectionId가 없는 경우
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiGeneratingMessage.id
+                ? { ...msg, content: `[${action}] 요청이 완료되어 에디터에 반영되었습니다. (리포트 정보가 없어 DB에 저장되지 않았습니다)`, isGenerating: false }
+                : msg
+            )
+          );
         }
-        
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === aiGeneratingMessage.id
-              ? { ...msg, content: `[${action}] 요청이 완료되어 에디터에 반영되었습니다.`, isGenerating: false }
-              : msg
-          )
-        );
         
         // 완료 모달 표시
         setCompletionMessage(`[${action}] 작업이 완료되었습니다.`);

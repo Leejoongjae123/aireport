@@ -98,6 +98,7 @@ interface GeneratedReportSection {
   section_name: string;
   subsection_id: string;
   subsection_name: string;
+  is_completed?: boolean;
   character_count?: number; // 글자 수 속성 추가
 }
 
@@ -127,6 +128,7 @@ export function TableOfContents({
 
     // subsection의 상세 정보(content 유무, 글자 수) 확인 함수
     const getSectionDetails = (
+      subsectionId: string,
       subsectionName: string
     ): { hasContent: boolean; charCount: number } => {
       if (!generatedReport) {
@@ -135,13 +137,31 @@ export function TableOfContents({
 
       const cleanedSubsectionName = removeNumbering(subsectionName);
 
-      const matchingSection = generatedReport.find((section) => {
-        const cleanedQuery = removeNumbering(section.query);
-        return cleanedQuery === cleanedSubsectionName;
+      // 1차: subsection_id로 직접 매칭 시도
+      let matchingSection = generatedReport.find((section) => {
+        return section.subsection_id === subsectionId;
       });
 
+      // 2차: subsection_id 매칭 실패 시, subsection_name으로 부분 매칭
+      if (!matchingSection) {
+        matchingSection = generatedReport.find((section) => {
+          const cleanedApiSubsectionName = removeNumbering(section.subsection_name || "");
+          const cleanedApiQuery = removeNumbering(section.query || "");
+          
+          // subsection_name 또는 query에 목차명이 포함되어 있는지 확인
+          return (
+            cleanedApiSubsectionName.includes(cleanedSubsectionName) ||
+            cleanedSubsectionName.includes(cleanedApiSubsectionName) ||
+            cleanedApiQuery.includes(cleanedSubsectionName) ||
+            cleanedSubsectionName.includes(cleanedApiQuery)
+          );
+        });
+      }
+
+      // is_completed와 content 둘 다 확인
       const contentExists = !!(
         matchingSection &&
+        matchingSection.is_completed &&
         matchingSection.content &&
         matchingSection.content.trim()
       );
@@ -163,6 +183,7 @@ export function TableOfContents({
           score: "",
           children: enabledSubsections.map((subsection) => {
             const { hasContent, charCount } = getSectionDetails(
+              subsection.id,
               subsection.name
             );
             return {

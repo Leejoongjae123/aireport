@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { useReportStore } from "./store/report-store";
 import { useProcedureStore } from "../procedure/components/store/procedure-store";
-import { ExpertRecommendationModal } from "./expert-recommendation-modal";
+import { ExpertRecommendationModal } from "./expert-evaluation-processing-modal";
 import { ExpertStepModal } from "./expert-step-modal";
 import { CustomModal } from "@/components/ui/custom-modal";
 import { toast } from "sonner";
@@ -268,6 +268,7 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
         isOpen={isExpertStepModalOpen}
         onClose={() => setIsExpertStepModalOpen(false)}
         onStartRequest={handleStartExpertRequest}
+        reportId={reportId || ""}
       />
       <ExpertRecommendationModal
         isOpen={isExpertRecommendationModalOpen}

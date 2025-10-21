@@ -52,7 +52,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
         <DialogContent
           className={cn(
             "fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] z-50",
-            "inline-flex flex-col items-start rounded-[12px] bg-white shadow-[0_0_10px_0_rgba(0,119,255,0.20)]",
+            "inline-flex flex-col items-start rounded-[12px] bg-white ",
             "border-none",
             className
           )}

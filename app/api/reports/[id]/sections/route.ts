@@ -27,15 +27,24 @@ export async function GET(
     }
 
     // 데이터 형식 변환 (기존 generated_report 형식과 호환)
-    const formattedData = data?.map((section) => ({
-      query: section.query,
-      content: section.content,
-      section_id: section.section_id,
-      section_name: section.section_name,
-      subsection_id: section.subsection_id,
-      subsection_name: section.subsection_name,
-      is_completed: section.is_completed,
-    })) || [];
+    const formattedData = data?.map((section) => {
+      // HTML 태그를 제거하고 글자 수 계산
+      const textContent = section.content
+        ? section.content.replace(/<[^>]*>/g, '').trim()
+        : '';
+      const characterCount = textContent.length;
+
+      return {
+        query: section.query,
+        content: section.content,
+        section_id: section.section_id,
+        section_name: section.section_name,
+        subsection_id: section.subsection_id,
+        subsection_name: section.subsection_name,
+        is_completed: section.is_completed,
+        character_count: characterCount,
+      };
+    }) || [];
 
     return NextResponse.json({
       success: true,

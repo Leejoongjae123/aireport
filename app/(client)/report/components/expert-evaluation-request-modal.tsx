@@ -2,57 +2,32 @@
 
 import { CustomModal } from "@/components/ui/custom-modal";
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Expert } from "./types";
+import { useExpertStore } from "./store/expert-store";
 
 interface ExpertEvaluationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onEvaluationRequest?: () => void;
+  experts?: Expert[];
 }
 
-interface Expert {
-  id: string;
-  name: string;
-  specialty: string;
-  experience: string;
-  description: string;
-  selected: boolean;
-}
-
-export function ExpertEvaluationModal({
+export function ExpertEvaluationRequestModal({
   isOpen,
   onClose,
   onEvaluationRequest,
+  experts: initialExperts = [],
 }: ExpertEvaluationModalProps) {
-  const [experts, setExperts] = useState<Expert[]>([
-    {
-      id: "1",
-      name: "김준환 박사",
-      specialty: "헬스케어 IT전문가",
-      experience: "15년 경력",
-      description:
-        "삼성의료원 디지털헬스 케어팀 출신, AI 의료기기 개발 다수 경험",
-      selected: true,
-    },
-    {
-      id: "2",
-      name: "박철민 전문가",
-      specialty: "바이오텍전문가",
-      experience: "10년 경력",
-      description:
-        "영화 바이오테크 전문가, 10년 경력",
-      selected: false,
-    },
-    {
-      id: "3",
-      name: "최은혜 전문가",
-      specialty: "핀테크 전문가",
-      experience: "8년 경력",
-      description:
-        "핀테크 전문가, 8년 경력",
-      selected: false,
-    },
-  ]);
+  const [experts, setExperts] = useState<Expert[]>(initialExperts);
+  const { setSelectedExpert } = useExpertStore();
+
+  // props로 받은 experts가 변경되면 상태 업데이트
+  useEffect(() => {
+    if (initialExperts.length > 0) {
+      setExperts(initialExperts);
+    }
+  }, [initialExperts]);
 
   const toggleExpertSelection = (expertId: string) => {
     setExperts((prev) =>
@@ -65,6 +40,11 @@ export function ExpertEvaluationModal({
   };
 
   const handleEvaluationRequest = () => {
+    // 선택된 전문가를 store에 저장
+    const selectedExpert = experts.find((expert) => expert.selected);
+    if (selectedExpert) {
+      setSelectedExpert(selectedExpert);
+    }
     onEvaluationRequest?.();
   };
 
@@ -101,18 +81,18 @@ export function ExpertEvaluationModal({
 
           {/* Expert Cards */}
           <div className="flex flex-col items-start gap-3 self-stretch relative">
-            {experts.map((expert) => (
+            {experts.slice(0, 3).map((expert) => (
               <div
                 key={expert.id}
                 className="flex p-6 flex-col items-start gap-4 self-stretch rounded-[10px] border border-[#EEEEEF] bg-white relative"
               >
                 <div className="flex flex-col items-start gap-2 self-stretch relative">
-                  <div className="flex w-[165px] flex-col items-start relative">
+                  <div className="flex w-full flex-col items-start relative">
                     <div className="self-stretch text-[#2B2B2B] font-pretendard text-[16px] font-bold leading-[29px]">
                       {expert.name}
                     </div>
-                    <div className="self-stretch text-[#6B6B6B] font-pretendard text-[14px] font-normal leading-normal tracking-[-0.064px] opacity-80">
-                      {expert.specialty} · {expert.experience}
+                    <div className="w-full text-[#6B6B6B] font-pretendard text-[14px] font-normal leading-normal tracking-[-0.064px] opacity-80 line-clamp-2">
+                      {expert.specialty}
                     </div>
                   </div>
                   <div className="self-stretch text-[#2B2B2B] font-pretendard text-[14px] font-normal leading-[18px] tracking-[-0.064px] opacity-80">

@@ -50,8 +50,8 @@ function ReportProcedureContent() {
     string | null
   >(null);
   const [selectedItemName, setSelectedItemName] = useState<string>("");
-  const [minCharCount, setMinCharCount] = useState("300");
-  const [maxCharCount, setMaxCharCount] = useState("500");
+  const [minCharCount, setMinCharCount] = useState("1000");
+  const [maxCharCount, setMaxCharCount] = useState("2000");
 
   // URL에서 reportType과 reportId 가져와서 store에 저장
   useEffect(() => {
@@ -63,7 +63,9 @@ function ReportProcedureContent() {
     if (reportId) {
       setReportId(reportId);
     }
-  }, [searchParams, setReportType, setReportId]);
+    // procedure 페이지 진입 시 모달 상태 초기화
+    setGenerationModalOpen(false);
+  }, [searchParams, setReportType, setReportId, setGenerationModalOpen]);
 
   // TableOfContents를 FlatSubsections로 변환
   const convertToFlatSubsections = (
@@ -104,8 +106,8 @@ function ReportProcedureContent() {
           name: sub.name,
           enabled: sub.enabled,
           order: index,
-          minChar: 300,
-          maxChar: 500,
+          minChar: 1000,
+          maxChar: 2000,
         }));
 
       return {
@@ -352,8 +354,8 @@ function ReportProcedureContent() {
             name: item.name,
             enabled: item.enabled,
             order: index,
-            minChar: existingSub?.minChar ?? 300,
-            maxChar: existingSub?.maxChar ?? 500,
+            minChar: existingSub?.minChar ?? 1000,
+            maxChar: existingSub?.maxChar ?? 2000,
           };
         }
       );

@@ -62,6 +62,7 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
     let fallbackTimer3: NodeJS.Timeout | null = null;
     let fallbackTimer4: NodeJS.Timeout | null = null;
     let completionTimeout: NodeJS.Timeout | null = null;
+    let step3CompletionTimeout: NodeJS.Timeout | null = null;
     const startTime = Date.now();
 
     const scheduleNavigation = () => {
@@ -111,8 +112,15 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
             if (fallbackTimer3) clearTimeout(fallbackTimer3);
             if (fallbackTimer4) clearTimeout(fallbackTimer4);
 
-            // 1초 후 페이지 이동
-            scheduleNavigation();
+            // step3 완료 후 2초 대기 후 페이지 이동
+            step3CompletionTimeout = setTimeout(() => {
+              if (isCancelled) return;
+              if (reportId) {
+                router.push(`/report/editor?reportId=${reportId}`);
+              } else {
+                router.push("/report/editor");
+              }
+            }, 2000);
           }
         } catch {
           // polling 중 오류는 무시하고 계속 시도
@@ -210,7 +218,15 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
           if (generateData && generateData.success) {
             setStep2Status("completed");
             setStep3Status("completed");
-            scheduleNavigation();
+            // step3 완료 후 2초 대기 후 페이지 이동
+            step3CompletionTimeout = setTimeout(() => {
+              if (isCancelled) return;
+              if (reportId) {
+                router.push(`/report/editor?reportId=${reportId}`);
+              } else {
+                router.push("/report/editor");
+              }
+            }, 2000);
             return;
           }
           // success가 아닌 경우에만 polling 시작
@@ -237,7 +253,15 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
     fallbackTimer3 = setTimeout(() => {
       if (isCancelled) return;
       setStep3Status((prev) => (prev === "completed" ? prev : "completed"));
-      scheduleNavigation();
+      // step3 완료 후 2초 대기 후 페이지 이동
+      step3CompletionTimeout = setTimeout(() => {
+        if (isCancelled) return;
+        if (reportId) {
+          router.push(`/report/editor?reportId=${reportId}`);
+        } else {
+          router.push("/report/editor");
+        }
+      }, 2000);
     }, 15000);
 
     fallbackTimer4 = setTimeout(() => {
@@ -253,6 +277,7 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
       if (fallbackTimer3) clearTimeout(fallbackTimer3);
       if (fallbackTimer4) clearTimeout(fallbackTimer4);
       if (completionTimeout) clearTimeout(completionTimeout);
+      if (step3CompletionTimeout) clearTimeout(step3CompletionTimeout);
     };
   }, [isOpen, router, reportId]);
 

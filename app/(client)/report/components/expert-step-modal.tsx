@@ -2,21 +2,84 @@
 
 import { CustomModal } from "@/components/ui/custom-modal";
 import { X } from "lucide-react";
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useExpertStore } from "./store/expert-store";
+import { ExpertMatchResponse } from "./types";
 
 interface ExpertStepModalProps {
   isOpen: boolean;
   onClose: () => void;
   onStartRequest?: () => void;
+  reportId: string;
 }
 
 export function ExpertStepModal({
   isOpen,
   onClose,
   onStartRequest,
+  reportId,
 }: ExpertStepModalProps) {
-  const handleStartRequest = () => {
-    onStartRequest?.();
-    onClose();
+  const [isLoading, setIsLoading] = useState(false);
+  const { setExpertMatchData } = useExpertStore();
+
+  const handleStartRequest = async () => {
+    try {
+      setIsLoading(true);
+
+      // Supabase에서 report_create 조회
+      const supabase = createClient();
+      const { data: reportData, error } = await supabase
+        .from("report_create")
+        .select("business_idea, core_value")
+        .eq("uuid", reportId)
+        .single();
+
+      if (error || !reportData) {
+        setIsLoading(false);
+        return;
+      }
+
+      const businessReport = `${reportData.business_idea || ""} ${
+        reportData.core_value || ""
+      }`.trim();
+
+      // 전문가 매칭 API 호출 (백그라운드에서 실행)
+      fetch("/api/expert/match", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          business_report: businessReport,
+          num_keywords: 10,
+          top_k: 10,
+          similarity_threshold: 0.5,
+        }),
+      })
+        .then((response) => {
+          if (response.ok) {
+            return response.json();
+          }
+          return null;
+        })
+        .then((data: ExpertMatchResponse | null) => {
+          if (data) {
+            // Store에 저장
+            setExpertMatchData(data);
+          }
+        });
+
+      // 바로 다음 모달로 전환
+      setIsLoading(false);
+      onClose();
+
+      setTimeout(() => {
+        onStartRequest?.();
+      }, 100);
+    } catch {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -97,10 +160,11 @@ export function ExpertStepModal({
         {/* Action Button */}
         <button
           onClick={handleStartRequest}
-          className="flex py-5 px-[52px] justify-center items-center gap-2 self-stretch rounded-[10px] bg-[#07F] text-white transition-colors hover:bg-[#0066CC]"
+          disabled={isLoading}
+          className="flex py-5 px-[52px] justify-center items-center gap-2 self-stretch rounded-[10px] bg-[#07F] text-white transition-colors hover:bg-[#0066CC] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div className="text-white font-[Pretendard] text-[18px] font-bold leading-normal tracking-[-0.36px]">
-            전문가 평가 요청하기
+            {isLoading ? "전문가 매칭 중..." : "전문가 평가 요청하기"}
           </div>
         </button>
       </div>

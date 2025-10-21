@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-interface GeneratedReportItem {
-  query?: string | null;
-  content?: string | null;
+interface ReportSection {
+  query: string | null;
+  content: string | null;
 }
 
 export async function POST(
@@ -20,7 +20,7 @@ export async function POST(
       error: reportError,
     } = await supabase
       .from("report_create")
-      .select("generated_report, business_field")
+      .select("business_field")
       .eq("uuid", id)
       .single();
 
@@ -31,10 +31,26 @@ export async function POST(
       );
     }
 
-    const generatedReport =
-      (reportData.generated_report as GeneratedReportItem[] | null) ?? null;
+    const {
+      data: sectionsData,
+      error: sectionsError,
+    } = await supabase
+      .from("report_sections")
+      .select("query, content")
+      .eq("report_uuid", id)
+      .order("generation_order", { ascending: true });
 
-    if (!generatedReport || generatedReport.length === 0) {
+    if (sectionsError || !sectionsData) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "리포트 섹션을 불러올 수 없습니다.",
+        },
+        { status: 500 }
+      );
+    }
+
+    if (sectionsData.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -71,7 +87,7 @@ export async function POST(
     }
 
     const requestBody = {
-      input: generatedReport.map((section) => ({
+      input: sectionsData.map((section: ReportSection) => ({
         contents:
           typeof section.content === "string" && section.content.length > 0
             ? section.content
@@ -106,9 +122,76 @@ export async function POST(
 
     const diagnosisResult = await response.json();
 
+    // 진단 결과를 diagnosis 테이블에 저장 (upsert)
+    const { error: upsertError } = await supabase
+      .from("diagnosis")
+      .upsert(
+        {
+          report_uuid: id,
+          diagnosis_result: diagnosisResult,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "report_uuid",
+        }
+      );
+
+    if (upsertError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "진단 결과 저장에 실패했습니다.",
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
       data: diagnosisResult,
+    });
+  } catch {
+    return NextResponse.json(
+      { success: false, message: "서버 오류가 발생했습니다." },
+      { status: 500 }
+    );
+  }
+}
+
+// GET: 저장된 진단 결과 불러오기
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("diagnosis")
+      .select("diagnosis_result, updated_at")
+      .eq("report_uuid", id)
+      .single();
+
+    if (error) {
+      // 데이터가 없는 경우는 정상 (아직 진단하지 않음)
+      if (error.code === "PGRST116") {
+        return NextResponse.json({
+          success: true,
+          data: null,
+        });
+      }
+
+      return NextResponse.json(
+        { success: false, message: "진단 결과를 불러올 수 없습니다." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: data?.diagnosis_result ?? null,
     });
   } catch {
     return NextResponse.json(

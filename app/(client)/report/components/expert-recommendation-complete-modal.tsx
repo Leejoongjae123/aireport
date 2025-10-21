@@ -2,22 +2,34 @@
 
 import { CustomModal } from "@/components/ui/custom-modal";
 import { X } from "lucide-react";
+import Image from "next/image";
+import { useExpertStore } from "./store/expert-store";
 
 interface ExpertRecommendationCompleteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  requestDate?: string;
-  expertName?: string;
-  expertSpecialty?: string;
 }
 
 export function ExpertRecommendationCompleteModal({
   isOpen,
   onClose,
-  requestDate = "2025.09.09 15:32",
-  expertName = "김○○ 박사",
-  expertSpecialty = "헬스케어 IT전문가",
 }: ExpertRecommendationCompleteModalProps) {
+  const { selectedExpert } = useExpertStore();
+
+  // 현재 날짜와 시간 포맷팅
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    return `${year}.${month}.${day} ${hours}:${minutes}`;
+  };
+
+  const requestDate = getCurrentDateTime();
+  const expertName = selectedExpert?.name || "전문가";
+  const expertSpecialty = selectedExpert?.specialty || "전문 분야";
   return (
     <CustomModal
       isOpen={isOpen}
@@ -49,10 +61,14 @@ export function ExpertRecommendationCompleteModal({
           <div className="flex flex-col items-center gap-8 relative">
             {/* Illustration */}
             <div className="flex w-[280px] h-[224px] justify-center items-center relative">
-              <img
-                src="https://api.builder.io/api/v1/image/assets/TEMP/48aed30d8f92562d061c0ee87e84919dd0b6dc67?width=560"
+              <Image
+                src="/images/send_report.webp"
                 alt="Expert evaluation illustration"
-                className="w-full h-full object-contain"
+                width={280}
+                height={224}
+                sizes="(max-width: 560px) 100vw, 560px"
+                className="object-contain"
+                priority
               />
             </div>
 
