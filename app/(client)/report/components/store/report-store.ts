@@ -8,11 +8,13 @@ interface ReportInputData {
 
 interface ReportState {
   reportId: string | null;
+  title: string | null;
   reportType: string | null;
   businessField: string | null;
   isGenerationModalOpen: boolean;
   inputData: ReportInputData;
   setReportId: (id: string) => void;
+  setTitle: (title: string) => void;
   setReportType: (type: string) => void;
   setBusinessField: (field: string) => void;
   generateReportId: () => string;
@@ -29,11 +31,13 @@ const initialInputData: ReportInputData = {
 
 export const useReportStore = create<ReportState>((set) => ({
   reportId: null,
+  title: null,
   reportType: null,
   businessField: null,
   isGenerationModalOpen: false,
   inputData: initialInputData,
   setReportId: (id) => set({ reportId: id }),
+  setTitle: (title) => set({ title }),
   setReportType: (type) => set({ reportType: type }),
   setBusinessField: (field) => set({ businessField: field }),
   generateReportId: () => {

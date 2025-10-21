@@ -7,11 +7,12 @@ export async function POST(request: NextRequest) {
     const {
       reportId,
       보고서파일명,
-      분야,
-      분야번호,
       사업아이디어,
       핵심가치제안,
-      top_k = 3,
+      business_idea,
+      core_value,
+      file_name,
+      report_id,
     } = body;
 
     // AI 엔드포인트로 요청 전달
@@ -23,19 +24,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = await fetch(`${aiEndpoint}/api/business-plan/generate`, {
+    const response = await fetch(`${aiEndpoint}/generate`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        reportId,
-        보고서파일명,
-        분야,
-        분야번호,
-        사업아이디어,
-        핵심가치제안,
-        top_k,
+        business_idea: business_idea ?? 사업아이디어 ?? "",
+        core_value: core_value ?? 핵심가치제안 ?? "",
+        file_name: file_name ?? 보고서파일명 ?? "사업계획서",
+        report_id: report_id ?? reportId,
       }),
     });
 
@@ -56,3 +54,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

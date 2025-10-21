@@ -23,13 +23,18 @@ import {
 } from "lucide-react";
 import { LinkInsertModal } from "./link-insert-modal";
 import { ImageInsertModal } from "./image-insert-modal";
+import { useEditorStore } from "../store/editor-store";
+import { useLoadingOverlay } from "@/components/hooks/use-loading-overlay";
 
 interface TextEditorProps {
   content?: string;
   onUpdate?: (content: string) => void;
 }
 
+export const defaultContent = "";
+
 export function TextEditor({ content, onUpdate }: TextEditorProps) {
+  const { editorContent, isLoading, currentSection, selectedSubsectionId } = useEditorStore();
   const [isHeadingMenuOpen, setIsHeadingMenuOpen] = useState(false);
   const [isBulletMenuOpen, setIsBulletMenuOpen] = useState(false);
   const [isAlignMenuOpen, setIsAlignMenuOpen] = useState(false);
@@ -39,6 +44,8 @@ export function TextEditor({ content, onUpdate }: TextEditorProps) {
   const headingMenuRef = useRef<HTMLDivElement>(null);
   const bulletMenuRef = useRef<HTMLDivElement>(null);
   const alignMenuRef = useRef<HTMLDivElement>(null);
+  const [userModified, setUserModified] = useState(false); // 사용자가 수정했는지 추적
+  const previousSubsectionIdRef = useRef<string | null>(null); // 이전 subsection ID 추적
 
   // 드롭다운 메뉴 외부 클릭 시 닫기
   useEffect(() => {
@@ -94,39 +101,8 @@ export function TextEditor({ content, onUpdate }: TextEditorProps) {
         },
       }),
     ],
-    content:
-      content ||
-      `
-      <div style="text-align: center;">
-        <h1 style="font-weight: 700; font-size: 32px; line-height: 44px; letter-spacing: -0.64px; color: #303030;">AI 기반 리테일 수요예측 솔루션 사업계획서</h1>
-      </div>
-      <div style="text-align: right; font-weight: 600; font-size: 16px; color: black;">2025년 9월 9일</div>
-      
-      <h2 style="font-weight: 600; font-size: 20px; color: black;">1. 사업 개요</h2>
-      <h3 style="font-weight: 600; font-size: 16px; color: black;">1.1 추진 배경 및 필요성</h3>
-      
-      <p style="font-size: 16px; line-height: 24px; color: #343330;">리테일 산업은 디지털 전환과 함께 데이터 기반 경영이 필수 요소로 자리잡고 있습니다. 온라인·오프라인 채널의 융합, 소비자 구매 패턴의 다변화, 경기 변동성 확대 등으로 인해 재고 관리, 공급망 최적화, 판촉 전략 수립의 복잡성이 과거보다 크게 증가하였습니다.</p>
-      
-      <p style="font-size: 16px; line-height: 24px; color: #343330;">특히,</p>
-      <ul>
-        <li>수요 예측의 불확실성으로 인한 과잉 재고 및 품절 리스크 발생</li>
-        <li>단기 프로모션 및 마케팅 효과 측정의 어려움</li>
-        <li>소비자 데이터 활용의 한계로 맞춤형 전략 수립이 미흡</li>
-      </ul>
-      <p style="font-size: 16px; line-height: 24px; color: #343330;">이라는 문제점들이 리테일 기업의 수익성 및 경쟁력 약화로 이어지고 있습니다.</p>
-      
-      <p style="font-size: 16px; line-height: 24px; color: #343330;">이러한 환경 속에서, AI 기반 수요예측 솔루션은 대규모 거래 데이터와 외부 요인(계절성, 지역별 트렌드, 거시경제 지표 등)을 결합하여 정교한 수요 예측 모델을 제공함으로써, 리테일 기업이 직면한 문제를 근본적으로 해결할 수 있습니다.</p>
-      
-      <p style="font-size: 16px; line-height: 24px; color: #343330;">이를 통해 기업은:</p>
-      <ul>
-        <li>재고 관리 최적화 – 과잉재고 및 품절을 최소화하여 비용 절감 및 매출 기회 극대화</li>
-        <li>공급망 효율화 – 유통 단계별 수요 변동을 사전에 예측하여 운영 효율성 제고</li>
-        <li>맞춤형 마케팅 강화 – 고객 세그먼트별 구매 패턴 분석을 기반으로 한 타겟 마케팅 전략 수립</li>
-        <li>경쟁력 확보 – 급변하는 리테일 시장에서 차별화된 데이터 기반 의사결정 역량 확보</li>
-      </ul>
-      
-      <p style="font-size: 16px; line-height: 24px; color: #343330;">따라서, 본 사업은 리테일 산업의 디지털 경쟁력 강화와 지속 가능한 성장 기반 마련을 위해 추진이 필요하며, 향후 관련 산업 전반에 걸쳐 확장성과 파급 효과가 기대됩니다.</p>
-    `,
+    content: content || defaultContent,
+    editable: !isLoading,
     editorProps: {
       attributes: {
         class:
@@ -134,6 +110,8 @@ export function TextEditor({ content, onUpdate }: TextEditorProps) {
       },
     },
     onUpdate: ({ editor }) => {
+      // 사용자가 수정했음을 표시
+      setUserModified(true);
       if (onUpdate) {
         onUpdate(editor.getHTML());
       }
@@ -142,6 +120,44 @@ export function TextEditor({ content, onUpdate }: TextEditorProps) {
       setEditorState((prev) => prev + 1);
     },
   });
+
+  const loadingOverlay = useLoadingOverlay({
+    isLoading: isLoading || !editor || editor.isEmpty,
+    currentSection,
+  });
+
+  // subsection 변경 감지 및 userModified 플래그 리셋
+  useEffect(() => {
+    if (selectedSubsectionId !== previousSubsectionIdRef.current) {
+      // subsection이 변경되면 userModified 플래그 리셋
+      setUserModified(false);
+      previousSubsectionIdRef.current = selectedSubsectionId;
+    }
+  }, [selectedSubsectionId]);
+
+  // content prop 또는 zustand editorContent가 변경될 때 에디터 내용 업데이트
+  useEffect(() => {
+    if (!editor) return;
+
+    // zustand의 editorContent가 우선순위
+    const newContent = editorContent || content;
+
+    // 사용자가 수정한 경우, 같은 subsection이면 업데이트하지 않음
+    if (userModified && selectedSubsectionId === previousSubsectionIdRef.current) {
+      return;
+    }
+
+    if (newContent !== undefined && newContent !== editor.getHTML()) {
+      editor.commands.setContent(newContent || "");
+    }
+  }, [editor, content, editorContent, userModified, selectedSubsectionId]);
+
+  // isLoading 상태에 따라 에디터 편집 가능 여부 업데이트
+  useEffect(() => {
+    if (editor) {
+      editor.setEditable(!isLoading);
+    }
+  }, [editor, isLoading]);
 
   if (!editor) {
     return null;
@@ -241,7 +257,8 @@ export function TextEditor({ content, onUpdate }: TextEditorProps) {
 
   return (
     <>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full relative">
+        {loadingOverlay}
         {/* Rich Text Editor Toolbar */}
         <div className="px-8 pt-5 flex-shrink-0">
           <div className="flex flex-col gap-2.5 border-b border-[#D9D9D9] pb-2">
@@ -462,18 +479,8 @@ export function TextEditor({ content, onUpdate }: TextEditorProps) {
         </div>
 
         {/* Document Content */}
-        <div className="flex-1 overflow-y-auto px-11 py-8 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+        <div className="flex-1 overflow-y-auto px-8 py-8 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
           <EditorContent editor={editor} />
-
-          <Button
-            variant="outline"
-            className="w-fit ml-auto mt-9 gap-1 h-9 px-3.5 border-[#D9D9D9] flex"
-          >
-            <Edit className="w-6 h-6 text-[#5A5A5A]" />
-            <span className="text-[#5A5A5A] font-semibold text-sm">
-              수정 요청하기
-            </span>
-          </Button>
         </div>
       </div>
 

@@ -58,6 +58,7 @@ const ErrorIcon = () => (
     viewBox="0 0 18 18"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    className="w-[18px] h-[18px] flex-shrink-0"
   >
     <path
       d="M9.6632 1.89912C9.4037 1.40863 8.5967 1.40863 8.3372 1.89912L1.5872 14.6491C1.52667 14.7634 1.49673 14.8914 1.50028 15.0207C1.50384 15.15 1.54077 15.2762 1.6075 15.387C1.67422 15.4978 1.76847 15.5895 1.88109 15.6531C1.9937 15.7167 2.12086 15.7502 2.2502 15.7501H15.7502C15.8795 15.7504 16.0067 15.7171 16.1194 15.6536C16.2321 15.5901 16.3263 15.4984 16.393 15.3876C16.4597 15.2768 16.4966 15.1506 16.5 15.0213C16.5034 14.892 16.4732 14.764 16.4125 14.6499L9.6632 1.89912ZM9.7502 12.7501C9.7502 13.1643 9.41442 13.5001 9.0002 13.5001C8.58599 13.5001 8.2502 13.1643 8.2502 12.7501C8.2502 12.3359 8.58599 12.0001 9.0002 12.0001C9.41442 12.0001 9.7502 12.3359 9.7502 12.7501ZM9.0005 10.5001C8.58612 10.5001 8.2502 10.1642 8.2502 9.74982V7.5002C8.2502 7.08594 8.58602 6.75012 9.00028 6.75012C9.41448 6.75012 9.75027 7.08585 9.75035 7.50005L9.7508 9.74967C9.75089 10.1641 9.41494 10.5001 9.0005 10.5001Z"
@@ -90,22 +91,64 @@ interface TableOfContentsItem {
   children?: TableOfContentsItem[];
 }
 
+interface GeneratedReportSection {
+  query: string;
+  content: string;
+  section_id: string;
+  section_name: string;
+  subsection_id: string;
+  subsection_name: string;
+  character_count?: number; // 글자 수 속성 추가
+}
+
 interface TableOfContentsProps {
   procedureModify: ProcedureModifyData | null;
   selectedItemId: string | null;
   onItemSelect: (id: string) => void;
+  generatedReport: GeneratedReportSection[] | null;
 }
 
 export function TableOfContents({
   procedureModify,
   selectedItemId,
   onItemSelect,
+  generatedReport,
 }: TableOfContentsProps) {
   // procedure_modify 데이터를 목차 형식으로 변환
   const tableOfContents: TableOfContentsItem[] = useMemo(() => {
     if (!procedureModify?.sections) {
       return [];
     }
+
+    // 숫자 부분 제거 함수 (예: "1. 사업 개요" -> "사업 개요", "1.1 추진 배경" -> "추진 배경")
+    const removeNumbering = (text: string): string => {
+      return text.replace(/^\d+(\.\d+)?\s*/, "").trim();
+    };
+
+    // subsection의 상세 정보(content 유무, 글자 수) 확인 함수
+    const getSectionDetails = (
+      subsectionName: string
+    ): { hasContent: boolean; charCount: number } => {
+      if (!generatedReport) {
+        return { hasContent: false, charCount: 0 };
+      }
+
+      const cleanedSubsectionName = removeNumbering(subsectionName);
+
+      const matchingSection = generatedReport.find((section) => {
+        const cleanedQuery = removeNumbering(section.query);
+        return cleanedQuery === cleanedSubsectionName;
+      });
+
+      const contentExists = !!(
+        matchingSection &&
+        matchingSection.content &&
+        matchingSection.content.trim()
+      );
+      const charCount = matchingSection?.character_count || 0;
+
+      return { hasContent: contentExists, charCount };
+    };
 
     return procedureModify.sections
       .filter((section) => section.enabled)
@@ -116,18 +159,23 @@ export function TableOfContents({
         return {
           id: section.id,
           title: section.name,
-          completed: true, // 추후 실제 완료 상태로 대체
+          completed: true,
           score: "",
-          children: enabledSubsections.map((subsection) => ({
-            id: subsection.id,
-            title: subsection.name,
-            completed: true, // 추후 실제 완료 상태로 대체
-            score: "112/100자 · 75점", // 추후 실제 점수로 대체
-            hasError: false, // 추후 실제 에러 상태로 대체
-          })),
+          children: enabledSubsections.map((subsection) => {
+            const { hasContent, charCount } = getSectionDetails(
+              subsection.name
+            );
+            return {
+              id: subsection.id,
+              title: subsection.name,
+              completed: hasContent,
+              score: `${charCount}자`, // 글자수만 표시
+              hasError: !hasContent,
+            };
+          }),
         };
       });
-  }, [procedureModify]);
+  }, [procedureModify, generatedReport]);
 
   const renderTableOfContentsItem = (
     item: TableOfContentsItem,

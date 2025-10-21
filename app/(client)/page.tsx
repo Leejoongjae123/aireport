@@ -1,5 +1,7 @@
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 import FAQSection from "./components/faq-section";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -18,26 +20,30 @@ export default function Home() {
               AI 기반 보고서 자동 생성, 전문가 피드백, 컨설팅까지 한 번에!
             </p>
           </div>
-          <button className="flex items-center justify-center gap-2 rounded-[10px] bg-[#0077FF] px-[52px] py-5 pl-[52px] pr-11">
-            <span className="text-lg font-bold text-white tracking-[-0.36px]">
-              지금 시작하기
-            </span>
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M19 12L13 18M19 12L13 6M19 12L5 12"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
+
+          <Link href="/report/start">
+            <Button className="flex items-center justify-center gap-2 rounded-[10px] bg-[#0077FF] w-[224px] h-[64px] hover:bg-[#0077FF]/90">
+              <span className="text-lg font-bold text-white tracking-[-0.36px]">
+                지금 시작하기
+              </span>
+
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M19 12L13 18M19 12L13 6M19 12L5 12"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </Button>
+          </Link>
         </div>
 
         <Image

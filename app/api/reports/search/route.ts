@@ -65,10 +65,10 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        사업아이디어: report.business_idea || "",
-        핵심가치제안: report.core_value || "",
-        분류번호: 분류번호,
-        topK: topK,
+        business_idea: report.business_idea || "",
+        core_value: report.core_value || "",
+        category_number: 분류번호,
+        top_k: topK,
       }),
     });
 
@@ -81,6 +81,22 @@ export async function POST(request: NextRequest) {
     }
 
     const searchResult = await searchResponse.json();
+
+    // 검색 결과가 있고, 첫 번째 결과에 '보고서파일명'이 있는 경우 DB 업데이트
+    if (
+      searchResult.results &&
+      searchResult.results.length > 0 &&
+      searchResult.results[0].보고서파일명
+    ) {
+      const referenceReportName = searchResult.results[0].보고서파일명;
+
+      await supabase
+        .from("report_create")
+        .update({ reference_report: referenceReportName })
+        .eq("uuid", reportId)
+        .eq("user_id", user.id);
+    }
+
     return NextResponse.json(searchResult);
   } catch (error) {
     return NextResponse.json(

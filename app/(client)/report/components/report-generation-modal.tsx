@@ -5,12 +5,37 @@ import { useRouter } from "next/navigation";
 import { CustomModal } from "@/components/ui/custom-modal";
 import { useReportStore } from "./store/report-store";
 
+const businessCategories = [
+  {
+    id: "digital-ict-ai",
+    title: "디지털·ICT·AI 산업",
+  },
+  {
+    id: "manufacturing-tech",
+    title: "제조·산업기술·혁신",
+  },
+  {
+    id: "culture-content-tourism",
+    title: "문화·콘텐츠·관광",
+  },
+  {
+    id: "public-urban-infrastructure",
+    title: "공공·도시·인프라",
+  },
+  {
+    id: "energy-environment",
+    title: "에너지·환경",
+  },
+];
+
 interface ReportGenerationModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 type StepStatus = "pending" | "loading" | "completed";
+
+const MIN_LOADING_DURATION = 20000;
 
 export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
   isOpen,
@@ -36,6 +61,23 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
     let fallbackTimer2: NodeJS.Timeout | null = null;
     let fallbackTimer3: NodeJS.Timeout | null = null;
     let fallbackTimer4: NodeJS.Timeout | null = null;
+    let completionTimeout: NodeJS.Timeout | null = null;
+    const startTime = Date.now();
+
+    const scheduleNavigation = () => {
+      if (completionTimeout) return;
+      const elapsed = Date.now() - startTime;
+      const delay = Math.max(1000, MIN_LOADING_DURATION - elapsed);
+      completionTimeout = setTimeout(() => {
+        if (isCancelled) return;
+        if (reportId) {
+          router.push(`/report/editor?reportId=${reportId}`);
+        } else {
+          router.push("/report/editor");
+        }
+        completionTimeout = null;
+      }, delay);
+    };
 
     // Polling 함수: is_complete 확인
     const startPolling = () => {
@@ -69,11 +111,8 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
             if (fallbackTimer3) clearTimeout(fallbackTimer3);
             if (fallbackTimer4) clearTimeout(fallbackTimer4);
 
-            // 3초 후 페이지 이동
-            setTimeout(() => {
-              if (isCancelled) return;
-              router.push(`/report/editor?reportId=${reportId}`);
-            }, 3000);
+            // 1초 후 페이지 이동
+            scheduleNavigation();
           }
         } catch {
           // polling 중 오류는 무시하고 계속 시도
@@ -106,6 +145,13 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
         if (isCancelled) return;
         setStep1Status("completed");
         setStep2Status("loading");
+        console.log('inputData:', inputData)
+
+        // businessField에 해당하는 category_number 찾기
+        const categoryIndex = businessCategories.findIndex(
+          (category) => category.title === inputData.businessField
+        );
+        const categoryNumber = categoryIndex !== -1 ? categoryIndex + 1 : 0;
 
         // 2. 유사 보고서 검색 API 호출
         const searchResponse = await fetch(`/api/reports/search`, {
@@ -115,7 +161,10 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
           },
           body: JSON.stringify({
             reportId: reportId,
-            topK: 5,
+            business_idea: inputData.businessIdea || "",
+            core_value: inputData.coreValue || "",
+            category_number: categoryNumber,
+            top_k: 5,
           }),
         });
         
@@ -140,27 +189,31 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
           return;
         }
 
-        // 3. 로컬 API를 통한 AI 보고서 생성 요청 (환경변수 체크 포함)
-        const generateResponse = await fetch(`${process.env.NEXT_PUBLIC_AI_END_POINT}/api/business-plan/generate`, {
+        // 3. 내부 API(Route Handler)를 통해 AI 보고서 생성 요청
+        const generateResponse = await fetch(`/api/business-plan/generate`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            reportId: reportId,
-            보고서파일명: firstResult.보고서파일명 || "사업계획서",
-            분야: firstResult.분야 || inputData.businessField || "",
-            분야번호: firstResult.분야번호 || searchData.분류번호 || 1,
-            사업아이디어: inputData.businessIdea || "",
-            핵심가치제안: inputData.coreValue || "",
-            top_k: 3,
+            business_idea: inputData.businessIdea || "",
+            core_value: inputData.coreValue || "",
+            file_name: firstResult.보고서파일명 || "사업계획서",
+            report_id: reportId,
           }),
         });
 
         if (isCancelled) return;
 
         if (generateResponse.ok) {
-          // 생성 요청 성공 시 polling 시작
+          const generateData = await generateResponse.json();
+          if (generateData && generateData.success) {
+            setStep2Status("completed");
+            setStep3Status("completed");
+            scheduleNavigation();
+            return;
+          }
+          // success가 아닌 경우에만 polling 시작
           startPolling();
         } else {
           // 실패해도 계속 진행 (fallback 타이머로)
@@ -184,16 +237,13 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
     fallbackTimer3 = setTimeout(() => {
       if (isCancelled) return;
       setStep3Status((prev) => (prev === "completed" ? prev : "completed"));
+      scheduleNavigation();
     }, 15000);
 
     fallbackTimer4 = setTimeout(() => {
       if (isCancelled) return;
       // fallback: 일정 시간 후 무조건 페이지 이동
-      if (reportId) {
-        router.push(`/report/editor?reportId=${reportId}`);
-      } else {
-        router.push("/report/editor");
-      }
+      scheduleNavigation();
     }, 180000); // 3분 (180초) 후
 
     return () => {
@@ -202,6 +252,7 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
       if (fallbackTimer2) clearTimeout(fallbackTimer2);
       if (fallbackTimer3) clearTimeout(fallbackTimer3);
       if (fallbackTimer4) clearTimeout(fallbackTimer4);
+      if (completionTimeout) clearTimeout(completionTimeout);
     };
   }, [isOpen, router, reportId]);
 

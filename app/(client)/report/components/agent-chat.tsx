@@ -2,24 +2,14 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Bot, User } from "lucide-react";
-
-interface Message {
-  id: string;
-  type: "user" | "ai";
-  content: string;
-  isGenerating?: boolean;
-}
+import { Message } from "./types";
+import { QuickActions } from "./quick-actions";
+import { useEditorStore } from "../editor/store/editor-store";
+import { useReportStore } from "./store/report-store";
+import { defaultContent } from "../editor/components/text-editor";
+import { CustomModal } from "@/components/ui/custom-modal";
 
 export default function AgentChat() {
-  const quickActions = [
-    "자세히 쓰기",
-    "간결하게 쓰기",
-    "윤문하기",
-    "논문검색",
-    "뉴스검색",
-    "특허검색",
-  ];
-
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -28,7 +18,11 @@ export default function AgentChat() {
         "안녕하세요! 리포트 어시스턴트입니다. 보고서를 검토하고 개선 사항을 제안해드리겠습니다. 어떤 도움이 필요하신가요?",
     },
   ]);
+  const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
+  const [completionMessage, setCompletionMessage] = useState("");
 
+  const { editorContent, setEditorContent, isLoading, setIsLoading, setCurrentSection, selectedSubsectionId } = useEditorStore();
+  const { reportId } = useReportStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -39,17 +33,20 @@ export default function AgentChat() {
     scrollToBottom();
   }, [messages]);
 
-  const handleQuickAction = (action: string) => {
-    // 사용자 메시지 추가
+  useEffect(() => {
+    // 컴포넌트가 마운트될 때 editorContent가 비어있으면 기본값으로 설정
+    if (!editorContent) {
+      setEditorContent(defaultContent);
+    }
+  }, [editorContent, setEditorContent]);
+
+  const handleQuickAction = async (options: { action: string; subject?: string }) => {
+    const { action, subject } = options;
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       type: "user",
       content: `[${action} 요청]`,
     };
-
-    setMessages((prev) => [...prev, userMessage]);
-
-    // AI 생성중 메시지 추가
     const aiGeneratingMessage: Message = {
       id: `ai-${Date.now()}`,
       type: "ai",
@@ -57,67 +54,154 @@ export default function AgentChat() {
       isGenerating: true,
     };
 
-    setTimeout(() => {
-      setMessages((prev) => [...prev, aiGeneratingMessage]);
+    setMessages((prev) => [...prev, userMessage, aiGeneratingMessage]);
+    setIsLoading(true);
+    setCurrentSection(action);
 
-      // 2초 후 실제 응답으로 교체
-      setTimeout(() => {
+    try {
+      const requestBody: { classification: string; subject?: string; contents?: string } = {
+        classification: action,
+      };
+
+      const needsContent = ["자세히", "간결하게", "윤문"].includes(action);
+      const needsSubject = ["특허", "논문", "뉴스"].includes(action);
+
+      if (needsContent) {
+        if (!editorContent || editorContent.trim() === "") {
+          alert("에디터에 내용이 없습니다.");
+          setMessages((prev) => prev.slice(0, -2)); // 사용자, AI 메시지 제거
+          setIsLoading(false);
+          return;
+        }
+        requestBody.contents = editorContent;
+      }
+
+      if (needsSubject) {
+        if (subject) {
+          requestBody.subject = subject;
+        } else {
+          // subject가 없는 경우에 대한 처리 (예: 경고 또는 기본값 사용)
+          // subject가 없는 경우 editorContent의 첫 줄을 제목으로 사용
+          const firstLine = editorContent?.split('\n')[0].trim() || "";
+          const title = firstLine.replace(/#/g, '').trim();
+          requestBody.subject = title || "인공지능 기반 사업 계획"; // 제목이 없으면 기본값 사용
+        }
+      }
+
+      const response = await fetch("/api/report/regenerate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.contents || "API 요청 실패");
+      }
+
+      const data = await response.json();
+
+      if (data.result === 'success') {
+        // 특허, 논문, 뉴스의 경우 기존 내용 뒤에 추가, 나머지는 교체
+        const shouldAppend = ["특허", "논문", "뉴스"].includes(action);
+        const newContent = shouldAppend 
+          ? editorContent + "\n\n" + data.contents 
+          : data.contents;
+        
+        setEditorContent(newContent);
+        
+        // DB에 수정된 내용 저장
+        if (reportId && selectedSubsectionId) {
+          try {
+            await fetch(`/api/reports/${reportId}/sections/${selectedSubsectionId}`, {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                content: newContent,
+              }),
+            });
+          } catch {
+            // DB 저장 실패해도 에디터에는 반영됨
+          }
+        }
+        
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === aiGeneratingMessage.id
-              ? {
-                  ...msg,
-                  content: getAIResponse(action),
-                  isGenerating: false,
-                }
+              ? { ...msg, content: `[${action}] 요청이 완료되어 에디터에 반영되었습니다.`, isGenerating: false }
               : msg
           )
         );
-      }, 2000);
-    }, 300);
+        
+        // 완료 모달 표시
+        setCompletionMessage(`[${action}] 작업이 완료되었습니다.`);
+        setIsCompletionModalOpen(true);
+      } else {
+        throw new Error(data.contents || '작업 처리 중 오류가 발생했습니다.');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("Quick Action Error:", error);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === aiGeneratingMessage.id
+            ? { ...msg, content: `오류: ${errorMessage}`, isGenerating: false }
+            : msg
+        )
+      );
+    } finally {
+      setIsLoading(false);
+      setCurrentSection(null);
+    }
   };
 
-  const getAIResponse = (action: string): string => {
-    const responses: Record<string, string> = {
-      "자세히 쓰기":
-        "선택하신 내용을 더 자세하고 구체적으로 작성해드렸습니다. 추가 설명과 예시를 포함하여 내용을 보강했습니다.",
-      "간결하게 쓰기":
-        "선택하신 내용을 핵심만 남기고 간결하게 정리했습니다. 불필요한 표현을 제거하고 명확하게 작성했습니다.",
-      윤문하기:
-        "선택하신 내용의 문장을 다듬고 표현을 개선했습니다. 더 자연스럽고 전문적인 문체로 수정했습니다.",
-      논문검색:
-        "선택하신 키워드와 관련된 최신 논문을 검색중입니다. 관련성 높은 학술 자료를 찾아드리겠습니다.",
-      뉴스검색:
-        "최신 뉴스와 시장 동향을 검색중입니다. 관련 기사와 인사이트를 제공해드리겠습니다.",
-      특허검색:
-        "관련 특허 정보를 검색중입니다. 유사 기술과 특허 동향을 분석해드리겠습니다.",
-    };
-
-    return (
-      responses[action] ||
-      `[${action}] 요청을 처리중입니다. 잠시만 기다려주세요.`
-    );
+  const handleCloseCompletionModal = () => {
+    setIsCompletionModalOpen(false);
+    setCompletionMessage("");
   };
 
   return (
     <>
-      {/* Quick Action Buttons */}
-      <div className="flex py-5 items-start content-start gap-2 self-stretch flex-wrap border-b border-[#D9D9D9] mb-3">
-        {quickActions.map((action, index) => (
+      <QuickActions handleQuickAction={handleQuickAction} isLoading={isLoading} />
+
+      {/* Completion Modal */}
+      <CustomModal
+        isOpen={isCompletionModalOpen}
+        
+        onClose={handleCloseCompletionModal}
+        width="400px"
+        height="auto"
+        padding="24px"
+        headerClassName="justify-end"
+        contentClassName="items-center justify-center"
+        closeButtonClassName="absolute top-0 right-0"
+      >
+        <div className="flex flex-col items-center justify-center w-full gap-6 py-4">
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              작업 완료
+            </h3>
+            <p className="text-gray-600">{completionMessage}</p>
+          </div>
           <button
-            key={index}
-            onClick={() => handleQuickAction(action)}
-            className="flex h-6 py-1 px-2 justify-center items-center gap-1 rounded border border-[#BAD1EC] bg-white hover:bg-blue-50 transition-colors"
+            onClick={handleCloseCompletionModal}
+            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            <span className="text-[#5A5A5A] font-medium text-xs leading-4">
-              {action}
-            </span>
+            확인
           </button>
-        ))}
-      </div>
+        </div>
+      </CustomModal>
 
       {/* Chat Messages Area */}
-      <div className="flex h-[513px] flex-col gap-3 self-stretch overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+      <div
+        className="flex h-[513px] flex-col gap-3 self-stretch overflow-y-auto"
+        style={{ scrollbarWidth: "none" }}
+      >
         <div className="flex flex-col gap-3 flex-1 self-stretch px-1">
           {messages.map((message) => (
             <div
