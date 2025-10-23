@@ -9,6 +9,7 @@ import { ReportGenerationModal } from "../components/ReportGenerationModal";
 import { SectionList } from "./components/SectionList";
 import { TableOfContentsList } from "./components/TableOfContentsList";
 import { ItemSettings } from "./components/ItemSettings";
+import { useLoader } from "@/components/hooks/UseLoader";
 import {
   SectionItem,
   TableOfContentItem,
@@ -38,6 +39,7 @@ function ReportProcedureContent() {
     reorderSubsections,
   } = useProcedureStore();
 
+  const [isLoading, setIsLoading] = useState(false);
   const [isBusinessModalOpen, setIsBusinessModalOpen] = useState(false);
   const [sections, setSections] = useState<SectionItem[]>([]);
   const [flatSubsections, setFlatSubsections] = useState<FlatSubsectionItem[]>(
@@ -52,6 +54,8 @@ function ReportProcedureContent() {
   const [selectedItemName, setSelectedItemName] = useState<string>("");
   const [minCharCount, setMinCharCount] = useState("1000");
   const [maxCharCount, setMaxCharCount] = useState("2000");
+
+  const loader = useLoader({ isLoading });
 
   // URL에서 reportType과 reportId 가져와서 store에 저장
   useEffect(() => {
@@ -128,6 +132,7 @@ function ReportProcedureContent() {
         return;
       }
 
+      setIsLoading(true);
       try {
         // 1. procedure 기본 구조 가져오기
         const response = await fetch(`/api/reports/${reportId}/procedure`);
@@ -222,6 +227,8 @@ function ReportProcedureContent() {
         }
       } catch {
         // 에러 처리는 조용히
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -389,6 +396,7 @@ function ReportProcedureContent() {
 
     // 새로운 분야의 목차 데이터 가져오기
     if (reportId) {
+      setIsLoading(true);
       try {
         const response = await fetch(`/api/reports/${reportId}/procedure`);
         const result = await response.json();
@@ -432,6 +440,8 @@ function ReportProcedureContent() {
         }
       } catch {
         // 에러 처리는 조용히
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -442,53 +452,56 @@ function ReportProcedureContent() {
   );
 
   return (
-    <div className="flex w-full flex-col gap-8 max-w-[1200px] mx-auto">
-      <div className="flex w-full items-start gap-6">
-        {/* Left Panel - 대목차 */}
-        <SectionList
-          sections={sections}
-          selectedSectionId={selectedSectionId}
-          onToggle={toggleSection}
-          onSelect={handleSelectSection}
-          businessFieldName={getBusinessFieldName(businessField)}
-          onChangeCategory={() => setIsBusinessModalOpen(true)}
-        />
+    <>
+      {loader}
+      <div className="flex w-full flex-col gap-8 max-w-[1200px] mx-auto">
+        <div className="flex w-full items-start gap-6">
+          {/* Left Panel - 대목차 */}
+          <SectionList
+            sections={sections}
+            selectedSectionId={selectedSectionId}
+            onToggle={toggleSection}
+            onSelect={handleSelectSection}
+            businessFieldName={getBusinessFieldName(businessField)}
+            onChangeCategory={() => setIsBusinessModalOpen(true)}
+          />
 
-        {/* Middle Panel - 선택된 대목차의 소목차만 표시 */}
-        <TableOfContentsList
-          flatSubsections={filteredSubsections}
-          selectedSubsectionId={selectedSubsectionId}
-          onSelectSubsection={handleSelectSubsection}
-          onToggleSubsection={handleToggleSubsection}
-          onReorder={handleReorderSubsections}
-        />
+          {/* Middle Panel - 선택된 대목차의 소목차만 표시 */}
+          <TableOfContentsList
+            flatSubsections={filteredSubsections}
+            selectedSubsectionId={selectedSubsectionId}
+            onSelectSubsection={handleSelectSubsection}
+            onToggleSubsection={handleToggleSubsection}
+            onReorder={handleReorderSubsections}
+          />
 
-        {/* Right Panel - 항목명과 글자수 */}
-        <ItemSettings
-          itemName={selectedItemName}
-          minCharCount={minCharCount}
-          maxCharCount={maxCharCount}
-          onMinCharCountChange={handleMinCharCountChange}
-          onMaxCharCountChange={handleMaxCharCountChange}
+          {/* Right Panel - 항목명과 글자수 */}
+          <ItemSettings
+            itemName={selectedItemName}
+            minCharCount={minCharCount}
+            maxCharCount={maxCharCount}
+            onMinCharCountChange={handleMinCharCountChange}
+            onMaxCharCountChange={handleMaxCharCountChange}
+          />
+        </div>
+
+        {/* Modals */}
+        <BusinessCategoryModal
+          open={isBusinessModalOpen}
+          onOpenChange={setIsBusinessModalOpen}
+          mode="update"
+          reportId={reportId || undefined}
+          onBusinessFieldChange={handleBusinessFieldChange}
+        >
+          <div />
+        </BusinessCategoryModal>
+
+        <ReportGenerationModal
+          isOpen={isGenerationModalOpen}
+          onClose={() => setGenerationModalOpen(false)}
         />
       </div>
-
-      {/* Modals */}
-      <BusinessCategoryModal
-        open={isBusinessModalOpen}
-        onOpenChange={setIsBusinessModalOpen}
-        mode="update"
-        reportId={reportId || undefined}
-        onBusinessFieldChange={handleBusinessFieldChange}
-      >
-        <div />
-      </BusinessCategoryModal>
-
-      <ReportGenerationModal
-        isOpen={isGenerationModalOpen}
-        onClose={() => setGenerationModalOpen(false)}
-      />
-    </div>
+    </>
   );
 }
 
