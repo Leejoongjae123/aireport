@@ -5,11 +5,11 @@ import {
   DialogContent,
   DialogTrigger,
   DialogClose,
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import Image from "next/image";
-import { ExpertConsultationModal } from "./expert-consultation-modal";
+import { ExpertConsultationModal } from "./ExpertConsultationModal";
 import { useState } from "react";
 interface ReviewResultModalProps {
   children: React.ReactNode;

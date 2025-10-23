@@ -1,12 +1,12 @@
 "use client";
 
-import { CustomModal } from "@/components/ui/custom-modal";
+import { CustomModal } from "@/components/ui/CustomModal";
 import { X, Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { ExpertRecommendationCompleteModal } from "./expert-recommendation-complete-modal";
+import { ExpertRecommendationCompleteModal } from "./ExpertRecommendationCompleteModal";
 import { Expert } from "./types";
-import { ExpertEvaluationRequestModal } from "./expert-evaluation-request-modal";
-import { useExpertStore } from "./store/expert-store";
+import { ExpertEvaluationRequestModal } from "./ExpertEvaluationRequestModal";
+import { useExpertStore } from "./store/ExpertStore";
 
 interface ExpertRecommendationModalProps {
   isOpen: boolean;

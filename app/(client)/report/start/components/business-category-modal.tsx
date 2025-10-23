@@ -5,7 +5,7 @@ import {
   DialogContent,
   DialogTrigger,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

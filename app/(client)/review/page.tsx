@@ -1,12 +1,12 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Search } from "lucide-react";
-import { ExpertRequestsList } from "./components/expert-requests-list";
+import { ExpertRequestsList } from "./components/ExpertRequestsList";
 import { Suspense, useState, useCallback, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useLoader } from "@/components/hooks/use-loader";
+import { useLoader } from "@/components/hooks/UseLoader";
 
 function ReviewPageContent() {
   const searchParams = useSearchParams();

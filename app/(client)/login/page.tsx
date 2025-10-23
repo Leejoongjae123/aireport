@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PasswordResetModal } from "./components/password-reset-modal";
+import { PasswordResetModal } from "./components/PasswordResetModal";
 import { createClient } from "@/lib/supabase/client";
 
 const LoginPageContent = () => {

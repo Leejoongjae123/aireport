@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { Card } from "@/components/ui/card";
 import { useSearchParams } from "next/navigation";
-import AgentChat from "../components/agent-chat";
+import AgentChat from "../components/AgentChat";
 import { DiagnosisTab } from "./components/diagnosis-tab";
 import { TableOfContents } from "./components/table-of-contents";
 import { TextEditor } from "./components/text-editor";

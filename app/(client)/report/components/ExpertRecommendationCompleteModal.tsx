@@ -1,9 +1,9 @@
 "use client";
 
-import { CustomModal } from "@/components/ui/custom-modal";
+import { CustomModal } from "@/components/ui/CustomModal";
 import { X } from "lucide-react";
 import Image from "next/image";
-import { useExpertStore } from "./store/expert-store";
+import { useExpertStore } from "./store/ExpertStore";
 
 interface ExpertRecommendationCompleteModalProps {
   isOpen: boolean;

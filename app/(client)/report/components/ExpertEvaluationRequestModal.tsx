@@ -1,11 +1,11 @@
 "use client";
 
-import { CustomModal } from "@/components/ui/custom-modal";
+import { CustomModal } from "@/components/ui/CustomModal";
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Expert } from "./types";
-import { useExpertStore } from "./store/expert-store";
-import { useReportStore } from "./store/report-store";
+import { useExpertStore } from "./store/ExpertStore";
+import { useReportStore } from "./store/ReportStore";
 
 interface ExpertEvaluationModalProps {
   isOpen: boolean;

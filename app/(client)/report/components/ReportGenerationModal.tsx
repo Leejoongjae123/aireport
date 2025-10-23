@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CustomModal } from "@/components/ui/custom-modal";
-import { useReportStore } from "./store/report-store";
+import { CustomModal } from "@/components/ui/CustomModal";
+import { useReportStore } from "./store/ReportStore";
 
 const businessCategories = [
   {

@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import FAQSection from "./components/faq-section";
+import { Button } from "@/components/ui/Button";
+import FAQSection from "./components/FAQSection";
 import Link from "next/link";
 
 export default function Home() {

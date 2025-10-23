@@ -1,9 +1,9 @@
 "use client";
 
 import { Suspense } from "react";
-import { TopNavigation } from "./components/top-navigation";
-import { ReportSidebar } from "./components/report-sidebar";
-import { useSidebarStore } from "./components/store/sidebar-store";
+import { TopNavigation } from "./components/TopNavigation";
+import { ReportSidebar } from "./components/ReportSidebar";
+import { useSidebarStore } from "./components/store/SidebarStore";
 import { Toaster } from "sonner";
 
 export default function ReportLayout({

@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useSidebarStore } from "./store/sidebar-store";
+} from "@/components/ui/DropdownMenu";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { useSidebarStore } from "./store/SidebarStore";
 import { FileText, Plus, Copy, Trash, MoreVertical } from "lucide-react";
 
 interface Report {

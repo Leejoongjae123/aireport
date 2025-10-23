@@ -9,7 +9,7 @@ import {
   DialogPortal,
   DialogTitle,
   VisuallyHidden,
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 import { cn } from "@/lib/utils";
 
 interface CustomModalProps {

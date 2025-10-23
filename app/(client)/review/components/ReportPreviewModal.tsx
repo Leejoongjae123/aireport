@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { CustomModal } from "@/components/ui/custom-modal";
-import { Button } from "@/components/ui/button";
+import { CustomModal } from "@/components/ui/CustomModal";
+import { Button } from "@/components/ui/Button";
 import { X } from "lucide-react";
 import Image from "next/image";
-import { useLoadingOverlay } from "@/components/hooks/use-loading-overlay";
+import { useLoadingOverlay } from "@/components/hooks/UseLoadingOverlay";
 
 interface ReportPreviewModalProps {
   children: React.ReactNode;

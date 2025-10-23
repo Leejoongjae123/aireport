@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { CustomModal } from "@/components/ui/custom-modal";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { CustomModal } from "@/components/ui/CustomModal";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/label";
 
 interface LinkInsertModalProps {

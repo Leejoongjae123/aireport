@@ -1,6 +1,6 @@
 "use client";
 
-import { CustomModal } from "@/components/ui/custom-modal";
+import { CustomModal } from "@/components/ui/CustomModal";
 import { X, Plus } from "lucide-react";
 import { useState } from "react";
 
@@ -164,7 +164,7 @@ export function ExpertConsultationModal({
         <div className="flex items-start gap-3 self-stretch relative">
           <button
             onClick={onClose}
-            className="flex py-5 px-[52px] justify-center items-center gap-2 flex-1 rounded-[10px] border border-[#07F] bg-white text-[#07F] transition-colors hover:bg-[#07F]/5"
+            className="flex h-[62px] w-1/2 justify-center items-center gap-2 flex-1 rounded-[10px] border border-[#07F] bg-white text-[#07F] transition-colors hover:bg-[#07F]/5"
           >
             <div className="font-pretendard text-[18px] font-bold leading-normal tracking-[-0.36px]">
               취소
@@ -172,7 +172,7 @@ export function ExpertConsultationModal({
           </button>
           <button
             onClick={handleConsultationRequest}
-            className="flex py-5 px-[52px] justify-center items-center gap-2 flex-1 rounded-[10px] bg-[#07F] text-white transition-colors hover:bg-[#0066CC]"
+            className="flex h-[62px] w-1/2 justify-center items-center gap-2 flex-1 rounded-[10px] bg-[#07F] text-white transition-colors hover:bg-[#0066CC]"
           >
             <div className="font-pretendard text-[18px] font-bold leading-normal tracking-[-0.36px]">
               평가 요청

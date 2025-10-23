@@ -1,10 +1,10 @@
 "use client";
 
-import { CustomModal } from "@/components/ui/custom-modal";
+import { CustomModal } from "@/components/ui/CustomModal";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useExpertStore } from "./store/expert-store";
+import { useExpertStore } from "./store/ExpertStore";
 import { ExpertMatchResponse } from "./types";
 
 interface ExpertStepModalProps {

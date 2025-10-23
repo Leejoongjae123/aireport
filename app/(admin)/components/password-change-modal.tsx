@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CustomModal } from "@/components/ui/custom-modal";
+import { CustomModal } from "@/components/ui/CustomModal";
 import { X } from "lucide-react";
 
 interface PasswordChangeModalProps {

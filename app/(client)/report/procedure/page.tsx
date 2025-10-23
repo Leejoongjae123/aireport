@@ -6,9 +6,9 @@ import { useReportStore } from "../components/store/report-store";
 import { useProcedureStore } from "./components/store/procedure-store";
 import { BusinessCategoryModal } from "../start/components/business-category-modal";
 import { ReportGenerationModal } from "../components/report-generation-modal";
-import { SectionList } from "./components/section-list";
-import { TableOfContentsList } from "./components/table-of-contents-list";
-import { ItemSettings } from "./components/item-settings";
+import { SectionList } from "./components/SectionList";
+import { TableOfContentsList } from "./components/TableOfContentsList";
+import { ItemSettings } from "./components/ItemSettings";
 import {
   SectionItem,
   TableOfContentItem,

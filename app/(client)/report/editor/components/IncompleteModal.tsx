@@ -1,4 +1,4 @@
-import { CustomModal } from "@/components/ui/custom-modal";
+import { CustomModal } from "@/components/ui/CustomModal";
 import { Button } from "@/components/ui/button";
 
 interface IncompleteModalProps {
