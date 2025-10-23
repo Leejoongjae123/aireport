@@ -36,7 +36,7 @@ export async function GET(
       success: true,
       data: data.generated_report,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, message: "서버 오류가 발생했습니다." },
       { status: 500 }

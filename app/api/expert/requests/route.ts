@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
 
     const url = new URL(request.url);
     const statusParam = url.searchParams.get("status");
+    const keywordParam = url.searchParams.get("keyword");
     const allowedStatuses = [
       "pending",
       "evaluating",
@@ -44,13 +45,25 @@ export async function GET(request: NextRequest) {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    const rows = data ?? [];
-    const filtered =
-      statusParam && (allowedStatuses as readonly string[]).includes(statusParam)
-        ? rows.filter((row) => row.status === statusParam)
-        : rows;
+    let rows = data ?? [];
+    
+    // 상태 필터링
+    if (statusParam && (allowedStatuses as readonly string[]).includes(statusParam)) {
+      rows = rows.filter((row) => row.status === statusParam);
+    }
+    
+    // 키워드 필터링 (title 기준)
+    if (keywordParam) {
+      const keyword = keywordParam.toLowerCase();
+      rows = rows.filter((row) => {
+        const title = row.report_create && typeof row.report_create === 'object' && 'title' in row.report_create 
+          ? row.report_create.title 
+          : '';
+        return title && typeof title === 'string' && title.toLowerCase().includes(keyword);
+      });
+    }
 
-    return NextResponse.json(filtered);
+    return NextResponse.json(rows);
   } catch {
     return NextResponse.json(
       { error: "Internal server error" },

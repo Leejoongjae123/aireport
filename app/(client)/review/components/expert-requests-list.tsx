@@ -10,14 +10,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Download, Trash2, Pencil, FileText, BarChart3 } from "lucide-react";
+import { ReportPreviewModal } from "./report-preview-modal";
 
 interface ExpertRequestsListProps {
   isOpen: boolean;
   statusFilter?: "all" | ExpertRequestStatus;
+  keyword?: string;
   onLoadingChange?: (isLoading: boolean) => void;
 }
 
-export function ExpertRequestsList({ isOpen, statusFilter = "all", onLoadingChange }: ExpertRequestsListProps) {
+export function ExpertRequestsList({ isOpen, statusFilter = "all", keyword, onLoadingChange }: ExpertRequestsListProps) {
   const [requests, setRequests] = useState<ExpertRequest[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,6 +31,9 @@ export function ExpertRequestsList({ isOpen, statusFilter = "all", onLoadingChan
       if (statusFilter !== "all") {
         base.searchParams.set("status", statusFilter);
       }
+      if (keyword) {
+        base.searchParams.set("keyword", keyword);
+      }
       const response = await fetch(base.toString());
       if (response.ok) {
         const data = await response.json();
@@ -38,7 +43,7 @@ export function ExpertRequestsList({ isOpen, statusFilter = "all", onLoadingChan
       setIsLoading(false);
       onLoadingChange?.(false);
     }
-  }, [statusFilter, onLoadingChange]);
+  }, [statusFilter, keyword, onLoadingChange]);
 
   useEffect(() => {
     if (isOpen) {
@@ -150,13 +155,18 @@ export function ExpertRequestsList({ isOpen, statusFilter = "all", onLoadingChan
             </span>
           </div>
           <div className="flex-1 flex items-center justify-center px-[10px]">
-            <Button
-              variant="outline"
-              className="flex items-center gap-1 px-[10px] py-[6px] border border-[#D9D9D9] bg-white rounded text-xs text-[#5A5A5A] hover:bg-gray-50"
+            <ReportPreviewModal 
+              reportUuid={request.report_uuid}
+              reportTitle={request.report_create.title}
             >
-              <FileText className="w-4 h-4" strokeWidth={1.4} />
-              보고서 보기
-            </Button>
+              <Button
+                variant="outline"
+                className="flex items-center gap-1 px-[10px] py-[6px] border border-[#D9D9D9] bg-white rounded text-xs text-[#5A5A5A] hover:bg-gray-50"
+              >
+                <FileText className="w-4 h-4" strokeWidth={1.4} />
+                보고서 보기
+              </Button>
+            </ReportPreviewModal>
           </div>
           <div className="flex-1 flex items-center justify-center px-[10px]">
             <span className="text-[#444444] text-sm tracking-[-0.28px]">

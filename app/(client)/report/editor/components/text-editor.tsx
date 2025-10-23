@@ -18,7 +18,6 @@ import {
   AlignJustify,
   Link as LinkIcon,
   Image as ImageIcon,
-  Edit,
   ListIcon,
 } from "lucide-react";
 import { LinkInsertModal } from "./link-insert-modal";

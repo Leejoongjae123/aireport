@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { useReportStore } from "../components/store/report-store";
+import { useLoader } from "@/components/hooks/use-loader";
 
 function ReportInputsContent() {
   const searchParams = useSearchParams();
@@ -21,6 +22,7 @@ function ReportInputsContent() {
   const [businessIdea, setBusinessIdea] = useState("");
   const [coreValue, setCoreValue] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const loader = useLoader({ isLoading });
 
   // reportId로 데이터 가져오기
   useEffect(() => {
@@ -114,16 +116,10 @@ function ReportInputsContent() {
     setInvestmentAmount(formatted);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex w-full justify-center items-center min-h-[400px]">
-        <div className="text-lg text-[#767676]">데이터를 불러오는 중...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex w-full justify-center">
+    <>
+      {loader}
+      <div className="flex w-full justify-center">
       <Card className="w-full max-w-[1200px] p-6 border border-[#EEF1F7] bg-white shadow-[0_0_10px_0_rgba(60,123,194,0.12)] rounded-xl">
         <div className="flex flex-col gap-6">
           {/* 목표 투자 금액 */}
@@ -221,6 +217,7 @@ function ReportInputsContent() {
         </div>
       </Card>
     </div>
+    </>
   );
 }
 

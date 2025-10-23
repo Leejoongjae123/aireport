@@ -12,6 +12,8 @@ function ReviewPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const activeTab = (searchParams.get("tab") as "all" | "pending" | "evaluating" | "consulting_requested" | "completed") || "all";
+  const keyword = searchParams.get("keyword") || "";
+  const [searchInput, setSearchInput] = useState(keyword);
   const [isLoading, setIsLoading] = useState(true);
   const [statusCounts, setStatusCounts] = useState({
     all: 0,
@@ -65,7 +67,28 @@ function ReviewPageContent() {
 
   const handleTabChange = (tab: string) => {
     setIsLoading(true);
-    router.push(`?tab=${tab}`);
+    const params = new URLSearchParams();
+    params.set("tab", tab);
+    if (keyword) {
+      params.set("keyword", keyword);
+    }
+    router.push(`?${params.toString()}`);
+  };
+
+  const handleSearch = () => {
+    setIsLoading(true);
+    const params = new URLSearchParams();
+    params.set("tab", activeTab);
+    if (searchInput.trim()) {
+      params.set("keyword", searchInput.trim());
+    }
+    router.push(`?${params.toString()}`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
   return (
@@ -138,10 +161,16 @@ function ReviewPageContent() {
               {/* Search Bar */}
               <div className="relative w-[453px]">
                 <Input
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   placeholder="생성하려는 보고서 제목을 입력해주세요."
                   className="w-full px-[18px] h-11 border border-[#E3E5E5] rounded-full bg-white text-base tracking-[-0.064px] placeholder:text-[#A6A6A6]"
                 />
-                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-[#0077FF] stroke-[2.5]" />
+                <Search 
+                  onClick={handleSearch}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-[#0077FF] stroke-[2.5] cursor-pointer hover:opacity-80" 
+                />
               </div>
             </div>
           </div>
@@ -150,6 +179,7 @@ function ReviewPageContent() {
           <ExpertRequestsList 
             isOpen={true} 
             statusFilter={activeTab === "all" ? "all" : activeTab as "pending" | "evaluating" | "consulting_requested" | "completed"}
+            keyword={keyword}
             onLoadingChange={setIsLoading}
           />
           </div>

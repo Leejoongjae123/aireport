@@ -1,21 +1,53 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { CustomModal } from "@/components/ui/custom-modal";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import Image from "next/image";
+
 interface ReportPreviewModalProps {
   children: React.ReactNode;
+  reportUuid: string;
+  reportTitle: string;
 }
 
 export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
   children,
+  reportUuid,
+  reportTitle,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [reportContent, setReportContent] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleOpenModal = () => setIsOpen(true);
   const handleCloseModal = () => setIsOpen(false);
+
+  const fetchReportSections = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/reports/${reportUuid}/sections`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          // 모든 섹션의 content를 순서대로 합치기
+          const combinedContent = result.data
+            .map((section: { content: string }) => section.content || "")
+            .join("");
+          setReportContent(combinedContent);
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [reportUuid]);
+
+  useEffect(() => {
+    if (isOpen && reportUuid) {
+      fetchReportSections();
+    }
+  }, [isOpen, reportUuid, fetchReportSections]);
 
   return (
     <>
@@ -50,7 +82,7 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
             {/* Title and Download Button */}
             <div className="flex justify-between items-start self-stretch relative py-6">
               <div className="text-[#2A2A2A] font-pretendard text-[20px] font-semibold leading-[150%] tracking-[-0.4px]">
-                AI 기반 리테일 수요예측 사업계획서
+                {reportTitle}
               </div>
               <button className="w-[139px] h-[40px] flex items-center justify-center gap-2 border border-[#D9D9D9] bg-white rounded" >
                 {/* Word Icon */}
@@ -62,14 +94,17 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
             </div>
 
             {/* Document Preview */}
-            <div className="flex w-[611px] h-[555px] p-5 px-6 flex-col items-center gap-[10px] border border-[#EEEEEF] bg-white rounded-xl relative">
-              <div className="flex flex-col items-start flex-1 self-stretch relative">
-                {/* Document Image */}
-                
-              </div>
-              
-              {/* Scrollbar */}
-              
+            <div className="flex w-[611px] h-[555px] p-5 px-6 flex-col items-start gap-[10px] border border-[#EEEEEF] bg-white rounded-xl relative overflow-y-auto">
+              {isLoading ? (
+                <div className="flex items-center justify-center w-full h-full">
+                  <div className="text-[#999999]">로딩 중...</div>
+                </div>
+              ) : (
+                <div 
+                  className="prose prose-sm max-w-none w-full"
+                  dangerouslySetInnerHTML={{ __html: reportContent }}
+                />
+              )}
             </div>
           </div>
 
