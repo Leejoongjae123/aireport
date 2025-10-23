@@ -5,6 +5,7 @@ import { CustomModal } from "@/components/ui/custom-modal";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import Image from "next/image";
+import { useLoadingOverlay } from "@/components/hooks/use-loading-overlay";
 
 interface ReportPreviewModalProps {
   children: React.ReactNode;
@@ -20,6 +21,11 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [reportContent, setReportContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  const loadingOverlay = useLoadingOverlay({ 
+    isLoading, 
+    currentSection: "" 
+  });
 
   const handleOpenModal = () => setIsOpen(true);
   const handleCloseModal = () => setIsOpen(false);
@@ -95,16 +101,11 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
 
             {/* Document Preview */}
             <div className="flex w-[611px] h-[555px] p-5 px-6 flex-col items-start gap-[10px] border border-[#EEEEEF] bg-white rounded-xl relative overflow-y-auto">
-              {isLoading ? (
-                <div className="flex items-center justify-center w-full h-full">
-                  <div className="text-[#999999]">로딩 중...</div>
-                </div>
-              ) : (
-                <div 
-                  className="prose prose-sm max-w-none w-full"
-                  dangerouslySetInnerHTML={{ __html: reportContent }}
-                />
-              )}
+              {loadingOverlay}
+              <div 
+                className="prose prose-sm max-w-none w-full [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-6 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-5 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:mb-2 [&_h3]:mt-4"
+                dangerouslySetInnerHTML={{ __html: reportContent }}
+              />
             </div>
           </div>
 
