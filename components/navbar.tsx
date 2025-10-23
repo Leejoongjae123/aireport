@@ -18,7 +18,7 @@ export default async function Navbar() {
           <Link href="/" className="flex items-center gap-[15px]">
             {/* <div className="h-[38px] w-[38px] rounded-full bg-[#B2B2B2]"></div>
             <span className="text-[32px] font-bold text-[#B3B3B3]">LOGO</span> */}
-            <Image src="/images/logo.png" alt="logo" width={120} height={60} />
+            <Image src="/images/logo.svg" alt="logo" width={120} height={60} />
 
           </Link>
           <div className="flex items-center">

@@ -198,7 +198,7 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
         }
 
         // 3. 내부 API(Route Handler)를 통해 AI 보고서 생성 요청
-        const generateResponse = await fetch(`/api/business-plan/generate`, {
+        const generateResponse = await fetch(`/api/reports/generate`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

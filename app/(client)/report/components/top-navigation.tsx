@@ -26,6 +26,8 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
   const [isValidationErrorModalOpen, setIsValidationErrorModalOpen] =
     useState(false);
   const [validationErrorMessage, setValidationErrorMessage] = useState("");
+  const [isAlreadyRequestedModalOpen, setIsAlreadyRequestedModalOpen] =
+    useState(false);
   const {
     reportType,
     reportId,
@@ -168,12 +170,71 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
     }
   };
 
-  const handleExport = () => {
-    // TODO: 내보내기 로직 구현
+  const handleExport = async () => {
+    if (!reportId) {
+      toast.error("리포트 ID가 없습니다.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const response = await fetch(`/api/reports/${reportId}/export`);
+
+      if (!response.ok) {
+        toast.error("Word 파일 생성에 실패했습니다.");
+        return;
+      }
+      
+
+      // Blob으로 변환
+      const blob = await response.blob();
+
+      // 다운로드 링크 생성
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `report_${new Date().getTime()}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Word 파일이 다운로드되었습니다.");
+    } catch {
+      toast.error("내보내기 중 오류가 발생했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleExpertReview = () => {
-    setIsExpertStepModalOpen(true);
+  const handleExpertReview = async () => {
+    if (!reportId) {
+      toast.error("리포트 ID가 없습니다.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/expert/check-request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          report_uuid: reportId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.alreadyRequested) {
+        setIsAlreadyRequestedModalOpen(true);
+        return;
+      }
+
+      setIsExpertStepModalOpen(true);
+    } catch {
+      toast.error("요청 이력 확인 중 오류가 발생했습니다.");
+    }
   };
 
   const handleStartExpertRequest = () => {
@@ -293,6 +354,30 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
         <p className="text-center text-[16px] text-[#303030] leading-6">
           {validationErrorMessage}
         </p>
+      </CustomModal>
+      <CustomModal
+        isOpen={isAlreadyRequestedModalOpen}
+        onClose={() => setIsAlreadyRequestedModalOpen(false)}
+        className="border-none"
+        width="400px"
+        padding="40px"
+        showCloseButton={false}
+      >
+        <div className="flex flex-col items-center gap-6">
+          <div className="text-center">
+            <div className="text-black font-pretendard text-[20px] font-bold leading-normal">
+              이미 평가요청을 하였습니다.
+            </div>
+          </div>
+          <button
+            onClick={() => setIsAlreadyRequestedModalOpen(false)}
+            className="flex py-3 px-8 justify-center items-center gap-2 rounded-[10px] bg-[#07F] text-white transition-colors hover:bg-[#0066CC]"
+          >
+            <div className="font-pretendard text-[16px] font-bold leading-normal">
+              확인
+            </div>
+          </button>
+        </div>
       </CustomModal>
     </>
   );

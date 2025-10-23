@@ -111,7 +111,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
             )}
 
             {/* Content */}
-            <div className="flex flex-col items-start self-stretch relative flex-1">
+            <div className="flex flex-col items-center self-stretch relative flex-1">
               {children}
             </div>
 

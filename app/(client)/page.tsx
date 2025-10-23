@@ -330,7 +330,7 @@ export default function Home() {
         </div> */}
         <div className="absolute top-[50px] left-[60px] text-center text-4xl font-bold leading-[160%] text-[#A6A6A6]">
           <Image
-            src="/images/logo.png"
+            src="/images/logo.svg"
             alt="logo"
             width={150}
             height={100}

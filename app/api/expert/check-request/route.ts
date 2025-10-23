@@ -18,11 +18,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { report_uuid, all_candidates, selected_expert } = body;
+    const { report_uuid } = body;
 
-    if (!report_uuid || !all_candidates || !selected_expert) {
+    if (!report_uuid) {
       return NextResponse.json(
-        { error: "report_uuid, all_candidates, selected_expert는 필수 항목입니다." },
+        { error: "report_uuid는 필수 항목입니다." },
         { status: 400 }
       );
     }
@@ -37,45 +37,19 @@ export async function POST(request: NextRequest) {
 
     if (existingRequest) {
       return NextResponse.json(
-        { error: "이미 요청한 이력이 있습니다.", alreadyRequested: true },
-        { status: 409 }
-      );
-    }
-
-    const { data, error } = await supabase
-      .from("expert_requests")
-      .insert({
-        user_id: user.id,
-        report_uuid,
-        all_candidates,
-        selected_expert,
-        status: "pending",
-      })
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json(
-        {
-          error: "전문가 평가 요청 저장 실패",
-          details: error.message,
-        },
-        { status: 500 }
+        { alreadyRequested: true },
+        { status: 200 }
       );
     }
 
     return NextResponse.json(
-      {
-        success: true,
-        data,
-        message: "전문가 평가 요청이 성공적으로 저장되었습니다.",
-      },
+      { alreadyRequested: false },
       { status: 200 }
     );
   } catch (error) {
     return NextResponse.json(
       {
-        error: "전문가 평가 요청 중 오류가 발생했습니다.",
+        error: "요청 이력 확인 중 오류가 발생했습니다.",
         details: error instanceof Error ? error.message : "알 수 없는 오류",
       },
       { status: 500 }

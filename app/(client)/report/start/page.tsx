@@ -27,7 +27,7 @@ export default function ReportStartPage() {
       {/* Logo */}
       <div className="flex items-center gap-[15px] mb-10">
         {/* <div className="w-[38px] h-[38px] bg-[#B2B2B2] rounded-full" /> */}
-        <Image src="/images/logo.png" alt="logo" width={200} height={100} />
+        <Image src="/images/logo.svg" alt="logo" width={200} height={100} />
         {/* <span className="text-[#B3B3B3] font-bold text-[32px] font-['Pretendard']">
           LOGO
         </span> */}

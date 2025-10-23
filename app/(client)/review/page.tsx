@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { ReviewResultModal } from "./components/review-result";
 import { ReportPreviewModal } from "./components/report-preview-modal";
+import { ExpertRequestsList } from "./components/expert-requests-list";
+import { useState } from "react";
 
 interface ReportData {
   id: number;
@@ -119,6 +121,7 @@ const StatusBadge = ({ status }: { status: ReportData["status"] }) => {
 };
 
 export default function ReviewPage() {
+  const [activeTab, setActiveTab] = useState<"all" | "submitted" | "expert-requests">("all");
   const statusCounts = {
     selected: 24,
     submitted: 1,
@@ -140,12 +143,22 @@ export default function ReviewPage() {
             {/* Filter Buttons and Search */}
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <Button className="bg-[#0077FF] text-white px-[18px] h-[38px] text-sm font-semibold tracking-[-0.28px] rounded-md hover:bg-[#0077FF]/90">
+                <Button 
+                  onClick={() => setActiveTab("all")}
+                  className={`px-[18px] h-[38px] text-sm font-semibold tracking-[-0.28px] rounded-md ${
+                    activeTab === "all"
+                      ? "bg-[#0077FF] text-white hover:bg-[#0077FF]/90"
+                      : "border-[#0077FF] text-[#0077FF] bg-white border hover:bg-gray-50"
+                  }`}
+                >
                   선택 ({statusCounts.selected})
                 </Button>
                 <Button
+                  onClick={() => setActiveTab("expert-requests")}
                   variant="outline"
-                  className="border-[#0077FF] text-[#0077FF] bg-white px-[18px] h-[38px] text-sm font-semibold tracking-[-0.28px] rounded-md hover:bg-gray-50"
+                  className={`border-[#0077FF] text-[#0077FF] bg-white px-[18px] h-[38px] text-sm font-semibold tracking-[-0.28px] rounded-md hover:bg-gray-50 ${
+                    activeTab === "expert-requests" ? "bg-[#E8F3FF]" : ""
+                  }`}
                 >
                   평가요청 ({statusCounts.submitted})
                 </Button>
@@ -181,144 +194,148 @@ export default function ReviewPage() {
           </div>
 
           {/* Table */}
-          <div className="border border-[#D9D9D9]">
-            {/* Table Header */}
-            <div className="flex h-[50px] bg-[#F5F5F5] border-b border-[#D9D9D9]">
-              <div className="flex-1 flex items-center justify-center px-[10px]">
-                <span className="text-[#5A5A5A] text-xs font-semibold">
-                  제목
-                </span>
+          {activeTab === "expert-requests" ? (
+            <ExpertRequestsList isOpen={activeTab === "expert-requests"} />
+          ) : (
+            <div className="border border-[#D9D9D9]">
+              {/* Table Header */}
+              <div className="flex h-[50px] bg-[#F5F5F5] border-b border-[#D9D9D9]">
+                <div className="flex-1 flex items-center justify-center px-[10px]">
+                  <span className="text-[#5A5A5A] text-xs font-semibold">
+                    제목
+                  </span>
+                </div>
+                <div className="flex-1 flex items-center justify-center px-[10px]">
+                  <span className="text-[#5A5A5A] text-xs font-semibold">
+                    분야
+                  </span>
+                </div>
+                <div className="flex-1 flex items-center justify-center px-[10px]">
+                  <span className="text-[#5A5A5A] text-xs font-semibold">
+                    상태
+                  </span>
+                </div>
+                <div className="flex-1 flex items-center justify-center px-[10px]">
+                  <span className="text-[#5A5A5A] text-xs font-semibold">
+                    생성일
+                  </span>
+                </div>
+                <div className="flex-1 flex items-center justify-center px-[10px]">
+                  <span className="text-[#5A5A5A] text-xs font-semibold">
+                    보고서
+                  </span>
+                </div>
+                <div className="flex-1 flex items-center justify-center px-[10px]">
+                  <span className="text-[#5A5A5A] text-xs font-semibold">
+                    전문가 평가
+                  </span>
+                </div>
+                <div className="flex-1 flex items-center justify-center px-[10px]">
+                  <span className="text-[#5A5A5A] text-xs font-semibold">
+                    평가서
+                  </span>
+                </div>
+                <div className="w-20 flex items-center justify-center px-[10px]">
+                  <span className="text-[#5A5A5A] text-xs font-semibold">
+                    더보기
+                  </span>
+                </div>
               </div>
-              <div className="flex-1 flex items-center justify-center px-[10px]">
-                <span className="text-[#5A5A5A] text-xs font-semibold">
-                  분야
-                </span>
-              </div>
-              <div className="flex-1 flex items-center justify-center px-[10px]">
-                <span className="text-[#5A5A5A] text-xs font-semibold">
-                  상태
-                </span>
-              </div>
-              <div className="flex-1 flex items-center justify-center px-[10px]">
-                <span className="text-[#5A5A5A] text-xs font-semibold">
-                  생성일
-                </span>
-              </div>
-              <div className="flex-1 flex items-center justify-center px-[10px]">
-                <span className="text-[#5A5A5A] text-xs font-semibold">
-                  보고서
-                </span>
-              </div>
-              <div className="flex-1 flex items-center justify-center px-[10px]">
-                <span className="text-[#5A5A5A] text-xs font-semibold">
-                  전문가 평가
-                </span>
-              </div>
-              <div className="flex-1 flex items-center justify-center px-[10px]">
-                <span className="text-[#5A5A5A] text-xs font-semibold">
-                  평가서
-                </span>
-              </div>
-              <div className="w-20 flex items-center justify-center px-[10px]">
-                <span className="text-[#5A5A5A] text-xs font-semibold">
-                  더보기
-                </span>
-              </div>
-            </div>
 
-            {/* Table Rows */}
-            {mockData.map((report) => (
-              <div
-                key={report.id}
-                className="flex py-4 border-b border-[#D9D9D9] last:border-b-0"
-              >
-                <div className="flex-1 flex items-center justify-center px-[10px]">
-                  <span className="text-[#444444] text-sm tracking-[-0.28px]">
-                    {report.title}
-                  </span>
-                </div>
-                <div className="flex-1 flex items-center justify-center px-[10px]">
-                  <span className="text-[#444444] text-sm tracking-[-0.28px]">
-                    {report.field}
-                  </span>
-                </div>
-                <div className="flex-1 flex items-center justify-center px-[10px]">
-                  <StatusBadge status={report.status} />
-                </div>
-                <div className="flex-1 flex items-center justify-center px-[10px]">
-                  <span className="text-[#444444] text-sm tracking-[-0.28px]">
-                    {report.createdDate}
-                  </span>
-                </div>
-                <div className="flex-1 flex items-center justify-center px-[10px]">
-                  <ReportPreviewModal>
-                    <Button
-                      variant="outline"
-                      className="flex items-center gap-1 px-[10px] py-[6px] border border-[#D9D9D9] bg-white rounded text-xs text-[#5A5A5A] hover:bg-gray-50"
-                    >
-                      <FileText className="w-4 h-4" strokeWidth={1.4} />
-                      보고서 보기
-                    </Button>
-                  </ReportPreviewModal>
-                </div>
-                <div className="flex-1 flex items-center justify-center px-[10px]">
-                  <span className="text-[#444444] text-sm tracking-[-0.28px]">
-                    {report.expertScore || "-"}
-                  </span>
-                </div>
-                <div className="flex-1 flex items-center justify-center px-[10px]">
-                  {report.expertScore ? (
-                    <ReviewResultModal>
+              {/* Table Rows */}
+              {mockData.map((report) => (
+                <div
+                  key={report.id}
+                  className="flex py-4 border-b border-[#D9D9D9] last:border-b-0"
+                >
+                  <div className="flex-1 flex items-center justify-center px-[10px]">
+                    <span className="text-[#444444] text-sm tracking-[-0.28px]">
+                      {report.title}
+                    </span>
+                  </div>
+                  <div className="flex-1 flex items-center justify-center px-[10px]">
+                    <span className="text-[#444444] text-sm tracking-[-0.28px]">
+                      {report.field}
+                    </span>
+                  </div>
+                  <div className="flex-1 flex items-center justify-center px-[10px]">
+                    <StatusBadge status={report.status} />
+                  </div>
+                  <div className="flex-1 flex items-center justify-center px-[10px]">
+                    <span className="text-[#444444] text-sm tracking-[-0.28px]">
+                      {report.createdDate}
+                    </span>
+                  </div>
+                  <div className="flex-1 flex items-center justify-center px-[10px]">
+                    <ReportPreviewModal>
                       <Button
                         variant="outline"
                         className="flex items-center gap-1 px-[10px] py-[6px] border border-[#D9D9D9] bg-white rounded text-xs text-[#5A5A5A] hover:bg-gray-50"
                       >
-                        <BarChart3 className="w-4 h-4" strokeWidth={1.4} />
-                        평가서 보기
+                        <FileText className="w-4 h-4" strokeWidth={1.4} />
+                        보고서 보기
                       </Button>
-                    </ReviewResultModal>
-                  ) : (
+                    </ReportPreviewModal>
+                  </div>
+                  <div className="flex-1 flex items-center justify-center px-[10px]">
                     <span className="text-[#444444] text-sm tracking-[-0.28px]">
-                      -
+                      {report.expertScore || "-"}
                     </span>
-                  )}
-                </div>
-                <div className="w-20 flex items-center justify-center px-[10px]">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-8 h-8 hover:bg-gray-100"
+                  </div>
+                  <div className="flex-1 flex items-center justify-center px-[10px]">
+                    {report.expertScore ? (
+                      <ReviewResultModal>
+                        <Button
+                          variant="outline"
+                          className="flex items-center gap-1 px-[10px] py-[6px] border border-[#D9D9D9] bg-white rounded text-xs text-[#5A5A5A] hover:bg-gray-50"
+                        >
+                          <BarChart3 className="w-4 h-4" strokeWidth={1.4} />
+                          평가서 보기
+                        </Button>
+                      </ReviewResultModal>
+                    ) : (
+                      <span className="text-[#444444] text-sm tracking-[-0.28px]">
+                        -
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-20 flex items-center justify-center px-[10px]">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-8 h-8 hover:bg-gray-100"
+                        >
+                          <MoreHorizontal className="w-8 h-8 text-[#444444]" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        side="bottom"
+                        alignOffset={0}
+                        sideOffset={5}
+                        className="p-2 w-auto min-w-fit"
                       >
-                        <MoreHorizontal className="w-8 h-8 text-[#444444]" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      side="bottom"
-                      alignOffset={0}
-                      sideOffset={5}
-                      className="p-2 w-auto min-w-fit"
-                    >
-                      <DropdownMenuItem className="flex items-center gap-[6px] px-3 py-[6px] bg-[#E8F3FF] text-[#0077FF] text-sm font-medium rounded hover:bg-[#E8F3FF]/80 cursor-pointer">
-                        <Download className="w-[18px] h-[18px]" />
-                        저장
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-[6px] px-3 py-[6px] text-[#767676] text-sm hover:bg-gray-50 cursor-pointer mt-[2px]">
-                        <Pencil className="w-[18px] h-[18px]" />
-                        수정
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-[6px] px-3 py-[6px] text-[#767676] text-sm hover:bg-gray-50 cursor-pointer mt-[2px]">
-                        <Trash2 className="w-[18px] h-[18px]" />
-                        삭제
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        <DropdownMenuItem className="flex items-center gap-[6px] px-3 py-[6px] bg-[#E8F3FF] text-[#0077FF] text-sm font-medium rounded hover:bg-[#E8F3FF]/80 cursor-pointer">
+                          <Download className="w-[18px] h-[18px]" />
+                          저장
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="flex items-center gap-[6px] px-3 py-[6px] text-[#767676] text-sm hover:bg-gray-50 cursor-pointer mt-[2px]">
+                          <Pencil className="w-[18px] h-[18px]" />
+                          수정
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="flex items-center gap-[6px] px-3 py-[6px] text-[#767676] text-sm hover:bg-gray-50 cursor-pointer mt-[2px]">
+                          <Trash2 className="w-[18px] h-[18px]" />
+                          삭제
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
