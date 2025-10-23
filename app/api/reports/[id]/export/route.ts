@@ -225,7 +225,7 @@ export async function GET(
     const fileName = `${reportData?.title || "report"}_${new Date().getTime()}.docx`;
 
     // 응답 반환
-    return new NextResponse(buffer, {
+    return new NextResponse(buffer as unknown as BodyInit, {
       headers: {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

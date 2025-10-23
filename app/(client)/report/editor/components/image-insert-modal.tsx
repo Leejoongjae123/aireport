@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import Image from "next/image";
 import { CustomModal } from "@/components/ui/custom-modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -139,11 +140,12 @@ export function ImageInsertModal({
             {url && (
               <div className="flex flex-col gap-2">
                 <Label className="text-sm font-semibold">미리보기</Label>
-                <div className="border border-gray-200 rounded-md p-4 flex justify-center items-center bg-gray-50">
-                  <img
+                <div className="border border-gray-200 rounded-md p-4 flex justify-center items-center bg-gray-50 relative h-48">
+                  <Image
                     src={url}
                     alt="Preview"
-                    className="max-w-full max-h-48 object-contain"
+                    fill
+                    className="object-contain"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = "none";
                     }}
@@ -183,11 +185,12 @@ export function ImageInsertModal({
             {filePreview && (
               <div className="flex flex-col gap-2">
                 <Label className="text-sm font-semibold">미리보기</Label>
-                <div className="border border-gray-200 rounded-md p-4 flex justify-center items-center bg-gray-50">
-                  <img
+                <div className="border border-gray-200 rounded-md p-4 flex justify-center items-center bg-gray-50 relative h-48">
+                  <Image
                     src={filePreview}
                     alt="Preview"
-                    className="max-w-full max-h-48 object-contain"
+                    fill
+                    className="object-contain"
                   />
                 </div>
               </div>
