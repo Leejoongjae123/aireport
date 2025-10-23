@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useReportStore } from "../components/store/report-store";
-import { useProcedureStore } from "./components/store/procedure-store";
-import { BusinessCategoryModal } from "../start/components/business-category-modal";
-import { ReportGenerationModal } from "../components/report-generation-modal";
+import { useReportStore } from "../components/store/ReportStore";
+import { useProcedureStore } from "./components/store/ProcedureStore";
+import { BusinessCategoryModal } from "../start/components/BusinessCategoryModal";
+import { ReportGenerationModal } from "../components/ReportGenerationModal";
 import { SectionList } from "./components/SectionList";
 import { TableOfContentsList } from "./components/TableOfContentsList";
 import { ItemSettings } from "./components/ItemSettings";

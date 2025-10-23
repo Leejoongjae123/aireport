@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
-import { useReportStore } from "../components/store/report-store";
-import { useLoader } from "@/components/hooks/use-loader";
+import { useReportStore } from "../components/store/ReportStore";
+import { useLoader } from "@/components/hooks/UseLoader";
 
 function ReportInputsContent() {
   const searchParams = useSearchParams();
