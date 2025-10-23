@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     const {
       data: { user },
       error: authError,
@@ -22,7 +22,10 @@ export async function POST(request: NextRequest) {
 
     if (!report_uuid || !all_candidates || !selected_expert) {
       return NextResponse.json(
-        { error: "report_uuid, all_candidates, selected_expert는 필수 항목입니다." },
+        {
+          error:
+            "report_uuid, all_candidates, selected_expert는 필수 항목입니다.",
+        },
         { status: 400 }
       );
     }

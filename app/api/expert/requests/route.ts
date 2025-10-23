@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
 
@@ -12,6 +12,15 @@ export async function GET() {
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const url = new URL(request.url);
+    const statusParam = url.searchParams.get("status");
+    const allowedStatuses = [
+      "pending",
+      "evaluating",
+      "consulting_requested",
+      "completed",
+    ] as const;
 
     const { data } = await supabase
       .from("expert_requests")
@@ -25,7 +34,7 @@ export async function GET() {
         all_candidates,
         selected_expert,
         status,
-        report_create!inner(
+        report_create!expert_requests_report_uuid_fkey(
           title,
           business_field,
           created_at
@@ -35,7 +44,13 @@ export async function GET() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    return NextResponse.json(data);
+    const rows = data ?? [];
+    const filtered =
+      statusParam && (allowedStatuses as readonly string[]).includes(statusParam)
+        ? rows.filter((row) => row.status === statusParam)
+        : rows;
+
+    return NextResponse.json(filtered);
   } catch {
     return NextResponse.json(
       { error: "Internal server error" },

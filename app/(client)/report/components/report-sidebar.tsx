@@ -74,7 +74,7 @@ export function ReportSidebar() {
 
           <div className="flex flex-col gap-3">
             {isLoading ? (
-              <div className="px-4 py-2 text-sm text-[#767676]">로딩 중...</div>
+              <div className="px-4 py-2 text-sm text-[#767676]"></div>
             ) : reports.length === 0 ? (
               <div className="px-4 py-2 text-sm text-[#767676]">
                 생성된 보고서가 없습니다.

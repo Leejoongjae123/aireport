@@ -6,6 +6,12 @@ export interface Expert {
   selected?: boolean;
 }
 
+export type ExpertRequestStatus =
+  | "pending"
+  | "evaluating"
+  | "consulting_requested"
+  | "completed";
+
 export interface ExpertRequest {
   id: number;
   created_at: string;
@@ -14,7 +20,7 @@ export interface ExpertRequest {
   user_id: string;
   all_candidates: Expert[];
   selected_expert: Expert;
-  status: string;
+  status: ExpertRequestStatus;
   report_create: {
     title: string;
     business_field: string;

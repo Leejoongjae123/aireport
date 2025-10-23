@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ExpertRequest } from "./types";
+import { useCallback, useEffect, useState } from "react";
+import { ExpertRequest, ExpertRequestStatus } from "./types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,34 +9,42 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Download, Trash2, Pencil } from "lucide-react";
+import { MoreHorizontal, Download, Trash2, Pencil, FileText, BarChart3 } from "lucide-react";
 
 interface ExpertRequestsListProps {
   isOpen: boolean;
+  statusFilter?: "all" | ExpertRequestStatus;
+  onLoadingChange?: (isLoading: boolean) => void;
 }
 
-export function ExpertRequestsList({ isOpen }: ExpertRequestsListProps) {
-  const [requests, setRequests] = useState<ExpertRequest[]>([]);
+export function ExpertRequestsList({ isOpen, statusFilter = "all", onLoadingChange }: ExpertRequestsListProps) {
+  const [requests, setRequests] = useState<ExpertRequest[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const fetchExpertRequests = useCallback(async () => {
+    setIsLoading(true);
+    onLoadingChange?.(true);
+    try {
+      const base = new URL("/api/expert/requests", window.location.origin);
+      if (statusFilter !== "all") {
+        base.searchParams.set("status", statusFilter);
+      }
+      const response = await fetch(base.toString());
+      if (response.ok) {
+        const data = await response.json();
+        setRequests(Array.isArray(data) ? data : []);
+      }
+    } finally {
+      setIsLoading(false);
+      onLoadingChange?.(false);
+    }
+  }, [statusFilter, onLoadingChange]);
 
   useEffect(() => {
     if (isOpen) {
       fetchExpertRequests();
     }
-  }, [isOpen]);
-
-  const fetchExpertRequests = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/expert/requests");
-      if (response.ok) {
-        const data = await response.json();
-        setRequests(data);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [isOpen, fetchExpertRequests]);
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -46,23 +54,23 @@ export function ExpertRequestsList({ isOpen }: ExpertRequestsListProps) {
           className:
             "bg-[#FFF1C2] text-[#BF6A02] px-3 py-2 rounded-full text-sm font-semibold",
         };
-      case "accepted":
+      case "evaluating":
         return {
-          text: "수락됨",
+          text: "평가중",
           className:
-            "bg-[#CFF7D3] text-[#009951] px-3 py-2 rounded-full text-sm font-semibold",
+            "bg-[#E7E7FF] text-[#4F46E5] px-3 py-2 rounded-full text-sm font-semibold",
+        };
+      case "consulting_requested":
+        return {
+          text: "컨설팅요청",
+          className:
+            "bg-[#FFE8E0] text-[#C2410C] px-3 py-2 rounded-full text-sm font-semibold",
         };
       case "completed":
         return {
           text: "완료됨",
           className:
             "bg-[#C7EAFF] text-[#0077FF] px-3 py-2 rounded-full text-sm font-semibold",
-        };
-      case "rejected":
-        return {
-          text: "거절됨",
-          className:
-            "bg-[#FDD3D0] text-[#C00F0C] px-3 py-2 rounded-full text-sm font-semibold",
         };
       default:
         return {
@@ -74,11 +82,15 @@ export function ExpertRequestsList({ isOpen }: ExpertRequestsListProps) {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">로딩 중...</div>;
+    return <div className="text-center py-8"></div>;
   }
 
-  if (requests.length === 0) {
-    return <div className="text-center py-8 text-[#999999]">평가요청 내역이 없습니다.</div>;
+  if (!Array.isArray(requests) || requests.length === 0) {
+    return (
+      <div className="text-center py-8 text-[#999999]">
+        평가요청 내역이 없습니다.
+      </div>
+    );
   }
 
   return (
@@ -92,15 +104,19 @@ export function ExpertRequestsList({ isOpen }: ExpertRequestsListProps) {
           <span className="text-[#5A5A5A] text-xs font-semibold">분야</span>
         </div>
         <div className="flex-1 flex items-center justify-center px-[10px]">
-          <span className="text-[#5A5A5A] text-xs font-semibold">
-            선택된 전문가
-          </span>
-        </div>
-        <div className="flex-1 flex items-center justify-center px-[10px]">
           <span className="text-[#5A5A5A] text-xs font-semibold">상태</span>
         </div>
         <div className="flex-1 flex items-center justify-center px-[10px]">
-          <span className="text-[#5A5A5A] text-xs font-semibold">요청일</span>
+          <span className="text-[#5A5A5A] text-xs font-semibold">생성일</span>
+        </div>
+        <div className="flex-1 flex items-center justify-center px-[10px]">
+          <span className="text-[#5A5A5A] text-xs font-semibold">보고서</span>
+        </div>
+        <div className="flex-1 flex items-center justify-center px-[10px]">
+          <span className="text-[#5A5A5A] text-xs font-semibold">전문가 평가</span>
+        </div>
+        <div className="flex-1 flex items-center justify-center px-[10px]">
+          <span className="text-[#5A5A5A] text-xs font-semibold">평가서</span>
         </div>
         <div className="w-20 flex items-center justify-center px-[10px]">
           <span className="text-[#5A5A5A] text-xs font-semibold">더보기</span>
@@ -124,14 +140,7 @@ export function ExpertRequestsList({ isOpen }: ExpertRequestsListProps) {
             </span>
           </div>
           <div className="flex-1 flex items-center justify-center px-[10px]">
-            <span className="text-[#444444] text-sm tracking-[-0.28px]">
-              {request.selected_expert.name}
-            </span>
-          </div>
-          <div className="flex-1 flex items-center justify-center px-[10px]">
-            <span
-              className={getStatusConfig(request.status).className}
-            >
+            <span className={getStatusConfig(request.status).className}>
               {getStatusConfig(request.status).text}
             </span>
           </div>
@@ -139,6 +148,29 @@ export function ExpertRequestsList({ isOpen }: ExpertRequestsListProps) {
             <span className="text-[#444444] text-sm tracking-[-0.28px]">
               {new Date(request.created_at).toLocaleDateString("ko-KR")}
             </span>
+          </div>
+          <div className="flex-1 flex items-center justify-center px-[10px]">
+            <Button
+              variant="outline"
+              className="flex items-center gap-1 px-[10px] py-[6px] border border-[#D9D9D9] bg-white rounded text-xs text-[#5A5A5A] hover:bg-gray-50"
+            >
+              <FileText className="w-4 h-4" strokeWidth={1.4} />
+              보고서 보기
+            </Button>
+          </div>
+          <div className="flex-1 flex items-center justify-center px-[10px]">
+            <span className="text-[#444444] text-sm tracking-[-0.28px]">
+              {request.selected_expert.name}
+            </span>
+          </div>
+          <div className="flex-1 flex items-center justify-center px-[10px]">
+            <Button
+              variant="outline"
+              className="flex items-center gap-1 px-[10px] py-[6px] border border-[#D9D9D9] bg-white rounded text-xs text-[#5A5A5A] hover:bg-gray-50"
+            >
+              <BarChart3 className="w-4 h-4" strokeWidth={1.4} />
+              평가서 보기
+            </Button>
           </div>
           <div className="w-20 flex items-center justify-center px-[10px]">
             <DropdownMenu>
