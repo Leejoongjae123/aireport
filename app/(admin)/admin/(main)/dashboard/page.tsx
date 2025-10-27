@@ -14,8 +14,15 @@ interface DashboardStats {
   averageDurationFormatted: string;
   successRate: number;
   expertRequestCount: number;
-  expertRequestPending: number;
-  expertRequestCompleted: number;
+  consultingRequestCount: number;
+}
+
+interface RecentReport {
+  uuid: string;
+  title: string;
+  business_field: string;
+  email: string;
+  created_at: string;
 }
 
 export default function DashboardPage() {
@@ -29,9 +36,9 @@ export default function DashboardPage() {
     averageDurationFormatted: "0분 0초",
     successRate: 0,
     expertRequestCount: 0,
-    expertRequestPending: 0,
-    expertRequestCompleted: 0,
+    consultingRequestCount: 0,
   });
+  const [recentReports, setRecentReports] = useState<RecentReport[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,6 +49,7 @@ export default function DashboardPage() {
 
         if (data.success) {
           setStats(data.stats);
+          setRecentReports(data.recentReports || []);
         }
       } catch (error) {
         console.log("통계 데이터를 불러오는데 실패했습니다.", error);
@@ -127,23 +135,17 @@ export default function DashboardPage() {
             
             {/* Right Column - Expert Evaluations */}
             <div className="flex-1 flex flex-col">
-              <div className="flex justify-between items-start py-2">
+              <div className="flex justify-between items-center py-2">
                 <span className="text-base font-semibold text-[#767676]">전문가 평가 요청</span>
-                <div className="flex flex-col items-end min-w-[114px]">
-                  <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">
-                    {loading ? "-" : stats.expertRequestCount}
-                  </span>
-                  <span className="text-xs font-semibold text-[#0077ff] text-right">
-                    대기 {loading ? "-" : stats.expertRequestPending} · 완료 {loading ? "-" : stats.expertRequestCompleted}
-                  </span>
-                </div>
+                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">
+                  {loading ? "-" : stats.expertRequestCount}
+                </span>
               </div>
-              <div className="flex justify-between items-start py-2">
+              <div className="flex justify-between items-center py-2">
                 <span className="text-base font-semibold text-[#767676]">컨설팅 요청</span>
-                <div className="flex flex-col items-end min-w-[73px]">
-                  <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">11</span>
-                  <span className="text-xs font-semibold text-[#0077ff] text-right">대기 3 · 완료 8</span>
-                </div>
+                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">
+                  {loading ? "-" : stats.consultingRequestCount}
+                </span>
               </div>
             </div>
           </div>
@@ -163,16 +165,29 @@ export default function DashboardPage() {
           </div>
           
           <div className="flex flex-col">
-            {/* Table Rows */}
-            {Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className="flex justify-evenly items-center py-4 border-b border-[#d9d9d9] gap-24">
-                <div className="text-sm text-[#303030] opacity-90">RP10231</div>
-                <div className="text-sm text-[#303030] opacity-90">AI 기반 리테일 수요예측 사업계획서</div>
-                <div className="text-sm text-[#303030] opacity-90">디지털·ICT·AI 산업</div>
-                <div className="text-sm text-[#303030] opacity-90">김철수(User1)</div>
-                <div className="text-sm text-[#303030] opacity-90">2025-09-10 14:12</div>
-              </div>
-            ))}
+            {loading ? (
+              <div className="text-center py-8 text-[#767676]">로딩 중...</div>
+            ) : recentReports.length === 0 ? (
+              <div className="text-center py-8 text-[#767676]">최근 생성된 보고서가 없습니다.</div>
+            ) : (
+              recentReports.map((report) => (
+                <div key={report.uuid} className="flex justify-evenly items-center py-4 border-b border-[#d9d9d9] gap-24">
+                  <div className="text-sm text-[#303030] opacity-90 min-w-[80px]">{report.uuid.slice(0, 8)}</div>
+                  <div className="text-sm text-[#303030] opacity-90 flex-1">{report.title || "제목 없음"}</div>
+                  <div className="text-sm text-[#303030] opacity-90 min-w-[150px]">{report.business_field || "-"}</div>
+                  <div className="text-sm text-[#303030] opacity-90 min-w-[150px]">{report.email || "-"}</div>
+                  <div className="text-sm text-[#303030] opacity-90 min-w-[130px]">
+                    {new Date(report.created_at).toLocaleString("ko-KR", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

@@ -82,8 +82,35 @@ export async function GET() {
 
   // 전문가 평가 요청 통계 계산
   const expertRequestCount = todayExpertRequests?.length || 0;
-  const expertRequestPending = todayExpertRequests?.filter(r => r.status === 'pending').length || 0;
-  const expertRequestCompleted = todayExpertRequests?.filter(r => r.status === 'completed').length || 0;
+
+  // 컨설팅 요청 데이터 조회
+  const { data: todayConsultingRequests, error: consultingRequestsError } = await supabase
+    .from("consulting_requests")
+    .select("status");
+
+  if (consultingRequestsError) {
+    return NextResponse.json(
+      { error: "컨설팅 요청 통계 데이터를 불러오는데 실패했습니다." },
+      { status: 500 }
+    );
+  }
+
+  // 컨설팅 요청 통계 계산
+  const consultingRequestCount = todayConsultingRequests?.length || 0;
+
+  // 최근 생성 보고서 5개 조회
+  const { data: recentReports, error: recentReportsError } = await supabase
+    .from("report_create")
+    .select("uuid, title, business_field, email, created_at")
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  if (recentReportsError) {
+    return NextResponse.json(
+      { error: "최근 보고서 데이터를 불러오는데 실패했습니다." },
+      { status: 500 }
+    );
+  }
 
   // 평균 처리 시간을 분:초 형식으로 변환
   const minutes = Math.floor(averageDuration / 60);
@@ -102,8 +129,8 @@ export async function GET() {
       averageDurationFormatted,
       successRate,
       expertRequestCount,
-      expertRequestPending,
-      expertRequestCompleted,
+      consultingRequestCount,
     },
+    recentReports: recentReports || [],
   });
 }
