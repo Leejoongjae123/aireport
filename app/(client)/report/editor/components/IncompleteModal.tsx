@@ -1,5 +1,5 @@
 import { CustomModal } from "@/components/ui/CustomModal";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 
 interface IncompleteModalProps {
   isOpen: boolean;

@@ -7,7 +7,7 @@ import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Link from "@tiptap/extension-link";
 import ResizableImageExtension from "tiptap-extension-resize-image";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import {
   ChevronDown,
   List,
@@ -20,10 +20,10 @@ import {
   Image as ImageIcon,
   ListIcon,
 } from "lucide-react";
-import { LinkInsertModal } from "./link-insert-modal";
-import { ImageInsertModal } from "./image-insert-modal";
-import { useEditorStore } from "../store/editor-store";
-import { useLoadingOverlay } from "@/components/hooks/use-loading-overlay";
+import { LinkInsertModal } from "./LinkInsertModal";
+import { ImageInsertModal } from "./ImageInsertModal";
+import { useEditorStore } from "../store/EditorStore";
+import { useLoadingOverlay } from "@/components/hooks/UseLoadingOverlay";
 
 interface TextEditorProps {
   content?: string;

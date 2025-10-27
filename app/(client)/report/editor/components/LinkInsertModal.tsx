@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { CustomModal } from "@/components/ui/CustomModal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Label } from "@/components/ui/label";
+import { Label } from "@/components/ui/Label";
 
 interface LinkInsertModalProps {
   isOpen: boolean;

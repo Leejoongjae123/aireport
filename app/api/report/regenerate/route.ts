@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 백엔드 API 호출
-    const response = await fetch(`${aiEndpoint}/report/regenerate`, {
+    const response = await fetch(`${aiEndpoint}/api/reports/regenerate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

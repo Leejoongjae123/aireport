@@ -22,7 +22,8 @@ export function ExpertEvaluationRequestModal({
 }: ExpertEvaluationModalProps) {
   const [experts, setExperts] = useState<Expert[]>(initialExperts);
   const [isLoading, setIsLoading] = useState(false);
-  const [showAlreadyRequestedModal, setShowAlreadyRequestedModal] = useState(false);
+  const [showAlreadyRequestedModal, setShowAlreadyRequestedModal] =
+    useState(false);
   const { setSelectedExpert } = useExpertStore();
   const { reportId } = useReportStore();
 
@@ -51,15 +52,15 @@ export function ExpertEvaluationRequestModal({
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/expert/request", {
+      const response = await fetch("/api/expert/evaluation-request", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           report_uuid: reportId,
-          all_candidates: experts,
-          selected_expert: selectedExpert,
+          experts: experts,
+          selected_expert_name: selectedExpert.name,
         }),
       });
 
@@ -115,87 +116,87 @@ export function ExpertEvaluationRequestModal({
         padding="40px"
         showCloseButton={false}
       >
-      <div className="flex w-[420px] flex-col items-center gap-8 relative">
-        <div className="flex flex-col items-start gap-5 self-stretch relative">
-          {/* Header */}
-          <div className="flex justify-between items-start self-stretch relative">
-            <div className="flex flex-col justify-center items-start gap-2 flex-1 relative">
-              <div className="text-black font-pretendard text-[24px] font-bold leading-normal">
-                전문가 평가요청
+        <div className="flex w-[420px] flex-col items-center gap-8 relative">
+          <div className="flex flex-col items-start gap-5 self-stretch relative">
+            {/* Header */}
+            <div className="flex justify-between items-start self-stretch relative">
+              <div className="flex flex-col justify-center items-start gap-2 flex-1 relative">
+                <div className="text-black font-pretendard text-[24px] font-bold leading-normal">
+                  전문가 평가요청
+                </div>
+                <div className="self-stretch text-[rgba(90,90,90,1)] font-pretendard text-[14px] font-normal leading-[20px]">
+                  해당 보고서에 적합한 전문가들을 찾았어요!
+                  <br />
+                  필요한 전문가를 선택해 평가를 요청하세요.
+                </div>
               </div>
-              <div className="self-stretch text-[rgba(90,90,90,1)] font-pretendard text-[14px] font-normal leading-[20px]">
-                해당 보고서에 적합한 전문가들을 찾았어요!
-                <br />
-                필요한 전문가를 선택해 평가를 요청하세요.
-              </div>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 flex items-center justify-center"
+              >
+                <X className="w-8 h-8 text-[#767676]" strokeWidth={1.6} />
+              </button>
             </div>
+
+            {/* Expert Cards */}
+            <div className="flex flex-col items-start gap-3 self-stretch relative">
+              {experts.slice(0, 3).map((expert) => (
+                <div
+                  key={expert.id}
+                  className="flex p-6 flex-col items-start gap-4 self-stretch rounded-[10px] border border-[#EEEEEF] bg-white relative"
+                >
+                  <div className="flex flex-col items-start gap-2 self-stretch relative">
+                    <div className="flex w-full flex-col items-start relative">
+                      <div className="self-stretch text-[#2B2B2B] font-pretendard text-[16px] font-bold leading-[29px]">
+                        {expert.name}
+                      </div>
+                      <div className="w-full text-[#6B6B6B] font-pretendard text-[14px] font-normal leading-normal tracking-[-0.064px] opacity-80 line-clamp-2">
+                        {expert.specialty}
+                      </div>
+                    </div>
+                    <div className="self-stretch text-[#2B2B2B] font-pretendard text-[14px] font-normal leading-[18px] tracking-[-0.064px] opacity-80">
+                      {expert.description}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleExpertSelection(expert.id)}
+                    className={`flex py-3 px-6 justify-center items-center gap-[6px] rounded-lg ${
+                      expert.selected
+                        ? "bg-[#07F] text-white"
+                        : "border border-[#07F] bg-white text-[#07F]"
+                    } transition-colors`}
+                  >
+                    <div className="font-pretendard text-[18px] font-bold leading-normal tracking-[-0.36px]">
+                      선택
+                    </div>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom Buttons */}
+          <div className="flex items-start gap-3 self-stretch relative">
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center"
+              disabled={isLoading}
+              className="flex py-5 px-[52px] justify-center items-center gap-2 flex-1 rounded-[10px] border border-[#07F] bg-white text-[#07F] transition-colors hover:bg-[#07F]/5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <X className="w-8 h-8 text-[#767676]" strokeWidth={1.6} />
+              <div className="font-pretendard text-[18px] font-bold leading-normal tracking-[-0.36px]">
+                취소
+              </div>
+            </button>
+            <button
+              onClick={handleEvaluationRequest}
+              disabled={isLoading}
+              className="flex py-5 px-[52px] justify-center items-center gap-2 flex-1 rounded-[10px] bg-[#07F] text-white transition-colors hover:bg-[#0066CC] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="font-pretendard text-[18px] font-bold leading-normal tracking-[-0.36px]">
+                {isLoading ? "요청 중..." : "평가 요청"}
+              </div>
             </button>
           </div>
-
-          {/* Expert Cards */}
-          <div className="flex flex-col items-start gap-3 self-stretch relative">
-            {experts.slice(0, 3).map((expert) => (
-              <div
-                key={expert.id}
-                className="flex p-6 flex-col items-start gap-4 self-stretch rounded-[10px] border border-[#EEEEEF] bg-white relative"
-              >
-                <div className="flex flex-col items-start gap-2 self-stretch relative">
-                  <div className="flex w-full flex-col items-start relative">
-                    <div className="self-stretch text-[#2B2B2B] font-pretendard text-[16px] font-bold leading-[29px]">
-                      {expert.name}
-                    </div>
-                    <div className="w-full text-[#6B6B6B] font-pretendard text-[14px] font-normal leading-normal tracking-[-0.064px] opacity-80 line-clamp-2">
-                      {expert.specialty}
-                    </div>
-                  </div>
-                  <div className="self-stretch text-[#2B2B2B] font-pretendard text-[14px] font-normal leading-[18px] tracking-[-0.064px] opacity-80">
-                    {expert.description}
-                  </div>
-                </div>
-                <button
-                  onClick={() => toggleExpertSelection(expert.id)}
-                  className={`flex py-3 px-6 justify-center items-center gap-[6px] rounded-lg ${
-                    expert.selected
-                      ? "bg-[#07F] text-white"
-                      : "border border-[#07F] bg-white text-[#07F]"
-                  } transition-colors`}
-                >
-                  <div className="font-pretendard text-[18px] font-bold leading-normal tracking-[-0.36px]">
-                    선택
-                  </div>
-                </button>
-              </div>
-            ))}
-          </div>
         </div>
-
-        {/* Bottom Buttons */}
-        <div className="flex items-start gap-3 self-stretch relative">
-          <button
-            onClick={onClose}
-            disabled={isLoading}
-            className="flex py-5 px-[52px] justify-center items-center gap-2 flex-1 rounded-[10px] border border-[#07F] bg-white text-[#07F] transition-colors hover:bg-[#07F]/5 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <div className="font-pretendard text-[18px] font-bold leading-normal tracking-[-0.36px]">
-              취소
-            </div>
-          </button>
-          <button
-            onClick={handleEvaluationRequest}
-            disabled={isLoading}
-            className="flex py-5 px-[52px] justify-center items-center gap-2 flex-1 rounded-[10px] bg-[#07F] text-white transition-colors hover:bg-[#0066CC] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <div className="font-pretendard text-[18px] font-bold leading-normal tracking-[-0.36px]">
-              {isLoading ? "요청 중..." : "평가 요청"}
-            </div>
-          </button>
-        </div>
-      </div>
       </CustomModal>
     </>
   );

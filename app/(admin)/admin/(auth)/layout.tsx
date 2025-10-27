@@ -1,4 +1,4 @@
-import AdminHeader from "@/app/(admin)/components/admin-header";
+import AdminHeader from "@/app/(admin)/components/AdminHeader";
 
 export default function AdminAuthLayout({
   children,

@@ -20,41 +20,34 @@ export async function GET(request: NextRequest) {
     }
 
     // 사용자 정보 가져오기
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    let user;
+    try {
+      const { data: { user: fetchedUser } } = await supabase.auth.getUser();
+      user = fetchedUser;
+    } catch {
+      return NextResponse.redirect(`${requestUrl.origin}/login?error=get_user_failed`);
+    }
 
     if (!user) {
       return NextResponse.redirect(`${requestUrl.origin}/login?error=no_user`);
     }
 
-    // OAuth 로그인 시 프로필의 email 업데이트
+    // OAuth 로그인 시 프로필의 email과 provider 업데이트
+    const provider = user.app_metadata?.provider || "local";
     if (user.email) {
       await supabase
         .from("profiles")
-        .update({ email: user.email })
+        .update({ email: user.email, provider })
+        .eq("id", user.id);
+    } else {
+      // email이 없어도 provider 업데이트
+      await supabase
+        .from("profiles")
+        .update({ provider })
         .eq("id", user.id);
     }
 
-    // 프로필 정보 확인
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("name, organization, business_field")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError) {
-      // 프로필이 없으면 회원가입 완료 페이지로
-      return NextResponse.redirect(`${requestUrl.origin}/register/complete`);
-    }
-
-    // name, organization, business_field가 모두 있는지 확인
-    if (!profile.name || !profile.organization || !profile.business_field) {
-      // 하나라도 없으면 회원가입 완료 페이지로
-      return NextResponse.redirect(`${requestUrl.origin}/register/complete`);
-    }
-
-    // 모든 정보가 있으면 홈으로
+    // name, organization, business_field 중 하나라도 없어도 홈으로 (정보 부족 시 제외하지 않음)
     return NextResponse.redirect(`${requestUrl.origin}/`);
   }
 

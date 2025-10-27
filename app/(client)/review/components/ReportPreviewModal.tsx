@@ -21,10 +21,10 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [reportContent, setReportContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  
-  const loadingOverlay = useLoadingOverlay({ 
-    isLoading, 
-    currentSection: "" 
+
+  const loadingOverlay = useLoadingOverlay({
+    isLoading,
+    currentSection: "",
   });
 
   const handleOpenModal = () => setIsOpen(true);
@@ -55,6 +55,29 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
     }
   }, [isOpen, reportUuid, fetchReportSections]);
 
+  const handleDownloadWord = async () => {
+    try {
+      const response = await fetch('/api/download-word', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html: reportContent, title: reportTitle }),
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${reportTitle}.docx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } else {
+        alert('다운로드에 실패했습니다.');
+      }
+    } catch (error) {
+      alert('다운로드 중 오류가 발생했습니다.');
+    }
+  };
+
   return (
     <>
       {/* Trigger */}
@@ -66,7 +89,6 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
         onClose={handleCloseModal}
         className="border-none"
         width="691px"
-        
         padding="40px"
         showCloseButton={false}
       >
@@ -90,9 +112,14 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
               <div className="text-[#2A2A2A] font-pretendard text-[20px] font-semibold leading-[150%] tracking-[-0.4px]">
                 {reportTitle}
               </div>
-              <button className="w-[139px] h-[40px] flex items-center justify-center gap-2 border border-[#D9D9D9] bg-white rounded" >
+              <button onClick={handleDownloadWord} className="w-[139px] h-[40px] flex items-center justify-center gap-2 border border-[#D9D9D9] bg-white rounded">
                 {/* Word Icon */}
-                <Image src="/images/word.svg" alt="Word" width={24} height={24} />
+                <Image
+                  src="/images/word.svg"
+                  alt="Word"
+                  width={24}
+                  height={24}
+                />
                 <span className="text-[#5A5A5A] font-pretendard text-[12px] font-bold leading-[150%] tracking-[-0.32px]">
                   Word 다운로드
                 </span>
@@ -102,7 +129,7 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
             {/* Document Preview */}
             <div className="flex w-[611px] h-[555px] p-5 px-6 flex-col items-start gap-[10px] border border-[#EEEEEF] bg-white rounded-xl relative overflow-y-auto">
               {loadingOverlay}
-              <div 
+              <div
                 className="prose prose-sm max-w-none w-full [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-6 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-5 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:mb-2 [&_h3]:mt-4"
                 dangerouslySetInnerHTML={{ __html: reportContent }}
               />

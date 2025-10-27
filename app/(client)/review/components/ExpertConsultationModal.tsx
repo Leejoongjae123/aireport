@@ -1,42 +1,156 @@
 "use client";
 
 import { CustomModal } from "@/components/ui/CustomModal";
-import { X, Plus } from "lucide-react";
-import { useState } from "react";
+import { X, Plus, FileText } from "lucide-react";
+import { useState, useRef } from "react";
+import { useToast } from "@/components/hooks/UseToast";
+import { ToastContainer } from "@/components/ToastContainer";
 
 interface ExpertConsultationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConsultationRequest?: () => void;
+  reportUuid?: string;
+  reportTitle?: string;
+  expertRequestId?: string;
+  expertId?: string;
+  expertName?: string;
+  expertTitle?: string;
+  expertExperience?: string;
+  evaluationDate?: string;
 }
 
 export function ExpertConsultationModal({
   isOpen,
   onClose,
   onConsultationRequest,
+  reportUuid,
+  reportTitle,
+  expertRequestId,
+  expertId,
+  expertName,
+  expertTitle,
+  expertExperience,
+  evaluationDate,
 }: ExpertConsultationModalProps) {
   const [requestSubject, setRequestSubject] = useState("");
   const [detailedRequirements, setDetailedRequirements] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toasts, removeToast, showSuccess, showError } = useToast();
 
-  const handleConsultationRequest = () => {
+  const handleFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter(file => {
+      const isValidType = file.type === 'application/pdf' || 
+                          file.type === 'application/msword' || 
+                          file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      const isValidSize = file.size <= 20 * 1024 * 1024; // 20MB
+      
+      if (!isValidType) {
+        showError(`${file.name}은(는) PDF 또는 Word 파일만 업로드 가능합니다.`);
+        return false;
+      }
+      if (!isValidSize) {
+        showError(`${file.name}은(는) 20MB를 초과합니다.`);
+        return false;
+      }
+      return true;
+    });
+    
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleConsultationRequest = async () => {
     // Validate required fields
     if (!requestSubject.trim() || !detailedRequirements.trim()) {
-      alert("요청주제와 상세 요구사항을 모두 입력해주세요.");
+      showError("요청주제와 상세 요구사항을 모두 입력해주세요.");
       return;
     }
-    onConsultationRequest?.();
-    onClose();
+
+    // Debug: 전달된 값 확인
+    console.log('전달된 값:', {
+      reportUuid,
+      expertRequestId,
+      expertId,
+      expertName,
+      reportTitle
+    });
+
+    if (!reportUuid) {
+      showError("보고서 정보가 누락되었습니다.");
+      return;
+    }
+
+    if (!expertRequestId) {
+      showError("전문가 요청 정보가 누락되었습니다.");
+      return;
+    }
+
+    if (!expertId) {
+      showError("전문가 정보가 누락되었습니다.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('report_uuid', reportUuid);
+      formData.append('expert_request_id', expertRequestId);
+      formData.append('expert_id', expertId);
+      formData.append('request_subject', requestSubject);
+      formData.append('detailed_requirements', detailedRequirements);
+      
+      selectedFiles.forEach(file => {
+        formData.append('files', file);
+      });
+
+      const response = await fetch('/api/expert/consulting-request', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        showError(errorData.error || '컨설팅 요청에 실패했습니다.');
+        return;
+      }
+
+      showSuccess('컨설팅 요청이 성공적으로 전송되었습니다.');
+      onConsultationRequest?.();
+      
+      // Reset form
+      setRequestSubject('');
+      setDetailedRequirements('');
+      setSelectedFiles([]);
+      onClose();
+    } catch {
+      showError('컨설팅 요청 중 오류가 발생했습니다.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <CustomModal
-      isOpen={isOpen}
-      onClose={onClose}
-      className="border-none"
-      width="500px"
-      padding="40px"
-      showCloseButton={false}
-    >
+    <>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <CustomModal
+        isOpen={isOpen}
+        onClose={onClose}
+        className="border-none"
+        width="500px"
+        padding="40px"
+        showCloseButton={false}
+      >
       <div className="flex w-[420px] flex-col items-center relative">
         <div className="flex flex-col items-start gap-11 self-stretch relative">
           {/* Header */}
@@ -71,7 +185,7 @@ export function ExpertConsultationModal({
                     보고서
                   </div>
                   <div className="text-[rgba(48,48,48,1)] font-pretendard text-[16px] font-medium leading-normal tracking-[-0.064px] opacity-80">
-                    AI 기반 리테일 수요예측 솔루션 사업계획서
+                    {reportTitle || 'AI 기반 리테일 수요예측 솔루션 사업계획서'}
                   </div>
                 </div>
                 <div className="flex py-2 justify-between items-start self-stretch relative">
@@ -79,7 +193,7 @@ export function ExpertConsultationModal({
                     평가서
                   </div>
                   <div className="text-[rgba(48,48,48,1)] font-pretendard text-[16px] font-medium leading-normal tracking-[-0.064px] opacity-80">
-                    김○○ 박사 평가서 (2025-09-11)
+                    {expertName || '김○○'} {expertTitle || '박사'} 평가서 ({evaluationDate ? new Date(evaluationDate).toLocaleDateString('ko-KR') : '2025-09-11'})
                   </div>
                 </div>
                 <div className="flex py-2 justify-between items-start self-stretch relative">
@@ -87,7 +201,7 @@ export function ExpertConsultationModal({
                     전문가
                   </div>
                   <div className="text-[rgba(48,48,48,1)] font-pretendard text-[16px] font-medium leading-normal tracking-[-0.064px] opacity-80">
-                    김○○ 박사 · 헬스케어/AI · 15년 경력
+                    {expertName || '김○○'} {expertTitle || '박사'} · {expertExperience || '헬스케어/AI · 15년 경력'}
                   </div>
                 </div>
               </div>
@@ -140,11 +254,43 @@ export function ExpertConsultationModal({
                   </div>
                   <div className="flex items-start gap-2 self-stretch relative">
                     <div className="flex py-3 px-[18px] items-center gap-[10px] flex-1 rounded-lg border border-[#E3E5E5] bg-white relative">
-                      <div className="text-[rgba(166,166,166,1)] font-pretendard text-[16px] font-normal leading-[24px] tracking-[-0.064px]">
-                        첨부파일을 업로드해주세요.
-                      </div>
+                      {selectedFiles.length === 0 ? (
+                        <div className="text-[rgba(166,166,166,1)] font-pretendard text-[16px] font-normal leading-[24px] tracking-[-0.064px]">
+                          첨부파일을 업로드해주세요.
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2 w-full">
+                          {selectedFiles.map((file, index) => (
+                            <div key={index} className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-[#0077FF]" />
+                                <span className="text-[rgba(48,48,48,1)] font-pretendard text-[14px] font-normal leading-[20px] tracking-[-0.064px]">
+                                  {file.name}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => handleRemoveFile(index)}
+                                className="text-[#767676] hover:text-[#FF0000]"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <button className="flex py-3 px-6 justify-center items-center gap-[6px] rounded-lg bg-[#E8F3FF]">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <button 
+                      onClick={handleFileSelect}
+                      className="flex py-3 px-6 justify-center items-center gap-[6px] rounded-lg bg-[#E8F3FF] hover:bg-[#D0E7FF] transition-colors"
+                    >
                       <Plus className="w-6 h-6 text-[#0077FF]" strokeWidth={2} />
                       <div className="text-[#07F] font-pretendard text-[18px] font-bold leading-normal tracking-[-0.36px]">
                         파일 첨부
@@ -172,14 +318,16 @@ export function ExpertConsultationModal({
           </button>
           <button
             onClick={handleConsultationRequest}
-            className="flex h-[62px] w-1/2 justify-center items-center gap-2 flex-1 rounded-[10px] bg-[#07F] text-white transition-colors hover:bg-[#0066CC]"
+            disabled={isSubmitting}
+            className="flex h-[62px] w-1/2 justify-center items-center gap-2 flex-1 rounded-[10px] bg-[#07F] text-white transition-colors hover:bg-[#0066CC] disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             <div className="font-pretendard text-[18px] font-bold leading-normal tracking-[-0.36px]">
-              평가 요청
+              {isSubmitting ? '요청 중...' : '평가 요청'}
             </div>
           </button>
         </div>
       </div>
     </CustomModal>
+    </>
   );
 }

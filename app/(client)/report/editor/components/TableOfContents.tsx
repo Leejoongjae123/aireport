@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/Card";
 import { ProcedureModifyData } from "../../procedure/types";
 
 // Custom Icons as SVG components

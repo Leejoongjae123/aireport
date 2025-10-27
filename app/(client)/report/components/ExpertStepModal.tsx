@@ -44,8 +44,8 @@ export function ExpertStepModal({
         reportData.core_value || ""
       }`.trim();
 
-      // 전문가 매칭 API 호출 (백그라운드에서 실행)
-      fetch("/api/expert/match", {
+      // 전문가 매칭 API 호출
+      const response = await fetch("/api/expert/match", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,21 +56,15 @@ export function ExpertStepModal({
           top_k: 10,
           similarity_threshold: 0.5,
         }),
-      })
-        .then((response) => {
-          if (response.ok) {
-            return response.json();
-          }
-          return null;
-        })
-        .then((data: ExpertMatchResponse | null) => {
-          if (data) {
-            // Store에 저장
-            setExpertMatchData(data);
-          }
-        });
+      });
 
-      // 바로 다음 모달로 전환
+      if (response.ok) {
+        const data: ExpertMatchResponse = await response.json();
+        // Store에 저장
+        setExpertMatchData(data);
+      }
+
+      // Processing 모달로 전환
       setIsLoading(false);
       onClose();
 

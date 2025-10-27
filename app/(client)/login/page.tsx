@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/Label";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { PasswordResetModal } from "./components/PasswordResetModal";
 import { createClient } from "@/lib/supabase/client";
 
@@ -25,12 +25,37 @@ const LoginPageContent = () => {
     if (toastShown.current) return;
 
     const failMessage = searchParams.get("fail");
+    const error = searchParams.get("error");
+
+    let message = "";
     if (failMessage) {
-      toast.error(failMessage);
+      message = failMessage;
+    } else if (error) {
+      switch (error) {
+        case "no_code":
+          message = "인증 코드가 없습니다.";
+          break;
+        case "auth_failed":
+          message = "OAuth 인증에 실패했습니다.";
+          break;
+        case "get_user_failed":
+          message = "사용자 정보를 가져올 수 없습니다.";
+          break;
+        case "no_user":
+          message = "사용자를 찾을 수 없습니다.";
+          break;
+        default:
+          message = "로그인 중 오류가 발생했습니다.";
+      }
+    }
+
+    if (message) {
+      toast.error(message);
       toastShown.current = true;
-      // URL에서 fail 파라미터 제거
+      // URL에서 파라미터 제거
       const url = new URL(window.location.href);
       url.searchParams.delete("fail");
+      url.searchParams.delete("error");
       window.history.replaceState({}, "", url.pathname);
     }
   }, [searchParams]);

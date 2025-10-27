@@ -1,40 +1,93 @@
-import { Button } from "@/components/ui/button";
+"use client";
+
+import { Button } from "@/components/ui/Button";
 import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+
+interface DashboardStats {
+  totalCount: number;
+  successCount: number;
+  failureCount: number;
+  queueCount: number;
+  diagnosisCount: number;
+  averageScore: number;
+  averageDurationFormatted: string;
+  successRate: number;
+  expertRequestCount: number;
+  expertRequestPending: number;
+  expertRequestCompleted: number;
+}
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalCount: 0,
+    successCount: 0,
+    failureCount: 0,
+    queueCount: 0,
+    diagnosisCount: 0,
+    averageScore: 0,
+    averageDurationFormatted: "0분 0초",
+    successRate: 0,
+    expertRequestCount: 0,
+    expertRequestPending: 0,
+    expertRequestCompleted: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/admin/stats");
+        const data = await response.json();
+
+        if (data.success) {
+          setStats(data.stats);
+        }
+      } catch (error) {
+        console.log("통계 데이터를 불러오는데 실패했습니다.", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">대시보드</h1>
-      
+
       <div className="flex flex-col gap-6">
         {/* Real-time Processing Status */}
         <div className="p-11 bg-white rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-6">실시간 처리 현황</h2>
-          
+
           <div className="flex">
             {/* Left Column - Report Generation */}
             <div className="flex-1 flex flex-col">
               <div className="flex justify-between items-center py-2">
                 <span className="text-base font-semibold text-[#767676]">오늘 보고서 생성</span>
-                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">312</span>
+                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">
+                  {loading ? "-" : stats.totalCount}
+                </span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-base font-semibold text-[#767676]">성공</span>
-                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">307</span>
+                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">
+                  {loading ? "-" : stats.successCount}
+                </span>
               </div>
-              <div className="flex justify-between items-start py-2">
+              <div className="flex justify-between items-center py-2">
                 <span className="text-base font-semibold text-[#767676]">실패</span>
-                <div className="flex flex-col items-end min-w-[114px]">
-                  <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">5</span>
-                  <span className="text-xs font-semibold text-[#0077ff] text-right">네트워크 3, 시스템 1</span>
-                </div>
+                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">
+                  {loading ? "-" : stats.failureCount}
+                </span>
               </div>
-              <div className="flex justify-between items-start py-2">
+              <div className="flex justify-between items-center py-2">
                 <span className="text-base font-semibold text-[#767676]">대기열(실시간)</span>
-                <div className="flex flex-col items-end min-w-[73px]">
-                  <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">4</span>
-                  <span className="text-xs font-semibold text-[#0077ff] text-right">평균 대기 6s</span>
-                </div>
+                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">
+                  {loading ? "-" : stats.queueCount}
+                </span>
               </div>
             </div>
             
@@ -45,19 +98,27 @@ export default function DashboardPage() {
             <div className="flex-1 flex flex-col">
               <div className="flex justify-between items-center py-2">
                 <span className="text-base font-semibold text-[#767676]">AI 진단 실행</span>
-                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">188</span>
+                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">
+                  {loading ? "-" : stats.diagnosisCount}
+                </span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-base font-semibold text-[#767676]">평균 점수</span>
-                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">76.2</span>
+                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">
+                  {loading ? "-" : stats.averageScore.toFixed(1)}
+                </span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-base font-semibold text-[#767676]">처리 시간</span>
-                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">1분 47초</span>
+                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">
+                  {loading ? "-" : stats.averageDurationFormatted}
+                </span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-base font-semibold text-[#767676]">성공률</span>
-                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">98.4%</span>
+                <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">
+                  {loading ? "-" : `${stats.successRate.toFixed(1)}%`}
+                </span>
               </div>
             </div>
             
@@ -69,8 +130,12 @@ export default function DashboardPage() {
               <div className="flex justify-between items-start py-2">
                 <span className="text-base font-semibold text-[#767676]">전문가 평가 요청</span>
                 <div className="flex flex-col items-end min-w-[114px]">
-                  <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">27</span>
-                  <span className="text-xs font-semibold text-[#0077ff] text-right">대기 5 · 완료 22</span>
+                  <span className="text-base font-bold text-[#0077ff] min-w-[80px] text-right">
+                    {loading ? "-" : stats.expertRequestCount}
+                  </span>
+                  <span className="text-xs font-semibold text-[#0077ff] text-right">
+                    대기 {loading ? "-" : stats.expertRequestPending} · 완료 {loading ? "-" : stats.expertRequestCompleted}
+                  </span>
                 </div>
               </div>
               <div className="flex justify-between items-start py-2">

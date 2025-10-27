@@ -1,22 +1,22 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/Card";
 import { useSearchParams } from "next/navigation";
 import AgentChat from "../components/AgentChat";
-import { DiagnosisTab } from "./components/diagnosis-tab";
-import { TableOfContents } from "./components/table-of-contents";
-import { TextEditor } from "./components/text-editor";
-import { useReportStore } from "../components/store/report-store";
-import { useEditorStore } from "./store/editor-store";
+import { DiagnosisTab } from "./components/DiagnosisTab";
+import { TableOfContents } from "./components/TableOfContents";
+import { TextEditor } from "./components/TextEditor";
+import { useReportStore } from "../components/store/ReportStore";
+import { useEditorStore } from "./store/EditorStore";
 import {
   EvaluationCriteriaData,
   ProcedureModifyData,
 } from "../procedure/types";
-import { Button } from "@/components/ui/button";
-import { useLoadingOverlay } from "@/components/hooks/use-loading-overlay";
+import { Button } from "@/components/ui/Button";
+import { useLoadingOverlay } from "@/components/hooks/UseLoadingOverlay";
 import { DiagnosisResult } from "./components/types";
-import { IncompleteModal } from "./components/incomplete-modal";
+import { IncompleteModal } from "./components/IncompleteModal";
 
 // Custom Icons as SVG components
 const AIIcon = () => (
@@ -77,6 +77,7 @@ function ReportEditorContent() {
   const [isDiagnosing, setIsDiagnosing] = useState(false);
   const [diagnosisError, setDiagnosisError] = useState<string | null>(null);
   const [showIncompleteModal, setShowIncompleteModal] = useState(false);
+  const [requestBody, setRequestBody] = useState<any>(null); // requestBody 상태 추가
 
   const loadingOverlay = useLoadingOverlay({ isLoading: isDiagnosing });
 
@@ -89,6 +90,7 @@ function ReportEditorContent() {
     setDiagnosisResult(null);
     setDiagnosisError(null);
     setActiveTab("chat");
+    setRequestBody(null); // requestBody 초기화 추가
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 빈 의존성 배열로 마운트 시 한 번만 실행
 
@@ -384,6 +386,7 @@ function ReportEditorContent() {
       }
 
       setDiagnosisResult(result.data ?? null);
+      setRequestBody(result.requestBody ?? null); // requestBody 저장
     } catch {
       setDiagnosisError("AI 진단 요청 중 오류가 발생했습니다.");
       setDiagnosisResult(null);
@@ -475,6 +478,7 @@ function ReportEditorContent() {
                     isLoading={isLoading}
                     isDiagnosing={isDiagnosing}
                     errorMessage={diagnosisError}
+                    requestBody={requestBody}
                   />
                   {loadingOverlay}
                 </div>

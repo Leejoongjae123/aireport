@@ -18,12 +18,17 @@ export interface ExpertRequest {
   updated_at: string;
   report_uuid: string;
   user_id: string;
-  all_candidates: Expert[];
-  selected_expert: Expert;
+  candidate_expert_ids: string[];
+  selected_expert_id: string;
   status: ExpertRequestStatus;
   report_create: {
     title: string;
     business_field: string;
     created_at: string;
   };
+  expert_informations: {
+    id: string;
+    name: string;
+    field: string[];
+  } | null;
 }

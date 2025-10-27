@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import {
@@ -10,16 +10,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
+import { createClient } from '@/lib/supabase/client';
+import { useLoader } from '@/components/hooks/UseLoader';
+import { CustomModal } from "@/components/ui/CustomModal";
+
+import { Profile } from './types';
 
 export default function MyPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [formData, setFormData] = useState({
-    name: "username",
-    email: "example@domain.com",
+    name: "",
+    email: "",
     password: "",
     confirmPassword: "",
     company: "",
     businessField: "IT",
   });
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -28,9 +36,100 @@ export default function MyPage() {
     }));
   };
 
-  const handleSave = () => {
-    // Handle save logic here
-    console.log("Saving account settings:", formData);
+  useEffect(() => {
+    const loadProfile = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('name, email, provider, organization, business_field')
+          .eq('id', user.id)
+          .single();
+
+        if (profileData && !error) {
+          setProfile(profileData);
+          setFormData({
+            name: profileData.name || "",
+            email: profileData.email || "",
+            password: "",
+            confirmPassword: "",
+            company: profileData.organization || "",
+            businessField: profileData.business_field || "IT",
+          });
+        }
+      }
+      setIsLoading(false);
+    };
+
+    loadProfile();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
+      // 비밀번호 변경 검증
+      if (formData.password) {
+        if (formData.password !== formData.confirmPassword) {
+          alert('비밀번호가 일치하지 않습니다.');
+          return;
+        }
+        if (formData.password.length < 6) {
+          alert('비밀번호는 6자리 이상이어야 합니다.');
+          return;
+        }
+      }
+
+      // 프로필 업데이트
+      const updateData = {
+        name: formData.name,
+        organization: formData.company,
+        business_field: formData.businessField,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', user.id);
+
+      if (profileError) {
+        alert('프로필 업데이트에 실패했습니다.');
+        return;
+      }
+
+      // 비밀번호 변경
+      if (formData.password) {
+        const { error: passwordError } = await supabase.auth.updateUser({
+          password: formData.password,
+        });
+
+        if (passwordError) {
+          alert('비밀번호 변경에 실패했습니다.');
+          return;
+        }
+      }
+
+      setIsModalOpen(true);
+      
+      // 폼 데이터 리셋 (비밀번호 필드)
+      setFormData(prev => ({
+        ...prev,
+        password: '',
+        confirmPassword: '',
+      }));
+
+    } catch {
+      alert('오류가 발생했습니다.');
+    }
   };
 
   const handleWithdraw = () => {
@@ -39,7 +138,9 @@ export default function MyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFD] flex items-center justify-center p-4">
+    <>
+      {useLoader({ isLoading })}
+      <div className="min-h-screen bg-[#FAFAFD] flex items-center justify-center p-4">
       <div className="w-full max-w-[421px] mt-[131px]">
         {/* Title */}
         <h1 className="text-[32px] font-bold text-black text-center mb-[22px]">
@@ -50,16 +151,19 @@ export default function MyPage() {
         <div className="space-y-8">
           {/* Form Fields */}
           <div className="space-y-5">
-            {/* Name Field - Disabled */}
+            {/* Name Field */}
             <div className="space-y-3">
               <label className="block text-sm font-semibold text-[#202224] opacity-80 tracking-[-0.064px]">
                 이름
               </label>
-              <div className="flex items-center gap-2.5 p-4 bg-[#F5F5F5] border border-[#E3E5E5] rounded-lg rounded-tr-none">
-                <span className="text-base font-normal text-[#B3B3B3] leading-6 tracking-[-0.064px]">
-                  username
-                </span>
-              </div>
+              <Input
+                type="text"
+                placeholder="이름을 입력해주세요."
+                value={formData.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                disabled={profile?.provider !== 'local'}
+                className="h-[56px] px-[18px] py-4 text-base font-normal leading-6 tracking-[-0.064px] border-[#E3E5E5] rounded-lg placeholder:text-[#A6A6A6] bg-white"
+              />
             </div>
 
             {/* Email Field - Disabled */}
@@ -69,7 +173,7 @@ export default function MyPage() {
               </label>
               <div className="flex items-center gap-2.5 p-4 bg-[#F5F5F5] border border-[#E3E5E5] rounded-lg">
                 <span className="text-base font-normal text-[#B3B3B3] leading-6 tracking-[-0.064px]">
-                  example@domain.com
+                  {formData.email}
                 </span>
               </div>
             </div>
@@ -84,6 +188,7 @@ export default function MyPage() {
                 placeholder="비밀번호를 입력해주세요."
                 value={formData.password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
+                disabled={profile?.provider !== 'local'}
                 className="h-[56px] px-[18px] py-4 text-base font-normal leading-6 tracking-[-0.064px] border-[#E3E5E5] rounded-lg placeholder:text-[#A6A6A6] bg-white"
               />
             </div>
@@ -100,6 +205,7 @@ export default function MyPage() {
                 onChange={(e) =>
                   handleInputChange("confirmPassword", e.target.value)
                 }
+                disabled={profile?.provider !== 'local'}
                 className="h-[56px] px-[18px] py-4 text-base font-normal leading-6 tracking-[-0.064px] border-[#E3E5E5] rounded-lg placeholder:text-[#A6A6A6] bg-white"
               />
             </div>
@@ -133,11 +239,11 @@ export default function MyPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="IT">IT</SelectItem>
-                  <SelectItem value="금융">금융</SelectItem>
-                  <SelectItem value="제조업">제조업</SelectItem>
-                  <SelectItem value="서비스업">서비스업</SelectItem>
-                  <SelectItem value="기타">기타</SelectItem>
+                  <SelectItem value="AI/ICT">AI/ICT</SelectItem>
+                  <SelectItem value="제조">제조</SelectItem>
+                  <SelectItem value="콘텐츠/문화">콘텐츠/문화</SelectItem>
+                  <SelectItem value="공공/인프라">공공/인프라</SelectItem>
+                  <SelectItem value="에너지">에너지</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -164,5 +270,21 @@ export default function MyPage() {
         </div>
       </div>
     </div>
+    <CustomModal
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      title="알림"
+      footer={
+        <Button
+          onClick={() => setIsModalOpen(false)}
+          className="w-full h-[50px] bg-[#07F] hover:bg-[#07F]/90 text-white text-base font-bold rounded-[10px]"
+        >
+          확인
+        </Button>
+      }
+    >
+      <p className="text-center text-xl font-medium">저장을 완료하였습니다.</p>
+    </CustomModal>
+    </>
   );
 }

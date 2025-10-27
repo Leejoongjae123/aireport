@@ -6,8 +6,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+} from "@/components/ui/DropdownMenu";
+import { Input } from "@/components/ui/Input";
 import UpArrow from "@/components/icons/UpArrow";
 
 interface SearchInputWithFilterProps {

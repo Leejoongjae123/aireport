@@ -1,5 +1,5 @@
-import AdminHeader from "@/app/(admin)/components/admin-header";
-import AdminSidebar from "@/app/(admin)/components/admin-sidebar";
+import AdminHeader from "@/app/(admin)/components/AdminHeader";
+import AdminSidebar from "@/app/(admin)/components/AdminSidebar";
 
 export default function AdminMainLayout({
   children,
@@ -10,7 +10,9 @@ export default function AdminMainLayout({
     <div className="min-h-screen bg-background ">
       <AdminHeader />
       <AdminSidebar />
-      <main className="pt-[78px] pl-[220px] min-h-screen bg-[#FBFCFD]">{children}</main>
+      <main className="pt-[78px] pl-[220px] min-h-screen bg-[#FBFCFD]">
+        {children}
+      </main>
     </div>
   );
 }

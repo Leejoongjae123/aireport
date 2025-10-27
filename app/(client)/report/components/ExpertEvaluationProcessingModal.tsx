@@ -42,17 +42,17 @@ export function ExpertRecommendationModal({
 
     const processSteps = async () => {
       try {
-        // Step 1: 보고서 분석 시작
+        // Step 1: 보고서 분석 시작 (2초)
         await new Promise((resolve) => setTimeout(resolve, 2000));
         setStep1Status("completed");
         setStep2Status("loading");
 
-        // Step 2: 전문가 분석중
+        // Step 2: 전문가 분석중 (2초)
         await new Promise((resolve) => setTimeout(resolve, 2000));
         setStep2Status("completed");
         setStep3Status("loading");
 
-        // Step 3: 매칭중
+        // Step 3: 매칭중 (2초)
         await new Promise((resolve) => setTimeout(resolve, 2000));
         setStep3Status("completed");
       } catch {
@@ -89,11 +89,13 @@ export function ExpertRecommendationModal({
 
     setExperts(transformedExperts);
 
-    // 전문가 평가 모달 표시
-    setTimeout(() => {
-      setShowExpertEvaluation(true);
-    }, 500);
-  }, [isOpen, expertMatchData]);
+    // 모든 스텝이 완료되면 전문가 평가 모달 표시
+    if (step1Status === "completed" && step2Status === "completed" && step3Status === "completed") {
+      setTimeout(() => {
+        setShowExpertEvaluation(true);
+      }, 500);
+    }
+  }, [isOpen, expertMatchData, step1Status, step2Status, step3Status]);
 
   // 스텝 상태에 따른 ��이콘 렌더링
   const renderStepIcon = (status: StepStatus) => {

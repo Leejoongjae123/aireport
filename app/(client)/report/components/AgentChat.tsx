@@ -4,9 +4,9 @@ import React, { useState, useRef, useEffect } from "react";
 import { Bot, User } from "lucide-react";
 import { Message } from "./Types";
 import { QuickActions } from "./QuickActions";
-import { useEditorStore } from "../editor/store/editor-store";
-import { useReportStore } from "./store/report-store";
-import { defaultContent } from "../editor/components/text-editor";
+import { useEditorStore } from "../editor/store/EditorStore";
+import { useReportStore } from "./store/ReportStore";
+import { defaultContent } from "../editor/components/TextEditor";
 import { CustomModal } from "@/components/ui/CustomModal";
 
 export default function AgentChat() {

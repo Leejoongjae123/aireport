@@ -1,23 +1,67 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { CustomModal } from "@/components/ui/CustomModal";
 
 const AdminLoginPage = () => {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [savePassword, setSavePassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setErrorMessage("이메일과 비밀번호를 입력해주세요.");
+      setShowErrorModal(true);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrorMessage(data.error || "로그인에 실패했습니다.");
+        setShowErrorModal(true);
+        return;
+      }
+
+      // 로그인 성공 - 관리자 대시보드로 이동
+      router.push("/admin/dashboard");
+    } catch {
+      setErrorMessage("로그인 중 오류가 발생했습니다.");
+      setShowErrorModal(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-[calc(100vh-78px)] bg-[#F5F6FA] flex items-center justify-center">
       <div className="w-[420px] flex flex-col items-center gap-8">
         {/* Logo Section */}
         <div className="flex flex-col items-center gap-5">
-          <div className="flex items-center gap-[15px]">
+          {/* <div className="flex items-center gap-[15px]">
             <div className="w-[38px] h-[38px] rounded-full bg-[#B2B2B2]"></div>
             <div className="text-[#B3B3B3] text-[32px] font-[700] leading-normal font-[Pretendard]">
               LOGO
             </div>
-          </div>
+          </div> */}
+          <Image src="/images/logo.svg" alt="Logo" width={142} height={38} />
           <div className="text-black text-center text-[32px] font-[700] leading-normal font-[Pretendard]">
             관리자 로그인
           </div>
@@ -98,59 +142,50 @@ const AdminLoginPage = () => {
           </div>
 
           {/* Login Button */}
-          <button className="flex py-5 px-[52px] justify-center items-center gap-2 w-full rounded-[10px] bg-[#07F]">
+          <button
+            onClick={handleLogin}
+            disabled={isLoading}
+            className="flex py-5 px-[52px] justify-center items-center gap-2 w-full rounded-[10px] bg-[#07F] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <span className="text-white text-[18px] font-[700] leading-normal font-[Pretendard]">
-              로그인
+              {isLoading ? "로그인 중..." : "로그인"}
             </span>
           </button>
         </div>
 
         {/* Info Section */}
         <div className="flex flex-col justify-center items-center gap-[14px] w-full">
-          <div className="flex items-center gap-2 w-full">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <g clipPath="url(#clip0_939_908)">
-                <path
-                  d="M9.99936 18.3337C11.0939 18.335 12.1779 18.1201 13.1892 17.7012C14.2004 17.2823 15.1189 16.6678 15.8919 15.8928C16.6668 15.1198 17.2813 14.2014 17.7002 13.1901C18.1191 12.1789 18.334 11.0949 18.3327 10.0003C18.334 8.90579 18.1191 7.82176 17.7002 6.81054C17.2813 5.79931 16.6668 4.88082 15.8919 4.10783C15.1189 3.3329 14.2004 2.71834 13.1892 2.29946C12.1779 1.88059 11.0939 1.66565 9.99936 1.667C8.90481 1.66565 7.82078 1.88059 6.80956 2.29946C5.79834 2.71834 4.87984 3.3329 4.10686 4.10783C3.33192 4.88082 2.71736 5.79931 2.29849 6.81054C1.87961 7.82176 1.66467 8.90579 1.66602 10.0003C1.66467 11.0949 1.87961 12.1789 2.29849 13.1901C2.71736 14.2014 3.33192 15.1198 4.10686 15.8928C4.87984 16.6678 5.79834 17.2823 6.80956 17.7012C7.82078 18.1201 8.90481 18.335 9.99936 18.3337Z"
-                  stroke="#767676"
-                  strokeWidth="1.4"
-                  strokeLinejoin="round"
-                />
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M9.9987 4.58398C10.275 4.58398 10.5399 4.69373 10.7353 4.88908C10.9306 5.08443 11.0404 5.34938 11.0404 5.62565C11.0404 5.90192 10.9306 6.16687 10.7353 6.36222C10.5399 6.55757 10.275 6.66732 9.9987 6.66732C9.72243 6.66732 9.45748 6.55757 9.26213 6.36222C9.06678 6.16687 8.95703 5.90192 8.95703 5.62565C8.95703 5.34938 9.06678 5.08443 9.26213 4.88908C9.45748 4.69373 9.72243 4.58398 9.9987 4.58398Z"
-                  fill="#767676"
-                />
-                <path
-                  d="M10.2083 14.1673V8.33398H9.375M8.75 14.1673H11.6667"
-                  stroke="#767676"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </g>
-              <defs>
-                <clipPath id="clip0_939_908">
-                  <rect width="20" height="20" fill="white" />
-                </clipPath>
-              </defs>
-            </svg>
+          <div className="flex items-center gap-2 w-full justify-center">
+            
             <span className="text-[#5A5A5A] text-[16px] font-[500] leading-normal font-[Pretendard]">
               관리자 계정 생성을 위해서는 시스템 관리자에게 연락바랍니다.
             </span>
           </div>
           <div className="text-[#5A5A5A] text-center text-[16px] font-[500] leading-normal font-[Pretendard]">
-            홍길동 과장 | 02-1234-1234 | admin@000.com
+            조서연 선임 | 010 3058 5870 | edusyj71@gmail.com
           </div>
         </div>
       </div>
+
+      {/* Error Modal */}
+      <CustomModal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        width="400px"
+        padding="32px"
+      >
+        <div className="flex flex-col items-center gap-6 w-full">
+          <div className="text-center text-[18px] font-[600] text-[#303030]">
+            {errorMessage}
+          </div>
+          <button
+            onClick={() => setShowErrorModal(false)}
+            className="w-full py-3 px-6 bg-[#07F] text-white rounded-[8px] font-[600] text-[16px]"
+          >
+            확인
+          </button>
+        </div>
+      </CustomModal>
     </div>
   );
 };

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { MoreHorizontal, Download, Trash2, Pencil, FileText, BarChart3 } from "lucide-react";
 import { ReportPreviewModal } from "./ReportPreviewModal";
 import { ExpertConsultationModal } from "./ExpertConsultationModal";
+import { ReviewResultModal } from "./ReviewResult";
 
 interface ExpertRequestsListProps {
   isOpen: boolean;
@@ -36,11 +37,25 @@ export function ExpertRequestsList({ isOpen, statusFilter = "all", keyword, onLo
       if (keyword) {
         base.searchParams.set("keyword", keyword);
       }
-      const response = await fetch(base.toString());
+      console.log("API 호출 URL:", base.toString());
+      const response = await fetch(base.toString(), {
+        credentials: "include",
+      });
+      console.log("API 응답 상태:", response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log("API 응답 데이터:", data);
         setRequests(Array.isArray(data) ? data : []);
+      } else {
+        console.error("API 호출 실패:", response.status, response.statusText);
+        const errorText = await response.text();
+        console.error("API 에러 내용:", errorText);
+        setRequests([]);
       }
+    } catch (error) {
+      console.error("네트워크 오류:", error);
+      setRequests([]);
     } finally {
       setIsLoading(false);
       onLoadingChange?.(false);
@@ -173,18 +188,19 @@ export function ExpertRequestsList({ isOpen, statusFilter = "all", keyword, onLo
             </div>
             <div className="flex-1 flex items-center justify-center px-[10px]">
               <span className="text-[#444444] text-sm tracking-[-0.28px]">
-                {request.selected_expert.name}
+                {request.expert_informations?.name || '전문가 정보 없음'}
               </span>
             </div>
             <div className="flex-1 flex items-center justify-center px-[10px]">
+              <ReviewResultModal reportUuid={request.report_uuid}>
               <Button
-                onClick={() => setIsConsultationModalOpen(true)}
                 variant="outline"
                 className="flex items-center gap-1 px-[10px] py-[6px] border border-[#D9D9D9] bg-white rounded text-xs text-[#5A5A5A] hover:bg-gray-50"
               >
                 <BarChart3 className="w-4 h-4" strokeWidth={1.4} />
                 평가서 보기
               </Button>
+            </ReviewResultModal>
             </div>
             <div className="w-20 flex items-center justify-center px-[10px]">
               <DropdownMenu>

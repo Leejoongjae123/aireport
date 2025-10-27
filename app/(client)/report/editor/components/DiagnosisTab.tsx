@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, RotateCcw } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { ChevronDown, ChevronRight, RotateCcw, Download } from "lucide-react";
 import { DiagnosisResult } from "./types";
 import { EvaluationCriteriaData } from "../../procedure/types";
 
@@ -15,6 +15,7 @@ interface DiagnosisTabProps {
   isLoading?: boolean;
   isDiagnosing?: boolean;
   errorMessage?: string | null;
+  requestBody?: any; // requestBody 추가
 }
 
 interface ProgressBarProps {
@@ -50,6 +51,7 @@ export function DiagnosisTab({
   isLoading = false,
   isDiagnosing = false,
   errorMessage = null,
+  requestBody,
 }: DiagnosisTabProps) {
   const categories = React.useMemo(() => {
     if (diagnosisResult?.categories) {
@@ -80,6 +82,27 @@ export function DiagnosisTab({
 
     return [];
   }, [diagnosisResult, evaluationCriteria]);
+
+  // requestBody 다운로드 함수
+  const downloadRequestBody = () => {
+    if (!requestBody) {
+      alert("requestBody가 없습니다.");
+      return;
+    }
+
+    const jsonString = JSON.stringify(requestBody, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "requestBody.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  };
 
   const overallScore = React.useMemo(() => {
     if (diagnosisResult?.overallScore !== undefined) {
@@ -209,6 +232,20 @@ export function DiagnosisTab({
               새로고침
             </span>
           </Button>
+
+          {/* RequestBody Download Button */}
+          {requestBody && (
+            <Button
+              variant="outline"
+              onClick={downloadRequestBody}
+              className="w-full gap-3 border-[#D9D9D9] h-12 mb-4"
+            >
+              <Download className="w-4 h-4 text-[#6C6C6C]" />
+              <span className="text-[#757575] font-semibold text-base">
+                requestBody.json 다운로드
+              </span>
+            </Button>
+          )}
 
           {isDiagnosing ? (
             <div className="text-center text-xs text-[#878A8F]">

@@ -37,25 +37,44 @@ function ReviewPageContent() {
       };
 
       // 전체 개수
-      const allRes = await fetch("/api/expert/requests");
+      console.log("전체 개수 API 호출");
+      const allRes = await fetch("/api/expert/requests", {
+        credentials: "include",
+      });
+      console.log("전체 개수 응답 상태:", allRes.status);
       if (allRes.ok) {
         const allData = await allRes.json();
+        console.log("전체 개수 데이터:", allData);
         counts.all = Array.isArray(allData) ? allData.length : 0;
+      } else {
+        console.error("전체 개수 API 실패:", allRes.status, allRes.statusText);
+        const errorData = await allRes.json().catch(() => ({}));
+        console.error("에러 상세:", errorData);
       }
 
       // 각 상태별 개수
       const statuses = ["pending", "evaluating", "consulting_requested", "completed"] as const;
       for (const status of statuses) {
-        const res = await fetch(`/api/expert/requests?status=${status}`);
+        console.log(`${status} 상태 개수 API 호출`);
+        const res = await fetch(`/api/expert/requests?status=${status}`, {
+          credentials: "include",
+        });
+        console.log(`${status} 응답 상태:`, res.status);
         if (res.ok) {
           const data = await res.json();
+          console.log(`${status} 데이터:`, data);
           counts[status] = Array.isArray(data) ? data.length : 0;
+        } else {
+          console.error(`${status} API 실패:`, res.status, res.statusText);
+          const errorData = await res.json().catch(() => ({}));
+          console.error(`${status} 에러 상세:`, errorData);
         }
       }
 
+      console.log("최종 카운트:", counts);
       setStatusCounts(counts);
-    } catch {
-      console.log("Error fetching status counts");
+    } catch (error) {
+      console.error("상태 카운트 조회 중 오류:", error);
     } finally {
       setIsLoading(false);
     }

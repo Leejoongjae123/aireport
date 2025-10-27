@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import { Search, RotateCcw, Calendar } from "lucide-react";
-import FilterDropdown from "@/components/ui/filter-dropdown";
-import SearchInputWithFilter from "@/components/ui/search-input-with-filter";
-import Pagination from "@/components/ui/pagination";
-import DateEdit from "@/components/ui/date-edit";
+import FilterDropdown from "@/components/ui/FilterDropdown";
+import SearchInputWithFilter from "@/components/ui/SearchInputWithFilter";
+import Pagination from "@/components/ui/Pagination";
+import DateEdit from "@/components/ui/DateEdit";
 
 // Status badge component for the table
 function StatusBadge({ status }: { status: "정상" | "탈퇴" }) {

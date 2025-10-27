@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { useReportStore } from "./store/report-store";
+import { Button } from "@/components/ui/Button";
+import { useReportStore } from "./store/ReportStore";
 
 const QUICK_ACTIONS = [
   { label: "자세히 쓰기", value: "자세히" },

@@ -18,13 +18,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { report_uuid, candidate_expert_ids, selected_expert_id } = body;
+    const { report_uuid, experts, selected_expert_name } = body;
 
-    if (!report_uuid || !candidate_expert_ids || !selected_expert_id) {
+    if (!report_uuid || !experts || !selected_expert_name) {
       return NextResponse.json(
         {
           error:
-            "report_uuid, candidate_expert_ids, selected_expert_id는 필수 항목입니다.",
+            "report_uuid, experts, selected_expert_name은 필수 항목입니다.",
         },
         { status: 400 }
       );
@@ -45,13 +45,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 선택된 전문가 ID 조회
+    const { data: selectedExpertInfo, error: selectedExpertError } = await supabase
+      .from("expert_informations")
+      .select("id")
+      .eq("name", selected_expert_name)
+      .single();
+
+    if (selectedExpertError || !selectedExpertInfo) {
+      return NextResponse.json(
+        { error: "선택된 전문가를 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
+    // 모든 후보 전문가 ID 조회
+    const candidateNames = experts.map((expert: any) => expert.name);
+    const { data: allExperts, error: allExpertsError } = await supabase
+      .from("expert_informations")
+      .select("id, name")
+      .in("name", candidateNames);
+
+    if (allExpertsError || !allExperts) {
+      return NextResponse.json(
+        { error: "후보 전문가들을 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
+    const candidateExpertIds = allExperts.map(expert => expert.id);
+
+    // 전문가 평가 요청 저장
     const { data, error } = await supabase
       .from("expert_requests")
       .insert({
         user_id: user.id,
         report_uuid,
-        candidate_expert_ids,
-        selected_expert_id,
+        candidate_expert_ids: candidateExpertIds,
+        selected_expert_id: selectedExpertInfo.id,
         status: "pending",
       })
       .select()

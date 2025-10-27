@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Label } from "@/components/ui/label";
+import { Label } from "@/components/ui/Label";
 import { createClient } from "@/lib/supabase/client";
 
 const RegisterPage = () => {
