@@ -1,50 +1,77 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import { FileText, BarChart3, Menu } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { useRouter, useParams } from "next/navigation";
+import { Menu } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ConsultingDetailResponse } from "./types";
+import { ConsultingDetailInfo } from "./components/ConsultingDetailInfo";
 
 const ExpertConsultingDetailPage = () => {
   const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
 
-  // Mock data - in real implementation, this would be fetched based on params.id
-  const consultingData = {
-    requestId: "CR-2025-0915-014",
-    requesterName: "김이수",
-    requesterId: "hong***@gmail.com",
-    requestDate: "2023-11-15 12:22:23",
-    status: "waiting" as const,
-    reportName: "AI 기반 리테일 수요예측 솔루션 사업계획서",
-    evaluationName: "홍길동 평가서 (2025-09-11)",
-    expertName: "김철수 박사",
-    expertField: "헬스케어/AI · 15년",
-    requestSubject: "IR 자료 보강을 위한 컨설팅 요청",
-    requestDetails: `평가서에서 지적된 시장분석 보완 및 근거 자료 보강
-경쟁사 대비 차별화 포인트 정�� 및 메세지 구체화
-투자자 피칭용 자료 재구성 가이드 요청`,
-    attachmentFile: "market_kpi.xlsx",
-  };
+  const [data, setData] = useState<ConsultingDetailResponse["data"] | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/admin/consulting-requests/${id}`);
+        if (!response.ok) {
+          setError("데이터를 불러오는데 실패했습니다.");
+          return;
+        }
+        const result: ConsultingDetailResponse = await response.json();
+        setData(result.data);
+      } catch {
+        setError("데이터를 불러오는데 실패했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchData();
+    }
+  }, [id]);
 
   const StatusBadge = ({ status }: { status: string }) => {
-    if (status === "waiting") {
-      return (
-        <div className="inline-flex items-center justify-center px-2.5 py-1.5 rounded-full bg-[#fff1c2]">
-          <span className="text-xs font-medium text-[#975102]">대기</span>
-        </div>
-      );
-    }
-    return null;
+    const statusConfig: Record<
+      string,
+      { bg: string; text: string; label: string }
+    > = {
+      pending: { bg: "#fff1c2", text: "#975102", label: "대기" },
+      in_progress: { bg: "#c7eaff", text: "#0077ff", label: "진행중" },
+      completed: { bg: "#d4f4dd", text: "#0d7a2c", label: "완료" },
+    };
+
+    const config = statusConfig[status] || statusConfig.pending;
+
+    return (
+      <div
+        className="inline-flex items-center justify-center px-2.5 py-1.5 rounded-full"
+        style={{ backgroundColor: config.bg }}
+      >
+        <span className="text-xs font-medium" style={{ color: config.text }}>
+          {config.label}
+        </span>
+      </div>
+    );
   };
 
   const TableRow = ({
     label,
     value,
-    action,
     isFirstRow = false,
   }: {
     label: string;
     value: string | React.ReactNode;
-    action?: React.ReactNode;
     isFirstRow?: boolean;
   }) => (
     <div
@@ -61,22 +88,59 @@ const ExpertConsultingDetailPage = () => {
         <div className="text-base font-normal text-[#303030] leading-6 tracking-[-0.32px] flex-1">
           {value}
         </div>
-        {action && action}
       </div>
-    </div>
-  );
-
-  const SectionHeader = ({ title }: { title: string }) => (
-    <div className="flex justify-between items-center mb-4">
-      <h2 className="text-xl font-semibold text-[#2A2A2A] leading-6">
-        {title}
-      </h2>
     </div>
   );
 
   const TableContainer = ({ children }: { children: React.ReactNode }) => (
     <div className="border border-[#f5f5f5] bg-white">{children}</div>
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg text-[#555555]">로딩 중...</div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg text-red-500">{error || "데이터가 없습니다."}</div>
+      </div>
+    );
+  }
+
+  const { consultingRequest, expertInfo, reviewInfo } = data;
+
+  const formatRequestId = () => {
+    return `CR-${new Date(consultingRequest.created_at).getFullYear()}-${String(
+      new Date(consultingRequest.created_at).getMonth() + 1
+    ).padStart(2, "0")}${String(
+      new Date(consultingRequest.created_at).getDate()
+    ).padStart(2, "0")}-${String(consultingRequest.id).padStart(3, "0")}`;
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}-${String(date.getDate()).padStart(2, "0")} ${String(
+      date.getHours()
+    ).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:${String(
+      date.getSeconds()
+    ).padStart(2, "0")}`;
+  };
+
+  const maskEmail = (email: string) => {
+    const [localPart, domain] = email.split("@");
+    if (localPart.length <= 3) {
+      return `${localPart[0]}***@${domain}`;
+    }
+    return `${localPart.substring(0, 3)}***@${domain}`;
+  };
 
   return (
     <div className="flex flex-col gap-20 p-11 bg-white min-h-screen font-['Pretendard']">
@@ -93,93 +157,50 @@ const ExpertConsultingDetailPage = () => {
         <TableContainer>
           <TableRow
             label="요청ID"
-            value={consultingData.requestId}
+            value={formatRequestId()}
             isFirstRow={true}
           />
           <div className="flex">
             <div className="flex-1 border-r border-[#f5f5f5] ">
-              <TableRow label="요청자" value={consultingData.requesterName} />
+              <TableRow
+                label="요청자"
+                value={consultingRequest.profiles?.name || "-"}
+              />
             </div>
             <div className="flex-1">
-              <TableRow label="요청자 ID" value={consultingData.requesterId} />
+              <TableRow
+                label="요청자 ID"
+                value={
+                  consultingRequest.profiles?.email
+                    ? maskEmail(consultingRequest.profiles.email)
+                    : "-"
+                }
+              />
             </div>
           </div>
           <div className="flex">
             <div className="flex-1 border-r border-[#f5f5f5] items-stretch h-full">
-              <TableRow label="요청일시" value={consultingData.requestDate} />
+              <TableRow
+                label="요청일시"
+                value={formatDate(consultingRequest.created_at)}
+              />
             </div>
             <div className="flex-1">
               <TableRow
                 label="상태"
-                value={<StatusBadge status={consultingData.status} />}
+                value={<StatusBadge status={consultingRequest.status} />}
               />
             </div>
           </div>
         </TableContainer>
       </div>
 
-      {/* Request Basic Information */}
-      <div className="flex flex-col gap-4">
-        <SectionHeader title="요청 기본 정보" />
-        <TableContainer>
-          <TableRow
-            label="보고서"
-            value={consultingData.reportName}
-            action={
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-1 px-2.5 py-1.5 h-7 border border-[#d9d9d9] bg-white text-[#5a5a5a] text-xs font-medium rounded"
-              >
-                <FileText className="w-4 h-4" />
-                보고서 열람
-              </Button>
-            }
-          />
-          <TableRow
-            label="평가서"
-            value={consultingData.evaluationName}
-            action={
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-1 px-2.5 py-1.5 h-7 border border-[#d9d9d9] bg-white text-[#5a5a5a] text-xs font-medium rounded"
-              >
-                <BarChart3 className="w-4 h-4" />
-                평가서 열람
-              </Button>
-            }
-          />
-          <TableRow
-            label="전문가"
-            value={`${consultingData.expertName}  (${consultingData.expertField})`}
-          />
-        </TableContainer>
-      </div>
-
-      {/* Request Content */}
-      <div className="flex flex-col gap-4">
-        <SectionHeader title="요청 내용" />
-        <TableContainer>
-          <TableRow label="요청 주제" value={consultingData.requestSubject} />
-          <TableRow
-            label="상세 요구사항"
-            value={
-              <div className="whitespace-pre-line">
-                {consultingData.requestDetails}
-              </div>
-            }
-          />
-          <TableRow
-            label="참고 첨부자료"
-            value={
-              <span className="text-[#07F] underline cursor-pointer">
-                {consultingData.attachmentFile}
-              </span>
-            }
-          />
-        </TableContainer>
-      </div>
+      {/* Request Basic Information & Content */}
+      <ConsultingDetailInfo
+        consultingRequest={consultingRequest}
+        expertInfo={expertInfo}
+        reviewInfo={reviewInfo}
+      />
 
       {/* Action Buttons */}
       <div className="flex justify-between items-center">
@@ -192,8 +213,6 @@ const ExpertConsultingDetailPage = () => {
           목록으로
         </Button>
       </div>
-
-      {/* Floating Numbers */}
     </div>
   );
 };

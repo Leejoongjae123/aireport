@@ -50,8 +50,12 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // API 경로와 /register/complete 페이지는 체크에서 제외
-  if (pathname.startsWith("/api/") || pathname === "/register/complete") {
+  // API 경로, /register/complete, /preview 페이지는 체크에서 제외
+  if (
+    pathname.startsWith("/api/") ||
+    pathname === "/register/complete" ||
+    pathname.startsWith("/preview")
+  ) {
     return supabaseResponse;
   }
 

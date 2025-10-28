@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { CustomModal } from "@/components/ui/CustomModal";
 import { Button } from "@/components/ui/Button";
 import { X } from "lucide-react";
@@ -8,18 +8,13 @@ import Image from "next/image";
 import { useLoadingOverlay } from "@/components/hooks/UseLoadingOverlay";
 
 interface ReportPreviewModalProps {
-  children: React.ReactNode;
-  reportUuid: string;
-  reportTitle: string;
+  uuid: string;
 }
 
-export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
-  children,
-  reportUuid,
-  reportTitle,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
+export default function ReportPreviewModal({ uuid }: ReportPreviewModalProps) {
+  const [isOpen, setIsOpen] = useState(true);
   const [reportContent, setReportContent] = useState<string>("");
+  const [reportTitle, setReportTitle] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
   const loadingOverlay = useLoadingOverlay({
@@ -27,13 +22,16 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
     currentSection: "",
   });
 
-  const handleOpenModal = () => setIsOpen(true);
-  const handleCloseModal = () => setIsOpen(false);
+  const handleCloseModal = () => {
+    setIsOpen(false);
+    // 모달을 닫으면 이전 페이지로 이동
+    window.history.back();
+  };
 
   const fetchReportSections = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/reports/${reportUuid}/sections`);
+      const response = await fetch(`/api/reports/${uuid}/sections`);
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.data) {
@@ -47,13 +45,26 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [reportUuid]);
+  }, [uuid]);
+
+  const fetchReportTitle = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/report/${uuid}`);
+      if (response.ok) {
+        const result = await response.json();
+        setReportTitle(result.report?.title || "사업계획서");
+      }
+    } catch {
+      setReportTitle("사업계획서");
+    }
+  }, [uuid]);
 
   useEffect(() => {
-    if (isOpen && reportUuid) {
+    if (uuid) {
+      fetchReportTitle();
       fetchReportSections();
     }
-  }, [isOpen, reportUuid, fetchReportSections]);
+  }, [uuid, fetchReportTitle, fetchReportSections]);
 
   const handleDownloadWord = async () => {
     try {
@@ -73,16 +84,13 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
       } else {
         alert("다운로드에 실패했습니다.");
       }
-    } catch (error) {
+    } catch {
       alert("다운로드 중 오류가 발생했습니다.");
     }
   };
 
   return (
     <>
-      {/* Trigger */}
-      <div onClick={handleOpenModal}>{children}</div>
-
       {/* Modal */}
       <CustomModal
         isOpen={isOpen}
@@ -152,4 +160,4 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
       </CustomModal>
     </>
   );
-};
+}

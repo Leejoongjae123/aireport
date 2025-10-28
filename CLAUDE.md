@@ -1,47 +1,47 @@
-1. api 요청할떄 별도로 api 라우트를 만들어야 함
+1. api 요청할때 별도로 api 라우트를 만들어야 함
 2. api 라우트에서 supabase client를 사용할때는 await createClient()를 사용해야 함
 3. supabase를 쓸때는 가급적 mcp로 테이블 확인 필요
 
 
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+이 파일은 Claude Code (claude.ai/code)가 이 저장소의 코드 작업 시 참고할 가이드를 제공합니다.
 
-## Project Overview
+## 프로젝트 개요
 
-AI-powered business report generation service built with Next.js 15, React 19, and Supabase. Users can generate professional business reports in 5 minutes through AI assistance, receive automated diagnosis, and request expert feedback.
+Next.js 15, React 19, Supabase로 구축된 AI 기반 사업계획서 생성 서비스입니다. 사용자는 AI 지원을 통해 5분 만에 전문적인 사업계획서를 생성하고, 자동 진단을 받으며, 전문가 피드백을 요청할 수 있습니다.
 
-## Development Commands
+## 개발 명령어
 
 ```bash
-# Development server with Turbopack
+# Turbopack을 사용한 개발 서버
 npm run dev
 
-# Production build
+# 프로덕션 빌드
 npm run build
 
-# Production server
+# 프로덕션 서버
 npm start
 
-# Linting
+# 린팅
 npm run lint
 ```
 
-## Architecture & Key Patterns
+## 아키텍처 및 주요 패턴
 
-### Route Groups & Application Structure
+### 라우트 그룹 및 애플리케이션 구조
 
-The application uses Next.js App Router with distinct route groups:
+애플리케이션은 Next.js App Router를 사용하며 다음과 같은 라우트 그룹으로 구분됩니다:
 
-- **`app/(client)/`** - Customer-facing pages (report creation, review, mypage)
-- **`app/(admin)/`** - Admin dashboard and management
-- **`app/api/`** - API Route Handlers for all backend operations
+- **`app/(client)/`** - 고객용 페이지 (보고서 작성, 검토, 마이페이지)
+- **`app/(admin)/`** - 관리자 대시보드 및 관리
+- **`app/api/`** - 모든 백엔드 작업을 위한 API Route Handlers
 
-Each route group has its own layout and authentication flow. Route groups don't affect the URL structure but organize the codebase logically.
+각 라우트 그룹은 자체 레이아웃과 인증 흐름을 가집니다. 라우트 그룹은 URL 구조에 영향을 주지 않지만 코드베이스를 논리적으로 구성합니다.
 
-### Supabase Client Usage Pattern
+### Supabase 클라이언트 사용 패턴
 
-**Critical**: Always use the correct Supabase client for the context:
+**중요**: 항상 컨텍스트에 맞는 올바른 Supabase 클라이언트를 사용하세요:
 
 ```typescript
 // Server Components & Server Actions
@@ -57,66 +57,66 @@ import { createClient } from "@/lib/supabase/server";
 const supabase = await createClient();
 ```
 
-The server client is async and must be awaited. Never put server clients in global variables - always create new instances within functions.
+서버 클라이언트는 비동기이며 반드시 await 해야 합니다. 서버 클라이언트를 전역 변수에 넣지 마세요 - 항상 함수 내에서 새 인스턴스를 생성하세요.
 
-### Authentication Flow
+### 인증 흐름
 
-Authentication uses Supabase Auth with session management handled by middleware:
+인증은 미들웨어에서 세션 관리를 처리하는 Supabase Auth를 사용합니다:
 
-1. Middleware (`middleware.ts`) calls `updateSession()` on every request
-2. Server components check auth via `supabase.auth.getUser()`
-3. Client components use `supabase.auth.onAuthStateChange()` for reactive updates
-4. Admin routes require specific role checks
+1. 미들웨어 (`middleware.ts`)가 모든 요청에서 `updateSession()`을 호출
+2. 서버 컴포넌트는 `supabase.auth.getUser()`를 통해 인증 확인
+3. 클라이언트 컴포넌트는 반응형 업데이트를 위해 `supabase.auth.onAuthStateChange()` 사용
+4. 관리자 라우트는 특정 역할 확인 필요
 
-**Admin Login**: Uses custom `/api/admin/login` endpoint, redirects to `/admin/dashboard` on success.
+**관리자 로그인**: 커스텀 `/api/admin/login` 엔드포인트 사용, 성공 시 `/admin/dashboard`로 리다이렉트.
 
-**Client Auth**: Uses Supabase OAuth callback at `/api/auth/callback`.
+**클라이언트 인증**: `/api/auth/callback`에서 Supabase OAuth 콜백 사용.
 
-### API Route Handler Patterns
+### API Route Handler 패턴
 
-All API routes follow this structure:
+모든 API 라우트는 다음 구조를 따릅니다:
 
 ```typescript
 export async function GET/POST/PUT/DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> } // params is async
+  { params }: { params: Promise<{ id: string }> } // params는 비동기
 ) {
   const supabase = await createClient();
-  const { id } = await params; // Always await params
+  const { id } = await params; // 항상 params를 await
 
-  // Get authenticated user
+  // 인증된 사용자 가져오기
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Database operations
+  // 데이터베이스 작업
   const { data, error } = await supabase.from("table_name")...
 
-  // Return JSON response
+  // JSON 응답 반환
   return NextResponse.json({ success: true, data });
 }
 ```
 
-**Never use Server Actions** - all backend logic goes through Route Handlers.
+**Server Actions는 절대 사용하지 마세요** - 모든 백엔드 로직은 Route Handlers를 통해 처리합니다.
 
-### Database Schema (Key Tables)
+### 데이터베이스 스키마 (주요 테이블)
 
-- **`report_create`** - Main reports table
-  - `uuid` (primary key, auto-generated)
-  - `user_id` - Foreign key to auth.users
+- **`report_create`** - 메인 보고서 테이블
+  - `uuid` (기본 키, 자동 생성)
+  - `user_id` - auth.users에 대한 외래 키
   - `title`, `business_field`
-  - `step` - Current workflow step (inputs, procedure, editor, review)
-  - `is_complete` - Boolean for completion status
-  - `created_at` - Timestamp for filtering
+  - `step` - 현재 워크플로우 단계 (inputs, procedure, editor, review)
+  - `is_complete` - 완료 상태 Boolean
+  - `created_at` - 필터링용 타임스탬프
 
-- **`profiles`** - Extended user information
-- **`expert_requests`** - Expert evaluation requests
+- **`profiles`** - 확장 사용자 정보
+- **`expert_requests`** - 전문가 평가 요청
 
-### State Management with Zustand
+### Zustand를 사용한 상태 관리
 
-Global state uses Zustand stores located in `components/store/` or page-specific `components/store/`:
+전역 상태는 `components/store/` 또는 페이지별 `components/store/`에 위치한 Zustand 스토어를 사용합니다:
 
 ```typescript
 import { create } from 'zustand';
@@ -132,18 +132,18 @@ export const useStore = create<StoreState>((set) => ({
 }));
 ```
 
-Use Zustand for:
-- Report workflow state
-- Multi-step form data
-- Cross-component shared state
+Zustand 사용 대상:
+- 보고서 워크플로우 상태
+- 다단계 폼 데이터
+- 컴포넌트 간 공유 상태
 
-Use React state for:
-- Component-local UI state
-- Form inputs (prefer react-hook-form)
+React state 사용 대상:
+- 컴포넌트 로컬 UI 상태
+- 폼 입력 (react-hook-form 선호)
 
-### Form Validation Pattern
+### 폼 검증 패턴
 
-Forms use react-hook-form + zod:
+폼은 react-hook-form + zod를 사용합니다:
 
 ```typescript
 import { useForm } from "react-hook-form";
@@ -156,83 +156,83 @@ const schema = z.object({
 
 const { register, handleSubmit, formState: { errors } } = useForm({
   resolver: zodResolver(schema),
-  mode: "onChange", // Real-time validation
+  mode: "onChange", // 실시간 검증
 });
 ```
 
-### Component Architecture
+### 컴포넌트 아키텍처
 
-**Server Components (default)**: Use for pages and layouts. Fetch data directly with async/await.
+**Server Components (기본)**: 페이지와 레이아웃에 사용. async/await로 직접 데이터 가져오기.
 
-**Client Components**: Only when needed for:
-- User interactions (onClick, onChange)
+**Client Components**: 다음이 필요한 경우에만 사용:
+- 사용자 상호작용 (onClick, onChange)
 - Hooks (useState, useEffect, useRouter)
-- Browser APIs
-- Third-party libraries requiring browser context
+- 브라우저 API
+- 브라우저 컨텍스트가 필요한 서드파티 라이브러리
 
-Mark with `"use client"` at the top of the file.
+파일 상단에 `"use client"` 표시.
 
-**Component Organization**:
+**컴포넌트 구성**:
 ```
 page/
-├── page.tsx          # Server Component (page entry)
-├── layout.tsx        # Layout wrapper
-└── components/       # Page-specific components
+├── page.tsx          # Server Component (페이지 진입점)
+├── layout.tsx        # 레이아웃 래퍼
+└── components/       # 페이지별 컴포넌트
     ├── ClientComponent.tsx  # "use client"
-    └── store/        # Page-specific Zustand stores
+    └── store/        # 페이지별 Zustand 스토어
 ```
 
-Shared components go in `components/ui/` (shadcn/ui) or `components/` (custom shared).
+공유 컴포넌트는 `components/ui/` (shadcn/ui) 또는 `components/` (커스텀 공유)에 위치.
 
-### UI Component Guidelines
+### UI 컴포넌트 가이드라인
 
-**shadcn/ui components** are in `components/ui/`:
-- Button, Input, Dialog, Card, Checkbox, Select, etc.
-- **Do not modify** these directly
-- Create wrapper components or use composition
+**shadcn/ui 컴포넌트**는 `components/ui/`에 있습니다:
+- Button, Input, Dialog, Card, Checkbox, Select 등
+- **직접 수정하지 마세요**
+- 래퍼 컴포넌트를 만들거나 컴포지션 사용
 
-**Custom reusable components**:
-- `FilterDropdown.tsx` - Dropdown filter
-- `SearchInputWithFilter.tsx` - Combined search + filter
-- `Pagination.tsx` - Page navigation
-- `DateEdit.tsx` - Date input (uses useRef pattern)
-- `CustomModal.tsx` - Modal wrapper with custom styling
+**커스텀 재사용 가능 컴포넌트**:
+- `FilterDropdown.tsx` - 드롭다운 필터
+- `SearchInputWithFilter.tsx` - 검색 + 필터 결합
+- `Pagination.tsx` - 페이지 네비게이션
+- `DateEdit.tsx` - 날짜 입력 (useRef 패턴 사용)
+- `CustomModal.tsx` - 커스텀 스타일링이 있는 모달 래퍼
 
-### Critical Rules & Constraints
+### 중요 규칙 및 제약사항
 
-1. **Never use `throw` statements** - Handle errors with conditional returns
-2. **Never use `console.error`** - Use `console.log` or remove
-3. **Never use `@supabase/auth-helpers-nextjs`** - Use `@supabase/ssr` instead
-4. **Wrap Suspense** around components using `useSearchParams()` or `usePathname()`
-5. **Always await params** in route handlers: `const { id } = await params`
-6. **PascalCase for file names** - All component files use PascalCase (e.g., `AdminHeader.tsx`)
+1. **절대 `throw` 문 사용 금지** - 조건부 반환으로 오류 처리
+2. **절대 `console.error` 사용 금지** - `console.log` 사용 또는 제거
+3. **절대 `@supabase/auth-helpers-nextjs` 사용 금지** - 대신 `@supabase/ssr` 사용
+4. **Suspense로 감싸기** - `useSearchParams()` 또는 `usePathname()` 사용하는 컴포넌트
+5. **항상 params await** - 라우트 핸들러에서: `const { id } = await params`
+6. **파일명은 PascalCase** - 모든 컴포넌트 파일은 PascalCase 사용 (예: `AdminHeader.tsx`)
 
-### Environment Variables
+### 환경 변수
 
-Required in `.env.local`:
+`.env.local`에 필요:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_project_url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=your_anon_key
 ```
 
-Note: The env var name differs from typical Supabase setup - uses `PUBLISHABLE_OR_ANON_KEY` instead of `ANON_KEY`.
+참고: 환경 변수 이름이 일반적인 Supabase 설정과 다릅니다 - `ANON_KEY` 대신 `PUBLISHABLE_OR_ANON_KEY` 사용.
 
-### Report Generation Workflow
+### 보고서 생성 워크플로우
 
-Multi-step process tracked via `step` field in `report_create`:
+`report_create`의 `step` 필드를 통해 추적되는 다단계 프로세스:
 
-1. **start** - Initial setup (title, business field)
-2. **inputs** - Detailed business information input
-3. **procedure** - Report generation in progress
-4. **editor** - User editing generated content
-5. **review** - Final review and export
+1. **start** - 초기 설정 (제목, 사업 분야)
+2. **inputs** - 상세 사업 정보 입력
+3. **procedure** - 보고서 생성 진행 중
+4. **editor** - 사용자가 생성된 콘텐츠 편집
+5. **review** - 최종 검토 및 내보내기
 
-Each step has dedicated page under `app/(client)/report/[step]/`.
+각 단계는 `app/(client)/report/[step]/` 아래에 전용 페이지가 있습니다.
 
-### TipTap Editor Integration
+### TipTap 에디터 통합
 
-Rich text editor for report content:
+보고서 콘텐츠를 위한 리치 텍스트 에디터:
 
 ```typescript
 import { useEditor } from '@tiptap/react';
@@ -244,24 +244,24 @@ const editor = useEditor({
     Image,
     Link,
     Underline,
-    // Custom extensions
+    // 커스텀 확장
   ],
   content: initialContent,
 });
 ```
 
-Located in `app/(client)/report/editor/`.
+`app/(client)/report/editor/`에 위치.
 
-### Word Document Export
+### Word 문서 내보내기
 
-Uses `docx` library (`app/api/download-word/`):
-- Converts HTML/JSON to .docx format
-- Preserves formatting, images, tables
-- Handles Korean fonts properly
+`docx` 라이브러리 사용 (`app/api/download-word/`):
+- HTML/JSON을 .docx 형식으로 변환
+- 서식, 이미지, 테이블 보존
+- 한글 폰트 적절히 처리
 
-## Common Patterns
+## 일반적인 패턴
 
-### Date Filtering (Today's Records)
+### 날짜 필터링 (오늘 기록)
 
 ```typescript
 const today = new Date();
@@ -279,7 +279,7 @@ const { data } = await supabase
   .lt("created_at", todayEnd);
 ```
 
-### Real-time Updates
+### 실시간 업데이트
 
 ```typescript
 useEffect(() => {
@@ -290,7 +290,7 @@ useEffect(() => {
     .on('postgres_changes',
       { event: '*', schema: 'public', table: 'report_create' },
       (payload) => {
-        // Handle changes
+        // 변경사항 처리
       }
     )
     .subscribe();
@@ -301,7 +301,7 @@ useEffect(() => {
 }, []);
 ```
 
-### Password Change with Supabase
+### Supabase로 비밀번호 변경
 
 ```typescript
 const { error } = await supabase.auth.updateUser({
@@ -309,36 +309,36 @@ const { error } = await supabase.auth.updateUser({
 });
 ```
 
-## Testing & Debugging
+## 테스팅 및 디버깅
 
-- No formal test suite currently
-- Use browser DevTools and Network tab
-- Check Supabase logs for database errors
-- Enable verbose logging in development
+- 현재 공식 테스트 스위트 없음
+- 브라우저 DevTools 및 Network 탭 사용
+- 데이터베이스 오류는 Supabase 로그 확인
+- 개발 환경에서 상세 로깅 활성화
 
-## Key Dependencies
+## 주요 의존성
 
 - **Next.js 15** - App Router, Server Components
-- **React 19** - Latest React features
+- **React 19** - 최신 React 기능
 - **Supabase** - Auth + Database (@supabase/ssr)
-- **TipTap** - Rich text editor
-- **Zustand** - State management
-- **react-hook-form + zod** - Form validation
-- **Tailwind CSS** - Styling
-- **shadcn/ui** - UI components
-- **docx** - Word document generation
-- **OpenAI SDK** - AI report generation
+- **TipTap** - 리치 텍스트 에디터
+- **Zustand** - 상태 관리
+- **react-hook-form + zod** - 폼 검증
+- **Tailwind CSS** - 스타일링
+- **shadcn/ui** - UI 컴포넌트
+- **docx** - Word 문서 생성
+- **OpenAI SDK** - AI 보고서 생성
 
-## File Naming Conventions
+## 파일 명명 규칙
 
-- Components: PascalCase (`AdminHeader.tsx`, `ReportCard.tsx`)
-- Pages: lowercase (`page.tsx`, `layout.tsx`)
+- 컴포넌트: PascalCase (`AdminHeader.tsx`, `ReportCard.tsx`)
+- 페이지: lowercase (`page.tsx`, `layout.tsx`)
 - Utils/Libs: camelCase (`utils.ts`, `supabase/client.ts`)
-- Types: PascalCase or match component name
+- 타입: PascalCase 또는 컴포넌트 이름과 일치
 
-## Additional Notes
+## 추가 참고사항
 
-- Turbopack is enabled by default in dev mode
-- Image optimization uses `next/image` with configured domains
-- Responsive design targets desktop-first, mobile adaptive
-- Korean language support throughout UI
+- 개발 모드에서 Turbopack이 기본으로 활성화됨
+- 이미지 최적화는 구성된 도메인과 함께 `next/image` 사용
+- 반응형 디자인은 데스크톱 우선, 모바일 적응형
+- UI 전반에 걸쳐 한국어 지원
