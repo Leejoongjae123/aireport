@@ -11,6 +11,8 @@ import { Star, FileText, Plus } from "lucide-react";
 import { ReportViewingModal } from "./ReportViewingModal";
 import { expertReviewSchema, ExpertReviewFormData, ExpertReviewDetailData } from "../types";
 import { useToast } from "@/components/hooks/UseToast";
+import { useLoader } from "@/components/hooks/UseLoader";
+import { Menu } from "lucide-react";
 
 // Star Rating Component
 function StarRating({
@@ -91,6 +93,7 @@ export function ExpertEvaluationForm({ data, expertRequestId }: ExpertEvaluation
   const { showToast } = useToast();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const loader = useLoader({ isLoading: isSubmitting });
 
   const {
     register,
@@ -240,8 +243,10 @@ export function ExpertEvaluationForm({ data, expertRequestId }: ExpertEvaluation
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex min-h-screen bg-white m-8">
-      <div className="flex w-full mx-auto">
+    <>
+      {loader}
+      <form onSubmit={handleSubmit(onSubmit)} className="flex min-h-screen bg-white m-8">
+        <div className="flex w-full mx-auto">
         <div className="flex flex-col flex-1 p-11 gap-6 bg-white rounded-[5px]">
           {/* Header */}
           <div className="flex flex-col gap-4">
@@ -579,7 +584,15 @@ export function ExpertEvaluationForm({ data, expertRequestId }: ExpertEvaluation
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-start justify-end gap-3">
+          <div className="flex items-start justify-between gap-3">
+                    <Button
+          variant="outline"
+          onClick={() => router.push("/admin/requests/expert-consulting")}
+          className="flex items-center gap-1.5 px-3 h-[45px] border border-[#a0a0a0] bg-white text-[#555555] text-sm font-semibold rounded"
+        >
+          <Menu className="w-4 h-4" />
+          목록으로
+        </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
@@ -603,5 +616,6 @@ export function ExpertEvaluationForm({ data, expertRequestId }: ExpertEvaluation
         reportUuid={data.report_uuid}
       />
     </form>
+    </>
   );
 }

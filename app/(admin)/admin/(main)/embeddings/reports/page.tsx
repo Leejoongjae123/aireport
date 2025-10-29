@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/Badge";
 import { Search, RotateCcw, Calendar } from "lucide-react";
-import FilterDropdown from "@/components/ui/F ";
+import FilterDropdown from "@/components/ui/FilterDropdown";
 import SearchInputWithFilter from "@/components/ui/SearchInputWithFilter";
-import Pagination from "@/components/ui/pagination";
+import Pagination from "@/components/ui/Pagination";
 import DateEdit from "@/components/ui/DateEdit";
 
 // Mock data for the table

@@ -6,6 +6,7 @@ import { Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ConsultingDetailResponse } from "./types";
 import { ConsultingDetailInfo } from "./components/ConsultingDetailInfo";
+import { useLoader } from "@/components/hooks/UseLoader";
 
 const ExpertConsultingDetailPage = () => {
   const router = useRouter();
@@ -17,6 +18,9 @@ const ExpertConsultingDetailPage = () => {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCompleting, setIsCompleting] = useState(false);
+  
+  const loader = useLoader({ isLoading: isCompleting });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -99,7 +103,7 @@ const ExpertConsultingDetailPage = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg text-[#555555]">로딩 중...</div>
+        <div className="text-lg text-[#555555]"></div>
       </div>
     );
   }
@@ -107,7 +111,9 @@ const ExpertConsultingDetailPage = () => {
   if (error || !data) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg text-red-500">{error || "데이터가 없습니다."}</div>
+        <div className="text-lg text-red-500">
+          {error || "데이터가 없습니다."}
+        </div>
       </div>
     );
   }
@@ -142,16 +148,49 @@ const ExpertConsultingDetailPage = () => {
     return `${localPart.substring(0, 3)}***@${domain}`;
   };
 
+  const handleComplete = async () => {
+    setIsCompleting(true);
+    
+    try {
+      const response = await fetch(
+        `/api/admin/consulting-requests/${id}/complete`,
+        {
+          method: "PUT",
+        }
+      );
+
+      if (!response.ok) {
+        setIsCompleting(false);
+        alert("완료 처리 중 오류가 발생했습니다.");
+        return;
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        // 완료 처리 성공 시 목록으로 이동
+        router.push("/admin/requests/expert-consulting");
+      } else {
+        setIsCompleting(false);
+        alert("완료 처리 중 오류가 발생했습니다.");
+      }
+    } catch {
+      setIsCompleting(false);
+      alert("서버 오류가 발생했습니다.");
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-20 p-11 bg-white min-h-screen font-['Pretendard']">
-      {/* Header */}
-      <div className="flex flex-col gap-10">
-        {/* Page Title */}
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-black leading-8">
-            전문가 컨설팅 요청
-          </h1>
-        </div>
+    <>
+      {loader}
+      <div className="flex flex-col gap-20 p-11 bg-white min-h-screen font-['Pretendard']">
+        {/* Header */}
+        <div className="flex flex-col gap-10">
+          {/* Page Title */}
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-semibold text-black leading-8">
+              전문가 컨설팅 요청
+            </h1>
+          </div>
 
         {/* Basic Request Information Table */}
         <TableContainer>
@@ -207,13 +246,23 @@ const ExpertConsultingDetailPage = () => {
         <Button
           variant="outline"
           onClick={() => router.push("/admin/requests/expert-consulting")}
-          className="flex items-center gap-1.5 px-3 py-2.5 border border-[#a0a0a0] bg-white text-[#555555] text-sm font-semibold rounded"
+          className="flex items-center gap-1.5 px-3 h-[45px] border border-[#a0a0a0] bg-white text-[#555555] text-sm font-semibold rounded"
         >
           <Menu className="w-4 h-4" />
           목록으로
         </Button>
+        <Button
+          className="flex w-[79px] h-[45px] justify-center items-center gap-1.5 rounded-lg bg-[#07F] hover:bg-[#0066CC]"
+          onClick={handleComplete}
+          disabled={isCompleting || consultingRequest.status === "completed"}
+        >
+          <span className="text-lg font-bold text-white font-pretendard tracking-[-0.36px]">
+            {isCompleting ? "" : "완료"}
+          </span>
+        </Button>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

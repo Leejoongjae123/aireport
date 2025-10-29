@@ -145,7 +145,7 @@ export default function ConsultingContent({ initialData }: ConsultingContentProp
         {/* Table */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="text-[#6D6D6D]">로딩 중...</div>
+            <div className="text-[#6D6D6D]"></div>
           </div>
         ) : (
           <ConsultingTable
