@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
@@ -12,30 +13,81 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { Plus } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ReportEmbeddingPage() {
+  const params = useParams();
+  const id = params.id as string;
   const [번호, set번호] = useState("");
   const [제목, set제목] = useState("");
   const [분야, set분야] = useState("");
   const [키워드, set키워드] = useState("");
   const [보고서파일명, set보고서파일명] = useState("");
   const [분야번호, set분야번호] = useState("");
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [dataNotFound, setDataNotFound] = useState(false);
+  const [원본보고서파일명, set원본보고서파일명] = useState("");
+
+  // report_embed 데이터 가져오기
+  useEffect(() => {
+    const fetchReportData = async () => {
+      if (!id) return;
+
+      try {
+        const supabase = createClient();
+        // id로 조회
+        const { data, error } = await supabase
+          .from('report_embed')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) {
+          // 에러 발생 시 데이터 없음 상태로 설정
+          setDataNotFound(true);
+          setLoading(false);
+          return;
+        }
+
+        if (!data) {
+          // 데이터가 없을 경우
+          setDataNotFound(true);
+          setLoading(false);
+          return;
+        }
+
+        // report_embed 테이블의 데이터를 직접 매핑
+        set번호(data.번호?.toString() || '');
+        set제목(data.제목 || '');
+        set분야(data.분야 || '');
+        set키워드(data.키워드 || '');
+        set보고서파일명(data.보고서파일명 || '');
+        set원본보고서파일명(data.보고서파일명 || ''); // 원본 파일명 저장
+        set분야번호(data.분야번호?.toString() || '');
+        
+        setLoading(false);
+      } catch {
+        // 예외 발생 시 로딩 상태만 해제
+        setLoading(false);
+      }
+    };
+
+    fetchReportData();
+  }, [id]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setUploadedFile(file);
       set보고서파일명(file.name);
     }
   };
 
   const fieldOptions = [
-    { value: "디지털·ICT·AI", label: "디지털·ICT·AI", number: 1 },
-    { value: "제조·산업기술·혁신", label: "제조·산업기술·혁신", number: 2 },
-    { value: "문화·콘텐츠·관광", label: "문화·콘텐츠·관광", number: 3 },
-    { value: "에너지·환경", label: "에너지·환경", number: 4 },
-    { value: "공공·도시·인프라", label: "공공·도시·인프라", number: 5 },
+    { value: "1)디지털·ICT·AI 산업", label: "1)디지털·ICT·AI 산업", number: 1 },
+    { value: "2)제조·산업기술·혁신", label: "2)제조·산업기술·혁신", number: 2 },
+    { value: "3)문화·콘텐츠·관광", label: "3)문화·콘텐츠·관광", number: 3 },
+    { value: "4)공공·도시·인프라", label: "4)공공·도시·인프라", number: 4 },
+    { value: "5)에너지·환경", label: "5)에너지·환경", number: 5 },
   ];
 
   const handleCancel = () => {
@@ -46,251 +98,285 @@ export default function ReportEmbeddingPage() {
     set키워드("");
     set보고서파일명("");
     set분야번호("");
-    setUploadedFile(null);
   };
 
   const handleEmbedding = async () => {
     // 필수 필드 검증
-    if (!번호 || !제목 || !분야 || !키워드 || !uploadedFile) {
+    if (!번호 || !제목 || !분야 || !키워드 || !보고서파일명) {
       alert("모든 필드를 입력해주세요.");
       return;
     }
 
     try {
-      // FormData 생성
-      const formData = new FormData();
-      formData.append("번호", 번호);
-      formData.append("제목", 제목);
-      formData.append("분야", 분야);
-      formData.append("키워드", 키워드);
-      formData.append("보고서파일명", 보고서파일명);
-      formData.append("분야번호", 분야번호);
-      formData.append("file", uploadedFile);
+      const supabase = createClient();
+      
+      // 파일이 변경되었는지 확인
+      const isFileChanged = 보고서파일명 !== 원본보고서파일명;
+      
+      // report_embed 테이블 업데이트
+      const updateData: {
+        번호: number;
+        제목: string;
+        분야: string;
+        키워드: string;
+        보고서파일명: string;
+        분야번호: number;
+        updated_at: string;
+        is_completed?: boolean;
+      } = {
+        번호: parseInt(번호),
+        제목,
+        분야,
+        키워드,
+        보고서파일명,
+        분야번호: parseInt(분야번호),
+        updated_at: new Date().toISOString()
+      };
 
-      // API 호출
-      const response = await fetch("/api/admin/reports/embed", {
-        method: "POST",
-        body: formData,
-      });
+      // 파일이 변경된 경우에만 is_completed를 false로 설정
+      if (isFileChanged) {
+        updateData.is_completed = false;
+      }
 
-      if (!response.ok) {
-        const error = await response.json();
-        alert(`임베딩 실패: ${error.message || "알 수 없는 오류"}`);
+      const { error } = await supabase
+        .from('report_embed')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) {
+        alert(`저장 실패: ${error.message}`);
         return;
       }
 
-      alert("임베딩이 성공적으로 완료되었습니다.");
-      handleCancel(); // 폼 초기화
+      alert("저장이 성공적으로 완료되었습니다.");
     } catch (error) {
-      alert(`임베딩 중 오류가 발생했습니다: ${error instanceof Error ? error.message : "알 수 없는 오류"}`);
+      alert(`저장 중 오류가 발생했습니다: ${error instanceof Error ? error.message : "알 수 없는 오류"}`);
     }
   };
 
   return (
     <div className="flex w-full p-8">
       <div className="flex flex-col w-full p-11 gap-20 bg-white rounded-[5px] relative">
-        <div className="flex flex-col gap-10 w-full">
-          {/* 보고서 임베딩 Section */}
-          <div className="flex flex-col gap-4 w-full">
-            <div className="flex justify-between items-center w-full">
-              <h1 className="text-2xl font-semibold text-black leading-8">
-                보고서 임베딩
-              </h1>
-            </div>
-
-            <div className="flex flex-col border border-[#f5f5f5] w-full">
-              {/* 번호 Row */}
-              <div className="flex w-full border-b border-[#f5f5f5]">
-                <div className="flex w-40 p-6 items-center bg-[#f5f5f5]">
-                  <Label className="text-[#555] text-base font-normal leading-6 tracking-[-0.32px]">
-                    번호
-                  </Label>
-                </div>
-                <div className="flex flex-1 p-4 px-6 items-center">
-                  <Input
-                    placeholder="번호를 입력해주세요."
-                    value={번호}
-                    onChange={(e) => set번호(e.target.value)}
-                    type="number"
-                    className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-white text-base leading-6 tracking-[-0.064px] placeholder:text-[#A6A6A6]"
-                  />
-                </div>
-              </div>
-
-              {/* 제목 Row */}
-              <div className="flex w-full border-b border-[#f5f5f5]">
-                <div className="flex w-40 p-6 items-center bg-[#f5f5f5]">
-                  <Label className="text-[#555] text-base font-normal leading-6 tracking-[-0.32px]">
-                    제목
-                  </Label>
-                </div>
-                <div className="flex flex-1 p-4 px-6 items-center">
-                  <Input
-                    placeholder="보고서 제목을 입력해주세요."
-                    value={제목}
-                    onChange={(e) => set제목(e.target.value)}
-                    className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-white text-base leading-6 tracking-[-0.064px] placeholder:text-[#A6A6A6]"
-                  />
-                </div>
-              </div>
-
-              {/* 분야 Row */}
-              <div className="flex w-full h-22 items-center border-b border-[#f5f5f5]">
-                <div className="flex w-40 p-6 items-center bg-[#f5f5f5] h-full">
-                  <Label className="text-[#555] text-base font-normal leading-6 tracking-[-0.32px]">
-                    분야
-                  </Label>
-                </div>
-                <div className="flex flex-1 p-4 px-6 items-center">
-                  <Select 
-                    value={분야} 
-                    onValueChange={(value) => {
-                      set분야(value);
-                      const selected = fieldOptions.find(opt => opt.value === value);
-                      if (selected) {
-                        set분야번호(selected.number.toString());
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-white">
-                      <SelectValue
-                        placeholder="선택"
-                        className="text-[#A6A6A6] text-base leading-6 tracking-[-0.064px]"
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {fieldOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* 키워드 Row */}
-              <div className="flex w-full border-b border-[#f5f5f5]">
-                <div className="flex w-40 p-6 items-center bg-[#f5f5f5]">
-                  <Label className="text-[#555] text-base font-normal leading-6 tracking-[-0.32px]">
-                    키워드
-                  </Label>
-                </div>
-                <div className="flex flex-1 p-4 px-6 items-center">
-                  <Input
-                    placeholder="키워드를 입력해주세요. 쉼표(,)로 구분합니다."
-                    value={키워드}
-                    onChange={(e) => set키워드(e.target.value)}
-                    className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-white text-base leading-6 tracking-[-0.064px] placeholder:text-[#A6A6A6]"
-                  />
-                </div>
-              </div>
-            </div>
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="text-lg text-gray-500">데이터를 불러오는 중...</div>
           </div>
+        ) : dataNotFound ? (
+          <div className="flex flex-col justify-center items-center h-64 gap-4">
+            <div className="text-xl text-gray-700 font-semibold">데이터를 찾을 수 없습니다</div>
+            <div className="text-base text-gray-500">ID {id}에 해당하는 보고서가 존재하지 않습니다.</div>
+            <Button
+              onClick={() => window.history.back()}
+              className="mt-4 px-6 py-2 bg-[#07F] text-white rounded-lg hover:bg-[#0066e6]"
+            >
+              목록으로 돌아가기
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-10 w-full">
+            {/* 보고서 임베딩 Section */}
+            <div className="flex flex-col gap-4 w-full">
+              <div className="flex justify-between items-center w-full">
+                <h1 className="text-2xl font-semibold text-black leading-8">
+                  보고서 등록
+                </h1>
+              </div>
 
-          {/* 보고서 등록 Section */}
-          <div className="flex flex-col gap-4 w-full">
-            <div className="flex justify-between items-center w-full">
-              <h2 className="text-xl font-semibold text-[#2A2A2A] leading-6">
-                보고서 등록
-              </h2>
+              <div className="flex flex-col border border-[#f5f5f5] w-full">
+                {/* 번호 Row */}
+                <div className="flex w-full border-b border-[#f5f5f5]">
+                  <div className="flex w-40 p-6 items-center bg-[#f5f5f5]">
+                    <Label className="text-[#555] text-base font-normal leading-6 tracking-[-0.32px]">
+                      번호
+                    </Label>
+                  </div>
+                  <div className="flex flex-1 p-4 px-6 items-center">
+                    <Input
+                      placeholder="자동으로 부여됩니다."
+                      value={번호}
+                      onChange={(e) => set번호(e.target.value)}
+                      type="number"
+                      className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-gray-200 text-gray-500 text-base leading-6 tracking-[-0.064px] placeholder:text-[#A6A6A6] cursor-not-allowed opacity-60"
+                      disabled
+                    />
+                  </div>
+                </div>
+
+                {/* 제목 Row */}
+                <div className="flex w-full border-b border-[#f5f5f5]">
+                  <div className="flex w-40 p-6 items-center bg-[#f5f5f5]">
+                    <Label className="text-[#555] text-base font-normal leading-6 tracking-[-0.32px]">
+                      제목
+                    </Label>
+                  </div>
+                  <div className="flex flex-1 p-4 px-6 items-center">
+                    <Input
+                      placeholder="보고서 제목을 입력해주세요."
+                      value={제목}
+                      onChange={(e) => set제목(e.target.value)}
+                      className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-white text-base leading-6 tracking-[-0.064px] placeholder:text-[#A6A6A6]"
+                    />
+                  </div>
+                </div>
+
+                {/* 분야 Row */}
+                <div className="flex w-full h-22 items-center border-b border-[#f5f5f5]">
+                  <div className="flex w-40 p-6 items-center bg-[#f5f5f5] h-full">
+                    <Label className="text-[#555] text-base font-normal leading-6 tracking-[-0.32px]">
+                      분야
+                    </Label>
+                  </div>
+                  <div className="flex flex-1 p-4 px-6 items-center">
+                    <Select 
+                      value={분야} 
+                      onValueChange={(value) => {
+                        set분야(value);
+                        const selected = fieldOptions.find(opt => opt.value === value);
+                        if (selected) {
+                          set분야번호(selected.number.toString());
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-white">
+                        <SelectValue
+                          placeholder="선택"
+                          className="text-[#A6A6A6] text-base leading-6 tracking-[-0.064px]"
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fieldOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* 키워드 Row */}
+                <div className="flex w-full border-b border-[#f5f5f5]">
+                  <div className="flex w-40 p-6 items-center bg-[#f5f5f5]">
+                    <Label className="text-[#555] text-base font-normal leading-6 tracking-[-0.32px]">
+                      키워드
+                    </Label>
+                  </div>
+                  <div className="flex flex-1 p-4 px-6 items-center">
+                    <Input
+                      placeholder="키워드를 입력해주세요. 쉼표(,)로 구분합니다."
+                      value={키워드}
+                      onChange={(e) => set키워드(e.target.value)}
+                      className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-white text-base leading-6 tracking-[-0.064px] placeholder:text-[#A6A6A6]"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex flex-col border border-[#f5f5f5] w-full">
-              {/* 파일첨부 Row */}
-              <div className="flex w-full items-center border-b border-[#f5f5f5]">
-                <div className="flex w-40 p-6 items-center bg-[#f5f5f5] h-full">
-                  <Label className="text-[#555] text-base font-normal leading-6 tracking-[-0.32px]">
-                    파일첨부
-                  </Label>
-                </div>
-                <div className="flex flex-1 p-6 flex-col justify-center items-start gap-2">
-                  <div className="flex items-center gap-2 w-full">
-                    <label htmlFor="file-upload">
-                      <div className="flex p-3 px-6 justify-center items-center gap-[6px] rounded-lg bg-[#E8F3FF] cursor-pointer">
-                        <Plus
-                          className="w-6 h-6 text-[#0077FF]"
-                          strokeWidth={2}
-                        />
-                        <span className="text-[#07F] text-lg font-semibold tracking-[-0.36px]">
-                          파일 첨부
+            {/* 보고서 등록 Section */}
+            <div className="flex flex-col gap-4 w-full">
+              <div className="flex justify-between items-center w-full">
+                <h2 className="text-xl font-semibold text-[#2A2A2A] leading-6">
+                  보고서 등록
+                </h2>
+              </div>
+
+              <div className="flex flex-col border border-[#f5f5f5] w-full">
+                {/* 파일첨부 Row */}
+                <div className="flex w-full items-center border-b border-[#f5f5f5]">
+                  <div className="flex w-40 p-6 items-center bg-[#f5f5f5] h-full">
+                    <Label className="text-[#555] text-base font-normal leading-6 tracking-[-0.32px]">
+                      파일첨부
+                    </Label>
+                  </div>
+                  <div className="flex flex-1 p-6 flex-col justify-center items-start gap-2">
+                    <div className="flex items-center gap-2 w-full">
+                      <label htmlFor="file-upload">
+                        <div className="flex p-3 px-6 justify-center items-center gap-[6px] rounded-lg bg-[#E8F3FF] cursor-pointer">
+                          <Plus
+                            className="w-6 h-6 text-[#0077FF]"
+                            strokeWidth={2}
+                          />
+                          <span className="text-[#07F] text-lg font-semibold tracking-[-0.36px]">
+                            파일 첨부
+                          </span>
+                        </div>
+                      </label>
+                      <input
+                        id="file-upload"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                      <div className="flex flex-1 p-3 px-[18px] items-center border border-[#E3E5E5] rounded-lg bg-white">
+                        <span className={`text-base leading-6 tracking-[-0.064px] ${보고서파일명 ? 'text-black' : 'text-[#A6A6A6]'}`}>
+                          {보고서파일명 || "첨부파일을 업로드해주세요."}
                         </span>
                       </div>
-                    </label>
-                    <input
-                      id="file-upload"
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                    <div className="flex flex-1 p-3 px-[18px] items-center border border-[#E3E5E5] rounded-lg bg-white">
-                      <span className="text-[#A6A6A6] text-base leading-6 tracking-[-0.064px]">
-                        {uploadedFile
-                          ? uploadedFile.name
-                          : "첨부파일을 업로드해주세요."}
-                      </span>
+                    </div>
+                    <div className="w-full text-[#757575] text-sm font-semibold tracking-[-0.064px] opacity-80">
+                      (PDF/Word, 최대 20MB)
                     </div>
                   </div>
-                  <div className="w-full text-[#757575] text-sm font-semibold tracking-[-0.064px] opacity-80">
-                    (PDF/Word, 최대 20MB)
-                  </div>
                 </div>
-              </div>
 
-              {/* 미리보기 Row */}
-              <div className="flex items-center w-full border-b border-[#f5f5f5]">
-                <div className="flex w-40 p-6 items-center bg-[#f5f5f5] h-full">
-                  <Label className="text-[#555] text-base font-normal leading-6 tracking-[-0.32px]">
-                    미리보기
-                  </Label>
-                </div>
-                <div className="flex flex-1 p-6 items-center gap-6">
-                  <div className="flex h-[555px] p-5 px-6 flex-col items-center gap-[10px] flex-1 rounded-xl border border-[#EEEEEF] bg-white relative overflow-hidden">
-                    {uploadedFile ? (
-                      <div className="flex flex-col items-start flex-1 w-full bg-gray-50 bg-cover bg-center relative">
-                        <div className="h-full w-full bg-gradient-to-b from-white to-gray-100 flex items-center justify-center">
-                          <div className="text-gray-500 text-center">
-                            <div className="text-lg font-medium mb-2">
-                              문서 미리보기
+                {/* 미리보기 Row */}
+                <div className="flex items-center w-full border-b border-[#f5f5f5]">
+                  <div className="flex w-40 p-6 items-center bg-[#f5f5f5] h-full">
+                    <Label className="text-[#555] text-base font-normal leading-6 tracking-[-0.32px]">
+                      미리보기
+                    </Label>
+                  </div>
+                  <div className="flex flex-1 p-6 items-center gap-6">
+                    <div className="flex h-[555px] p-5 px-6 flex-col items-center gap-[10px] flex-1 rounded-xl border border-[#EEEEEF] bg-white relative overflow-hidden">
+                      {보고서파일명 ? (
+                        <div className="flex flex-col items-start flex-1 w-full bg-gray-50 bg-cover bg-center relative">
+                          <div className="h-full w-full bg-gradient-to-b from-white to-gray-100 flex items-center justify-center">
+                            <div className="text-gray-500 text-center">
+                              <div className="text-lg font-medium mb-2">
+                                문서 미리보기
+                              </div>
+                              <div className="text-sm">{보고서파일명}</div>
                             </div>
-                            <div className="text-sm">{uploadedFile.name}</div>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-start flex-1 w-full bg-gray-50 relative">
-                        <div className="h-full w-full"></div>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="flex flex-col items-start flex-1 w-full bg-gray-50 relative">
+                          <div className="h-full w-full"></div>
+                        </div>
+                      )}
 
-                    {/* Scrollbar */}
-                    <div className="absolute right-3 top-5 bottom-5 w-[6px] bg-[#f5f5f5] rounded-full">
-                      <div className="w-[6px] h-[317px] bg-[#b2b2b2] rounded-full"></div>
+                      {/* Scrollbar */}
+                      <div className="absolute right-3 top-5 bottom-5 w-[6px] bg-[#f5f5f5] rounded-full">
+                        <div className="w-[6px] h-[317px] bg-[#b2b2b2] rounded-full"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Action Buttons */}
-        <div className="flex justify-end items-center gap-3 w-full">
-          <Button
-            onClick={handleCancel}
-            variant="outline"
-            className="flex w-[79px] h-[46px] justify-center items-center gap-[6px] rounded-lg border border-[#07F] bg-white text-[#07F] text-lg font-semibold tracking-[-0.36px] hover:bg-[#f8faff]"
-          >
-            취소
-          </Button>
-          <Button
-            onClick={handleEmbedding}
-            className="flex w-[94px] h-[46px] justify-center items-center gap-[6px] rounded-lg bg-[#07F] text-white text-lg font-semibold tracking-[-0.36px] hover:bg-[#0066e6]"
-          >
-            임베딩
-          </Button>
-        </div>
+        {!loading && (
+          <div className="flex justify-end items-center gap-3 w-full">
+            <Button
+              onClick={handleCancel}
+              variant="outline"
+              className="flex w-[79px] h-[46px] justify-center items-center gap-[6px] rounded-lg border border-[#07F] bg-white text-[#07F] text-lg font-semibold tracking-[-0.36px] hover:bg-[#f8faff]"
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleEmbedding}
+              className="flex w-[94px] h-[46px] justify-center items-center gap-[6px] rounded-lg bg-[#07F] text-white text-lg font-semibold tracking-[-0.36px] hover:bg-[#0066e6]"
+            >
+              저장
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

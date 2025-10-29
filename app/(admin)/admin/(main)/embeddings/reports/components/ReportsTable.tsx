@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import { ReportInformation } from "../types";
 
 interface ReportsTableProps {
@@ -35,7 +36,10 @@ export default function ReportsTable({ reports, currentPage, itemsPerPage }: Rep
         <div className="w-[10%] min-w-[80px] flex justify-center items-center">
           <div className="text-center text-xs font-bold text-[#515151]">파일</div>
         </div>
-        <div className="w-[20%] min-w-[150px] flex justify-center items-center">
+        <div className="w-[10%] min-w-[80px] flex justify-center items-center">
+          <div className="text-center text-xs font-bold text-[#515151]">임베딩</div>
+        </div>
+        <div className="w-[15%] min-w-[120px] flex justify-center items-center">
           <div className="text-center text-xs font-bold text-[#515151]">임베딩 일시</div>
         </div>
       </div>
@@ -56,7 +60,7 @@ export default function ReportsTable({ reports, currentPage, itemsPerPage }: Rep
               </div>
             </div>
             <div className="w-[10%] min-w-[80px] flex justify-center items-center">
-              <div className="text-center text-xs font-normal text-[#686868] group-hover:text-[#07F] truncate px-2">
+              <div className="text-center text-xs font-normal text-[#686868] group-hover:text-[#07F] truncate px-2" title={String(report.id)}>
                 {report.id}
               </div>
             </div>
@@ -92,7 +96,15 @@ export default function ReportsTable({ reports, currentPage, itemsPerPage }: Rep
                 </span>
               </Button>
             </div>
-            <div className="w-[20%] min-w-[150px] flex justify-center items-center">
+            <div className="w-[10%] min-w-[80px] flex justify-center items-center">
+              <Badge 
+                variant={report.is_completed ? "default" : "secondary"}
+                className="text-xs"
+              >
+                {report.is_completed ? "완료" : "대기중"}
+              </Badge>
+            </div>
+            <div className="w-[15%] min-w-[120px] flex justify-center items-center">
               <div className="text-center text-xs font-normal text-[#686868] group-hover:text-[#07F]">
                 {report.created_at ? new Date(report.created_at).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : "-"}
               </div>

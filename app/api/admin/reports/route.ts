@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -103,4 +104,88 @@ export async function GET(request: NextRequest) {
     page,
     limit,
   });
+}
+
+export async function POST(request: NextRequest) {
+  const supabase = await createClient();
+  
+  try {
+    const body = await request.json();
+    const { 번호, 제목, 분야, 키워드, 보고서파일명, 분야번호 } = body;
+
+    // 필수 필드 검증 (번호는 선택적)
+    if (!제목 || !분야 || !키워드 || !보고서파일명) {
+      return NextResponse.json(
+        { error: "모든 필드를 입력해주세요." },
+        { status: 400 }
+      );
+    }
+
+    // OpenAI API 키 확인
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { error: "OpenAI API 키가 설정되지 않았습니다." },
+        { status: 500 }
+      );
+    }
+
+    // 번호가 없으면 자동으로 최대값 + 1 할당
+    let finalNumber: number;
+    if (번호) {
+      finalNumber = parseInt(번호);
+    } else {
+      const { data: allReports } = await supabase
+        .from('report_embed')
+        .select('번호');
+      
+      const maxNumber = allReports && allReports.length > 0
+        ? Math.max(...(allReports as unknown as Array<{ 번호: number }>).map(r => r.번호))
+        : 0;
+      finalNumber = maxNumber + 1;
+    }
+
+    // OpenAI embedding 생성
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    // 키워드를 embedding 입력으로 사용
+    const embeddingResponse = await openai.embeddings.create({
+      input: 키워드,
+      model: "text-embedding-3-small",
+    });
+
+    const embedding = embeddingResponse.data[0].embedding;
+
+    // report_embed 테이블에 신규 데이터 삽입 (embedding 포함)
+    const insertData: Record<string, string | number | number[]> = {
+      번호: finalNumber,
+      제목,
+      분야,
+      키워드,
+      보고서파일명,
+      분야번호: 분야번호 ? parseInt(분야번호) : 0,
+      embedding,
+    };
+
+    const { data, error } = await supabase
+      .from('report_embed')
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ data }, { status: 201 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "알 수 없는 오류" },
+      { status: 500 }
+    );
+  }
 }
