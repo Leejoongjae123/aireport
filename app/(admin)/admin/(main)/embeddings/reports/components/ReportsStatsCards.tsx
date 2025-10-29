@@ -1,21 +1,21 @@
 "use client";
 
 import { Badge } from "@/components/ui/Badge";
-import { ExpertStats } from "../types";
+import { ReportStats } from "../types";
 
-interface ExpertsStatsCardsProps {
-  stats: ExpertStats;
+interface ReportsStatsCardsProps {
+  stats: ReportStats;
 }
 
-export default function ExpertsStatsCards({ stats }: ExpertsStatsCardsProps) {
+export default function ReportsStatsCards({ stats }: ReportsStatsCardsProps) {
   return (
     <div className="w-full flex items-start justify-center gap-4">
       <div className="flex flex-col items-center gap-4 border border-[rgba(217,217,217,1)] bg-white rounded-lg w-[220px] h-[120px] justify-center">
         <Badge className="flex p-[6px_10px] justify-center items-center rounded-full bg-[#ECF5FF] text-xs font-normal text-[#07F] hover:bg-[#ECF5FF]">
-          등록 전문가
+          등록 보고서
         </Badge>
         <div className="w-[100px] text-center text-xl font-bold text-[#303030]">
-          {stats.total}명
+          {stats.total}건
         </div>
       </div>
 
@@ -24,7 +24,7 @@ export default function ExpertsStatsCards({ stats }: ExpertsStatsCardsProps) {
           이번달 신규
         </Badge>
         <div className="w-[100px] text-center text-xl font-bold text-[#303030]">
-          {stats.thisMonth}명
+          {stats.thisMonth}건
         </div>
       </div>
 

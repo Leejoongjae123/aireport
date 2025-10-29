@@ -1,12 +1,12 @@
 export interface ExpertInformation {
   id: string;
   name: string | null;
-  career: string[] | null;
-  field: string[] | null;
+  career: Array<{ career: string[] } | string> | null;
+  field: Array<{ field: string[] } | string> | null;
   career_file_name: string | null;
   created_at?: string;
   updated_at?: string;
-  status?: "공개" | "비공개";
+  is_visible?: boolean;
   embedding_date?: string;
 }
 

@@ -2,18 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
-import ExpertsSearchFilter from "./ExpertsSearchFilter";
-import ExpertsStatsCards from "./ExpertsStatsCards";
-import ExpertsTable from "./ExpertsTable";
-import ExpertsPagination from "./ExpertsPagination";
-import { ExpertResponse } from "../types";
+import ReportsSearchFilter from "./ReportsSearchFilter";
+import ReportsStatsCards from "./ReportsStatsCards";
+import ReportsTable from "./ReportsTable";
+import ReportsPagination from "./ReportsPagination";
+import { ReportResponse } from "../types";
 import Link from "next/link";
-interface ExpertsContentProps {
-  initialData: ExpertResponse;
+
+interface ReportsContentProps {
+  initialData: ReportResponse;
 }
 
-export default function ExpertsContent({ initialData }: ExpertsContentProps) {
-  const [data, setData] = useState<ExpertResponse>(initialData);
+export default function ReportsContent({ initialData }: ReportsContentProps) {
+  const [data, setData] = useState<ReportResponse>(initialData);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState("10개씩 보기");
   const [isLoading, setIsLoading] = useState(false);
@@ -22,8 +23,7 @@ export default function ExpertsContent({ initialData }: ExpertsContentProps) {
     startDate: undefined as Date | undefined,
     endDate: undefined as Date | undefined,
     field: "전체",
-    status: "전체",
-    searchFilter: "이름",
+    searchFilter: "제목",
     searchValue: "",
   });
 
@@ -38,9 +38,6 @@ export default function ExpertsContent({ initialData }: ExpertsContentProps) {
       if (filters.field && filters.field !== "전체") {
         params.append("field", filters.field);
       }
-      if (filters.status && filters.status !== "전체") {
-        params.append("status", filters.status);
-      }
       if (filters.searchValue) {
         params.append("searchFilter", filters.searchFilter);
         params.append("searchValue", filters.searchValue);
@@ -52,7 +49,7 @@ export default function ExpertsContent({ initialData }: ExpertsContentProps) {
         params.append("endDate", filters.endDate.toISOString());
       }
 
-      const response = await fetch(`/api/admin/experts?${params}`);
+      const response = await fetch(`/api/admin/reports?${params}`);
       if (response.ok) {
         const newData = await response.json();
         setData(newData);
@@ -66,7 +63,6 @@ export default function ExpertsContent({ initialData }: ExpertsContentProps) {
     startDate?: Date;
     endDate?: Date;
     field: string;
-    status: string;
     searchFilter: string;
     searchValue: string;
   }) => {
@@ -74,7 +70,6 @@ export default function ExpertsContent({ initialData }: ExpertsContentProps) {
       startDate: newFilters.startDate,
       endDate: newFilters.endDate,
       field: newFilters.field,
-      status: newFilters.status,
       searchFilter: newFilters.searchFilter,
       searchValue: newFilters.searchValue,
     });
@@ -103,14 +98,14 @@ export default function ExpertsContent({ initialData }: ExpertsContentProps) {
     <div className="flex flex-col items-center gap-8 p-11 bg-white min-h-screen font-['Pretendard']">
       {/* Page Title */}
       <div className="w-full">
-        <h1 className="text-2xl font-bold text-[#2A2A2A]">전문가 정보 관리</h1>
+        <h1 className="text-2xl font-bold text-[#2A2A2A]">보고서 정보 관리</h1>
       </div>
 
       {/* Filter Section */}
-      <ExpertsSearchFilter onSearch={handleSearch} />
+      <ReportsSearchFilter onSearch={handleSearch} />
 
       {/* Status Summary Cards */}
-      <ExpertsStatsCards stats={data.stats} />
+      <ReportsStatsCards stats={data.stats} />
 
       {/* Results Section */}
       <div className="w-full flex flex-col gap-6">
@@ -147,9 +142,9 @@ export default function ExpertsContent({ initialData }: ExpertsContentProps) {
               </svg>
               엑셀 다운로드
             </Button>
-            <Link href='/admin/embeddings/experts/edit'>
+            <Link href='/admin/embeddings/reports/edit'>
             <Button className="flex px-3 py-2.5 justify-center items-center gap-2.5 rounded bg-[#07F] text-white font-bold text-sm hover:bg-[#0066dd]">
-              전문가 등록
+              보고서 등록
             </Button>
             </Link>
           </div>
@@ -158,18 +153,18 @@ export default function ExpertsContent({ initialData }: ExpertsContentProps) {
         {/* Table */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="text-[#6D6D6D]"></div>
+            <div className="text-[#6D6D6D]">로딩 중...</div>
           </div>
         ) : (
-          <ExpertsTable
-            experts={data.data || []}
+          <ReportsTable
+            reports={data.data || []}
             currentPage={currentPage}
             itemsPerPage={itemsPerPageNum}
           />
         )}
 
         {/* Pagination */}
-        <ExpertsPagination
+        <ReportsPagination
           currentPage={currentPage}
           totalPages={totalPages}
           itemsPerPage={itemsPerPage}

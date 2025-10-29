@@ -1,38 +1,89 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/Select";
 import { Plus } from "lucide-react";
 
 export default function ReportEmbeddingPage() {
-  const [reportTitle, setReportTitle] = useState("");
-  const [category, setCategory] = useState("");
-  const [field, setField] = useState("");
-  const [keywords, setKeywords] = useState("");
+  const [번호, set번호] = useState("");
+  const [제목, set제목] = useState("");
+  const [분야, set분야] = useState("");
+  const [키워드, set키워드] = useState("");
+  const [보고서파일명, set보고서파일명] = useState("");
+  const [분야번호, set분야번호] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setUploadedFile(file);
+      set보고서파일명(file.name);
     }
   };
 
+  const fieldOptions = [
+    { value: "디지털·ICT·AI", label: "디지털·ICT·AI", number: 1 },
+    { value: "제조·산업기술·혁신", label: "제조·산업기술·혁신", number: 2 },
+    { value: "문화·콘텐츠·관광", label: "문화·콘텐츠·관광", number: 3 },
+    { value: "에너지·환경", label: "에너지·환경", number: 4 },
+    { value: "공공·도시·인프라", label: "공공·도시·인프라", number: 5 },
+  ];
+
   const handleCancel = () => {
-    // Handle cancel action
+    // 초기화
+    set번호("");
+    set제목("");
+    set분야("");
+    set키워드("");
+    set보고서파일명("");
+    set분야번호("");
+    setUploadedFile(null);
   };
 
-  const handleEmbedding = () => {
-    // Handle embedding action
+  const handleEmbedding = async () => {
+    // 필수 필드 검증
+    if (!번호 || !제목 || !분야 || !키워드 || !uploadedFile) {
+      alert("모든 필드를 입력해주세요.");
+      return;
+    }
+
+    try {
+      // FormData 생성
+      const formData = new FormData();
+      formData.append("번호", 번호);
+      formData.append("제목", 제목);
+      formData.append("분야", 분야);
+      formData.append("키워드", 키워드);
+      formData.append("보고서파일명", 보고서파일명);
+      formData.append("분야번호", 분야번호);
+      formData.append("file", uploadedFile);
+
+      // API 호출
+      const response = await fetch("/api/admin/reports/embed", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(`임베딩 실패: ${error.message || "알 수 없는 오류"}`);
+        return;
+      }
+
+      alert("임베딩이 성공적으로 완료되었습니다.");
+      handleCancel(); // 폼 초기화
+    } catch (error) {
+      alert(`임베딩 중 오류가 발생했습니다: ${error instanceof Error ? error.message : "알 수 없는 오류"}`);
+    }
   };
 
   return (
@@ -48,44 +99,38 @@ export default function ReportEmbeddingPage() {
             </div>
 
             <div className="flex flex-col border border-[#f5f5f5] w-full">
-              {/* 보고서 제목 Row */}
+              {/* 번호 Row */}
               <div className="flex w-full border-b border-[#f5f5f5]">
                 <div className="flex w-40 p-6 items-center bg-[#f5f5f5]">
                   <Label className="text-[#555] text-base font-normal leading-6 tracking-[-0.32px]">
-                    보고서 제목
+                    번호
                   </Label>
                 </div>
                 <div className="flex flex-1 p-4 px-6 items-center">
                   <Input
-                    placeholder="보고서 제목을 입력해주세요."
-                    value={reportTitle}
-                    onChange={(e) => setReportTitle(e.target.value)}
+                    placeholder="번호를 입력해주세요."
+                    value={번호}
+                    onChange={(e) => set번호(e.target.value)}
+                    type="number"
                     className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-white text-base leading-6 tracking-[-0.064px] placeholder:text-[#A6A6A6]"
                   />
                 </div>
               </div>
 
-              {/* 카테고리 Row */}
-              <div className="flex w-full h-22 items-center border-b border-[#f5f5f5]">
-                <div className="flex w-40 p-6 items-center bg-[#f5f5f5] h-full">
+              {/* 제목 Row */}
+              <div className="flex w-full border-b border-[#f5f5f5]">
+                <div className="flex w-40 p-6 items-center bg-[#f5f5f5]">
                   <Label className="text-[#555] text-base font-normal leading-6 tracking-[-0.32px]">
-                    카테고리
+                    제목
                   </Label>
                 </div>
                 <div className="flex flex-1 p-4 px-6 items-center">
-                  <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-white">
-                      <SelectValue
-                        placeholder="선택"
-                        className="text-[#A6A6A6] text-base leading-6 tracking-[-0.064px]"
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="category1">카테고리 1</SelectItem>
-                      <SelectItem value="category2">카테고리 2</SelectItem>
-                      <SelectItem value="category3">카테고리 3</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    placeholder="보고서 제목을 입력해주세요."
+                    value={제목}
+                    onChange={(e) => set제목(e.target.value)}
+                    className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-white text-base leading-6 tracking-[-0.064px] placeholder:text-[#A6A6A6]"
+                  />
                 </div>
               </div>
 
@@ -97,7 +142,16 @@ export default function ReportEmbeddingPage() {
                   </Label>
                 </div>
                 <div className="flex flex-1 p-4 px-6 items-center">
-                  <Select value={field} onValueChange={setField}>
+                  <Select 
+                    value={분야} 
+                    onValueChange={(value) => {
+                      set분야(value);
+                      const selected = fieldOptions.find(opt => opt.value === value);
+                      if (selected) {
+                        set분야번호(selected.number.toString());
+                      }
+                    }}
+                  >
                     <SelectTrigger className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-white">
                       <SelectValue
                         placeholder="선택"
@@ -105,9 +159,11 @@ export default function ReportEmbeddingPage() {
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="field1">분야 1</SelectItem>
-                      <SelectItem value="field2">분야 2</SelectItem>
-                      <SelectItem value="field3">분야 3</SelectItem>
+                      {fieldOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -123,8 +179,8 @@ export default function ReportEmbeddingPage() {
                 <div className="flex flex-1 p-4 px-6 items-center">
                   <Input
                     placeholder="키워드를 입력해주세요. 쉼표(,)로 구분합니다."
-                    value={keywords}
-                    onChange={(e) => setKeywords(e.target.value)}
+                    value={키워드}
+                    onChange={(e) => set키워드(e.target.value)}
                     className="w-full h-14 px-[18px] py-4 border border-[#E3E5E5] rounded-lg bg-white text-base leading-6 tracking-[-0.064px] placeholder:text-[#A6A6A6]"
                   />
                 </div>

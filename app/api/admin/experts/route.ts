@@ -56,13 +56,33 @@ export async function GET(request: NextRequest) {
   const now = new Date();
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
+  // 최신 임베딩일 계산 (created_at 기준 가장 최신값)
+  const latestExpert = allExperts?.reduce((latest, current) => {
+    if (!current.created_at) return latest;
+    if (!latest?.created_at) return current;
+    return new Date(current.created_at) > new Date(latest.created_at) ? current : latest;
+  }, null as { id: string; created_at: string | null } | null);
+
+  // 날짜 포맷팅 함수
+  const formatLatestDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hour}:${minute}`;
+  };
+
   const stats = {
     total: count || 0,
     thisMonth: allExperts?.filter((expert) => {
       if (!expert.created_at) return false;
       return new Date(expert.created_at) >= thisMonthStart;
     }).length || 0,
-    latestEmbeddingDate: null, // 임베딩 날짜는 별도 테이블에서 관리 필요
+    latestEmbeddingDate: latestExpert?.created_at 
+      ? formatLatestDate(latestExpert.created_at)
+      : null,
   };
 
   return NextResponse.json({
