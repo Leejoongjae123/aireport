@@ -198,23 +198,32 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
         }
 
         // 3. 내부 API(Route Handler)를 통해 AI 보고서 생성 요청
+        const requestBody = {
+          business_idea: inputData.businessIdea || "",
+          core_value: inputData.coreValue || "",
+          file_name: firstResult.보고서파일명 || "사업계획서",
+          report_id: reportId,
+        };
+        
+        console.log("=== 보고서 생성 요청 데이터 ===");
+        console.log("business_idea 길이:", requestBody.business_idea.length);
+        console.log("core_value 길이:", requestBody.core_value.length);
+        console.log("file_name:", requestBody.file_name);
+        console.log("report_id:", requestBody.report_id);
+        
         const generateResponse = await fetch(`/api/reports/generate`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            business_idea: inputData.businessIdea || "",
-            core_value: inputData.coreValue || "",
-            file_name: firstResult.보고서파일명 || "사업계획서",
-            report_id: reportId,
-          }),
+          body: JSON.stringify(requestBody),
         });
 
         if (isCancelled) return;
 
         if (generateResponse.ok) {
           const generateData = await generateResponse.json();
+          console.log("보고서 생성 응답:", generateData);
           if (generateData && generateData.success) {
             setStep2Status("completed");
             setStep3Status("completed");
@@ -232,10 +241,18 @@ export const ReportGenerationModal: React.FC<ReportGenerationModalProps> = ({
           // success가 아닌 경우에만 polling 시작
           startPolling();
         } else {
+          // 에러 응답 로깅
+          const errorData = await generateResponse.json().catch(() => null);
+          console.error("보고서 생성 실패:", {
+            status: generateResponse.status,
+            statusText: generateResponse.statusText,
+            error: errorData
+          });
           // 실패해도 계속 진행 (fallback 타이머로)
         }
-      } catch {
+      } catch (error) {
         if (isCancelled) return;
+        console.error("보고서 생성 요청 중 예외 발생:", error);
         // 오류가 발생해도 계속 진행 (fallback 타이머로)
       }
     };
