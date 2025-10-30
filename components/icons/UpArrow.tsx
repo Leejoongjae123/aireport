@@ -1,4 +1,4 @@
-import { IconProps } from "./types";
+import { IconProps } from "./Types";
 
 export default function UpArrow({ className, size = 24, color }: IconProps) {
   return (
