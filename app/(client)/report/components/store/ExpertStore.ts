@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { ExpertMatchResponse, Expert } from "../Types";
+import { ExpertMatchResponse, Expert } from "../types";
 
 interface ExpertStore {
   expertMatchData: ExpertMatchResponse | null;

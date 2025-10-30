@@ -4,7 +4,7 @@ import { CustomModal } from "@/components/ui/CustomModal";
 import { X, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ExpertRecommendationCompleteModal } from "./ExpertRecommendationCompleteModal";
-import { Expert } from "./Types";
+import { Expert } from "./types";
 import { ExpertEvaluationRequestModal } from "./ExpertEvaluationRequestModal";
 import { useExpertStore } from "./store/ExpertStore";
 
@@ -90,7 +90,11 @@ export function ExpertRecommendationModal({
     setExperts(transformedExperts);
 
     // 모든 스텝이 완료되면 전문가 평가 모달 표시
-    if (step1Status === "completed" && step2Status === "completed" && step3Status === "completed") {
+    if (
+      step1Status === "completed" &&
+      step2Status === "completed" &&
+      step3Status === "completed"
+    ) {
       setTimeout(() => {
         setShowExpertEvaluation(true);
       }, 500);

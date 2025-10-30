@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Bot, User } from "lucide-react";
-import { Message } from "./Types";
+import { Message } from "./types";
 import { QuickActions } from "./QuickActions";
 import { useEditorStore } from "../editor/store/EditorStore";
 import { useReportStore } from "./store/ReportStore";
@@ -21,7 +21,16 @@ export default function AgentChat() {
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
   const [completionMessage, setCompletionMessage] = useState("");
 
-  const { editorContent, setEditorContent, isLoading, setIsLoading, setCurrentSection, selectedSubsectionId, updateCachedSections, triggerForceUpdate } = useEditorStore();
+  const {
+    editorContent,
+    setEditorContent,
+    isLoading,
+    setIsLoading,
+    setCurrentSection,
+    selectedSubsectionId,
+    updateCachedSections,
+    triggerForceUpdate,
+  } = useEditorStore();
   const { reportId } = useReportStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -40,7 +49,10 @@ export default function AgentChat() {
     }
   }, [editorContent, setEditorContent]);
 
-  const handleQuickAction = async (options: { action: string; subject?: string }) => {
+  const handleQuickAction = async (options: {
+    action: string;
+    subject?: string;
+  }) => {
     const { action, subject } = options;
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -59,7 +71,11 @@ export default function AgentChat() {
     setCurrentSection(action);
 
     try {
-      const requestBody: { classification: string; subject?: string; contents?: string } = {
+      const requestBody: {
+        classification: string;
+        subject?: string;
+        contents?: string;
+      } = {
         classification: action,
       };
 
@@ -82,8 +98,8 @@ export default function AgentChat() {
         } else {
           // subject가 없는 경우에 대한 처리 (예: 경고 또는 기본값 사용)
           // subject가 없는 경우 editorContent의 첫 줄을 제목으로 사용
-          const firstLine = editorContent?.split('\n')[0].trim() || "";
-          const title = firstLine.replace(/#/g, '').trim();
+          const firstLine = editorContent?.split("\n")[0].trim() || "";
+          const title = firstLine.replace(/#/g, "").trim();
           requestBody.subject = title || "인공지능 기반 사업 계획"; // 제목이 없으면 기본값 사용
         }
       }
@@ -103,39 +119,46 @@ export default function AgentChat() {
 
       const data = await response.json();
 
-      if (data.result === 'success') {
+      if (data.result === "success") {
         // 특허, 논문, 뉴스의 경우 기존 내용 뒤에 추가, 나머지는 교체
         const shouldAppend = ["특허", "논문", "뉴스"].includes(action);
-        const newContent = shouldAppend 
-          ? editorContent + "\n\n" + data.contents 
+        const newContent = shouldAppend
+          ? editorContent + "\n\n" + data.contents
           : data.contents;
-        
+
         setEditorContent(newContent);
         triggerForceUpdate(); // 에디터 강제 업데이트 트리거
-        
+
         // DB에 수정된 내용 저장 및 캐시 업데이트
         if (reportId && selectedSubsectionId) {
           try {
-            const updateResponse = await fetch(`/api/reports/${reportId}/sections/${selectedSubsectionId}`, {
-              method: "PATCH",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                content: newContent,
-              }),
-            });
+            const updateResponse = await fetch(
+              `/api/reports/${reportId}/sections/${selectedSubsectionId}`,
+              {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  content: newContent,
+                }),
+              }
+            );
 
             if (updateResponse.ok) {
               const updateResult = await updateResponse.json();
               if (updateResult.success && updateResult.data) {
                 // 캐시 업데이트: DB에 저장된 최신 데이터로 캐시 갱신
                 updateCachedSections([updateResult.data]);
-                
+
                 setMessages((prev) =>
                   prev.map((msg) =>
                     msg.id === aiGeneratingMessage.id
-                      ? { ...msg, content: `[${action}] 요청이 완료되어 에디터 및 DB에 저장되었습니다.`, isGenerating: false }
+                      ? {
+                          ...msg,
+                          content: `[${action}] 요청이 완료되어 에디터 및 DB에 저장되었습니다.`,
+                          isGenerating: false,
+                        }
                       : msg
                   )
                 );
@@ -143,29 +166,42 @@ export default function AgentChat() {
                 setMessages((prev) =>
                   prev.map((msg) =>
                     msg.id === aiGeneratingMessage.id
-                      ? { ...msg, content: `[${action}] 요청이 완료되어 에디터에 반영되었으나 DB 저장에 실패했습니다.`, isGenerating: false }
+                      ? {
+                          ...msg,
+                          content: `[${action}] 요청이 완료되어 에디터에 반영되었으나 DB 저장에 실패했습니다.`,
+                          isGenerating: false,
+                        }
                       : msg
                   )
                 );
               }
             } else {
               const errorData = await updateResponse.json().catch(() => ({}));
-              const errorMsg = errorData.message || 'DB 저장 실패';
+              const errorMsg = errorData.message || "DB 저장 실패";
               setMessages((prev) =>
                 prev.map((msg) =>
                   msg.id === aiGeneratingMessage.id
-                    ? { ...msg, content: `[${action}] 요청이 완료되어 에디터에 반영되었으나 DB 저장 중 오류가 발생했습니다: ${errorMsg}`, isGenerating: false }
+                    ? {
+                        ...msg,
+                        content: `[${action}] 요청이 완료되어 에디터에 반영되었으나 DB 저장 중 오류가 발생했습니다: ${errorMsg}`,
+                        isGenerating: false,
+                      }
                     : msg
                 )
               );
             }
           } catch (error) {
             // DB 저장 실패해도 에디터에는 반영됨
-            const errorMsg = error instanceof Error ? error.message : 'DB 저장 실패';
+            const errorMsg =
+              error instanceof Error ? error.message : "DB 저장 실패";
             setMessages((prev) =>
               prev.map((msg) =>
                 msg.id === aiGeneratingMessage.id
-                  ? { ...msg, content: `[${action}] 요청이 완료되어 에디터에 반영되었으나 DB 저장 중 오류가 발생했습니다: ${errorMsg}`, isGenerating: false }
+                  ? {
+                      ...msg,
+                      content: `[${action}] 요청이 완료되어 에디터에 반영되었으나 DB 저장 중 오류가 발생했습니다: ${errorMsg}`,
+                      isGenerating: false,
+                    }
                   : msg
               )
             );
@@ -175,21 +211,25 @@ export default function AgentChat() {
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === aiGeneratingMessage.id
-                ? { ...msg, content: `[${action}] 요청이 완료되어 에디터에 반영되었습니다. (리포트 정보가 없어 DB에 저장되지 않았습니다)`, isGenerating: false }
+                ? {
+                    ...msg,
+                    content: `[${action}] 요청이 완료되어 에디터에 반영되었습니다. (리포트 정보가 없어 DB에 저장되지 않았습니다)`,
+                    isGenerating: false,
+                  }
                 : msg
             )
           );
         }
-        
+
         // 완료 모달 표시
         setCompletionMessage(`[${action}] 작업이 완료되었습니다.`);
         setIsCompletionModalOpen(true);
       } else {
-        throw new Error(data.contents || '작업 처리 중 오류가 발생했습니다.');
+        throw new Error(data.contents || "작업 처리 중 오류가 발생했습니다.");
       }
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       console.error("Quick Action Error:", error);
       setMessages((prev) =>
         prev.map((msg) =>
@@ -211,12 +251,14 @@ export default function AgentChat() {
 
   return (
     <>
-      <QuickActions handleQuickAction={handleQuickAction} isLoading={isLoading} />
+      <QuickActions
+        handleQuickAction={handleQuickAction}
+        isLoading={isLoading}
+      />
 
       {/* Completion Modal */}
       <CustomModal
         isOpen={isCompletionModalOpen}
-        
         onClose={handleCloseCompletionModal}
         width="400px"
         height="auto"
