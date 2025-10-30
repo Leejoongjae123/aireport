@@ -60,24 +60,7 @@ export default function ReportCreatePage() {
     setSelectedFile(file);
 
     try {
-      // S3 중복 파일명 체크
       const fastApiUrl = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
-      const checkResponse = await fetch(`${fastApiUrl}/api/reports/check-file?file_name=${encodeURIComponent(file.name)}`);
-      
-      if (checkResponse.ok) {
-        const checkResult = await checkResponse.json();
-        if (checkResult.exists) {
-          showError("동일한 파일명이 이미 존재합니다. 파일명을 변경해주세요.");
-          setSelectedFile(null);
-          setIsUploading(false);
-          const fileInput = document.getElementById("file-upload") as HTMLInputElement;
-          if (fileInput) {
-            fileInput.value = "";
-          }
-          return;
-        }
-      }
-
       const formData = new FormData();
       formData.append("file", file);
 
@@ -86,9 +69,11 @@ export default function ReportCreatePage() {
         body: formData,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        showError(`파일 업로드 실패: ${error.detail || "알 수 없는 오류"}`);
+      const result = await response.json();
+
+      // 중복 파일 체크 (success: false인 경우)
+      if (!result.success) {
+        showError(result.message || "S3에 이미 동일한 파일명이 존재합니다. 파일명을 변경해주세요.");
         setSelectedFile(null);
         setIsUploading(false);
         const fileInput = document.getElementById("file-upload") as HTMLInputElement;
@@ -98,7 +83,7 @@ export default function ReportCreatePage() {
         return;
       }
 
-      const result = await response.json();
+      // 업로드 성공
       set보고서파일명(result.file_name);
       showSuccess("파일이 성공적으로 업로드되었습니다.");
       
