@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/Select";
 import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useLoader } from "@/components/hooks/UseLoader";
+import { useToast } from "@/components/hooks/UseToast";
+import { ToastContainer } from "@/components/ToastContainer";
 
 export default function ReportEmbeddingPage() {
   const params = useParams();
@@ -27,6 +30,11 @@ export default function ReportEmbeddingPage() {
   const [loading, setLoading] = useState(true);
   const [dataNotFound, setDataNotFound] = useState(false);
   const [원본보고서파일명, set원본보고서파일명] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const loader = useLoader({ isLoading: isSubmitting || isUploading });
+  const { toasts, showSuccess, showError, removeToast } = useToast();
 
   // report_embed 데이터 가져오기
   useEffect(() => {
@@ -75,10 +83,94 @@ export default function ReportEmbeddingPage() {
     fetchReportData();
   }, [id]);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      set보고서파일명(file.name);
+    if (!file) return;
+
+    // PDF 파일 검증
+    if (file.type !== 'application/pdf') {
+      showError("PDF 파일만 업로드 가능합니다.");
+      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = "";
+      }
+      return;
+    }
+
+    // 파일 크기 검증 (20MB)
+    const maxSize = 20 * 1024 * 1024;
+    if (file.size > maxSize) {
+      showError("파일 크기는 20MB를 초과할 수 없습니다.");
+      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = "";
+      }
+      return;
+    }
+
+    setIsUploading(true);
+    setSelectedFile(file);
+
+    try {
+      // S3 중복 파일명 체크
+      const fastApiUrl = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
+      const checkResponse = await fetch(`${fastApiUrl}/api/reports/check-file?file_name=${encodeURIComponent(file.name)}`);
+      
+      if (checkResponse.ok) {
+        const checkResult = await checkResponse.json();
+        if (checkResult.exists) {
+          showError("동일한 파일명이 이미 존재합니다. 파일명을 변경해주세요.");
+          setSelectedFile(null);
+          setIsUploading(false);
+          const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+          if (fileInput) {
+            fileInput.value = "";
+          }
+          return;
+        }
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`${fastApiUrl}/api/reports/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        showError(`파일 업로드 실패: ${error.detail || "알 수 없는 오류"}`);
+        setSelectedFile(null);
+        setIsUploading(false);
+        const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+        if (fileInput) {
+          fileInput.value = "";
+        }
+        return;
+      }
+
+      const result = await response.json();
+      set보고서파일명(result.file_name);
+      showSuccess("파일이 성공적으로 업로드되었습니다.");
+      
+      // input 초기화 (같은 파일 재선택 가능하도록)
+      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = "";
+      }
+    } catch (error) {
+      showError(`파일 업로드 중 오류가 발생했습니다: ${error instanceof Error ? error.message : "알 수 없는 오류"}`);
+      setSelectedFile(null);
+      
+      // 에러 시에도 input 초기화
+      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = "";
+      }
+    } finally {
+      setIsUploading(false);
+      setSelectedFile(null);
     }
   };
 
@@ -106,6 +198,8 @@ export default function ReportEmbeddingPage() {
       alert("모든 필드를 입력해주세요.");
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       const supabase = createClient();
@@ -145,16 +239,50 @@ export default function ReportEmbeddingPage() {
 
       if (error) {
         alert(`저장 실패: ${error.message}`);
+        setIsSubmitting(false);
         return;
       }
 
-      alert("저장이 성공적으로 완료되었습니다.");
+      // 파일이 변경된 경우에만 임베딩 처리
+      if (isFileChanged) {
+        try {
+          const fastApiUrl = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
+          const embedResponse = await fetch(`${fastApiUrl}/api/reports/embed`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              file_name: 보고서파일명,
+              embed_id: String(id),
+            }),
+          });
+
+          if (!embedResponse.ok) {
+            const embedError = await embedResponse.json();
+            showError(`임베딩 처리 요청 실패: ${embedError.detail || "알 수 없는 오류"}`);
+          } else {
+            showSuccess("저장이 완료되었으며 임베딩 처리가 시작되었습니다.");
+            // 원본 파일명 업데이트
+            set원본보고서파일명(보고서파일명);
+          }
+        } catch (embedError) {
+          showError(`임베딩 처리 요청 중 오류: ${embedError instanceof Error ? embedError.message : "알 수 없는 오류"}`);
+        }
+      } else {
+        showSuccess("저장이 성공적으로 완료되었습니다.");
+      }
     } catch (error) {
       alert(`저장 중 오류가 발생했습니다: ${error instanceof Error ? error.message : "알 수 없는 오류"}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
+    <>
+      {loader}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     <div className="flex w-full p-8">
       <div className="flex flex-col w-full p-11 gap-20 bg-white rounded-[5px] relative">
         {loading ? (
@@ -291,32 +419,33 @@ export default function ReportEmbeddingPage() {
                   </div>
                   <div className="flex flex-1 p-6 flex-col justify-center items-start gap-2">
                     <div className="flex items-center gap-2 w-full">
-                      <label htmlFor="file-upload">
-                        <div className="flex p-3 px-6 justify-center items-center gap-[6px] rounded-lg bg-[#E8F3FF] cursor-pointer">
+                      <label htmlFor="file-upload" className={isUploading ? "cursor-not-allowed opacity-50" : ""}>
+                        <div className={`flex p-3 px-6 justify-center items-center gap-[6px] rounded-lg bg-[#E8F3FF] ${isUploading ? "cursor-not-allowed" : "cursor-pointer"}`}>
                           <Plus
                             className="w-6 h-6 text-[#0077FF]"
                             strokeWidth={2}
                           />
                           <span className="text-[#07F] text-lg font-semibold tracking-[-0.36px]">
-                            파일 첨부
+                            {isUploading ? "업로드 중..." : "파일 첨부"}
                           </span>
                         </div>
                       </label>
                       <input
                         id="file-upload"
                         type="file"
-                        accept=".pdf,.doc,.docx"
+                        accept=".pdf"
                         onChange={handleFileUpload}
+                        disabled={isUploading}
                         className="hidden"
                       />
                       <div className="flex flex-1 p-3 px-[18px] items-center border border-[#E3E5E5] rounded-lg bg-white">
                         <span className={`text-base leading-6 tracking-[-0.064px] ${보고서파일명 ? 'text-black' : 'text-[#A6A6A6]'}`}>
-                          {보고서파일명 || "첨부파일을 업로드해주세요."}
+                          {보고서파일명 || (selectedFile ? `업로드 중: ${selectedFile.name}` : "첨부파일을 업로드해주세요.")}
                         </span>
                       </div>
                     </div>
                     <div className="w-full text-[#757575] text-sm font-semibold tracking-[-0.064px] opacity-80">
-                      (PDF/Word, 최대 20MB)
+                      (PDF만 가능, 최대 20MB)
                     </div>
                   </div>
                 </div>
@@ -331,16 +460,11 @@ export default function ReportEmbeddingPage() {
                   <div className="flex flex-1 p-6 items-center gap-6">
                     <div className="flex h-[555px] p-5 px-6 flex-col items-center gap-[10px] flex-1 rounded-xl border border-[#EEEEEF] bg-white relative overflow-hidden">
                       {보고서파일명 ? (
-                        <div className="flex flex-col items-start flex-1 w-full bg-gray-50 bg-cover bg-center relative">
-                          <div className="h-full w-full bg-gradient-to-b from-white to-gray-100 flex items-center justify-center">
-                            <div className="text-gray-500 text-center">
-                              <div className="text-lg font-medium mb-2">
-                                문서 미리보기
-                              </div>
-                              <div className="text-sm">{보고서파일명}</div>
-                            </div>
-                          </div>
-                        </div>
+                        <iframe
+                          src={`https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.ap-northeast-2.amazonaws.com/${encodeURIComponent(보고서파일명)}`}
+                          className="w-full h-full border-0"
+                          title="PDF 미리보기"
+                        />
                       ) : (
                         <div className="flex flex-col items-start flex-1 w-full bg-gray-50 relative">
                           <div className="h-full w-full"></div>
@@ -365,19 +489,22 @@ export default function ReportEmbeddingPage() {
             <Button
               onClick={handleCancel}
               variant="outline"
+              disabled={isSubmitting}
               className="flex w-[79px] h-[46px] justify-center items-center gap-[6px] rounded-lg border border-[#07F] bg-white text-[#07F] text-lg font-semibold tracking-[-0.36px] hover:bg-[#f8faff]"
             >
               취소
             </Button>
             <Button
               onClick={handleEmbedding}
-              className="flex w-[94px] h-[46px] justify-center items-center gap-[6px] rounded-lg bg-[#07F] text-white text-lg font-semibold tracking-[-0.36px] hover:bg-[#0066e6]"
+              disabled={isSubmitting}
+              className="flex w-[94px] h-[46px] justify-center items-center gap-[6px] rounded-lg bg-[#07F] text-white text-lg font-semibold tracking-[-0.36px] hover:bg-[#0066e6] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              저장
+              {isSubmitting ? "저장 중..." : "저장"}
             </Button>
           </div>
         )}
       </div>
     </div>
+    </>
   );
 }

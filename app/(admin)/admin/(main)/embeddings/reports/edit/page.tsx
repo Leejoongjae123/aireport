@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/Select";
 import { Plus } from "lucide-react";
 import { useLoader } from "@/components/hooks/UseLoader";
+import { useToast } from "@/components/hooks/UseToast";
+import { ToastContainer } from "@/components/ToastContainer";
 
 export default function ReportCreatePage() {
   const router = useRouter();
@@ -24,12 +26,99 @@ export default function ReportCreatePage() {
   const [보고서파일명, set보고서파일명] = useState("");
   const [분야번호, set분야번호] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const loader = useLoader({ isLoading: isSubmitting });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const loader = useLoader({ isLoading: isSubmitting || isUploading });
+  const { toasts, showSuccess, showError, removeToast } = useToast();
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      set보고서파일명(file.name);
+    if (!file) return;
+
+    // PDF 파일 검증
+    if (file.type !== 'application/pdf') {
+      showError("PDF 파일만 업로드 가능합니다.");
+      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = "";
+      }
+      return;
+    }
+
+    // 파일 크기 검증 (20MB)
+    const maxSize = 20 * 1024 * 1024;
+    if (file.size > maxSize) {
+      showError("파일 크기는 20MB를 초과할 수 없습니다.");
+      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = "";
+      }
+      return;
+    }
+
+    setIsUploading(true);
+    setSelectedFile(file);
+
+    try {
+      // S3 중복 파일명 체크
+      const fastApiUrl = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
+      const checkResponse = await fetch(`${fastApiUrl}/api/reports/check-file?file_name=${encodeURIComponent(file.name)}`);
+      
+      if (checkResponse.ok) {
+        const checkResult = await checkResponse.json();
+        if (checkResult.exists) {
+          showError("동일한 파일명이 이미 존재합니다. 파일명을 변경해주세요.");
+          setSelectedFile(null);
+          setIsUploading(false);
+          const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+          if (fileInput) {
+            fileInput.value = "";
+          }
+          return;
+        }
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`${fastApiUrl}/api/reports/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        showError(`파일 업로드 실패: ${error.detail || "알 수 없는 오류"}`);
+        setSelectedFile(null);
+        setIsUploading(false);
+        const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+        if (fileInput) {
+          fileInput.value = "";
+        }
+        return;
+      }
+
+      const result = await response.json();
+      set보고서파일명(result.file_name);
+      showSuccess("파일이 성공적으로 업로드되었습니다.");
+      
+      // input 초기화 (같은 파일 재선택 가능하도록)
+      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = "";
+      }
+    } catch (error) {
+      showError(`파일 업로드 중 오류가 발생했습니다: ${error instanceof Error ? error.message : "알 수 없는 오류"}`);
+      setSelectedFile(null);
+      
+      // 에러 시에도 input 초기화
+      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = "";
+      }
+    } finally {
+      setIsUploading(false);
+      setSelectedFile(null);
     }
   };
 
@@ -49,6 +138,7 @@ export default function ReportCreatePage() {
     set키워드("");
     set보고서파일명("");
     set분야번호("");
+    setSelectedFile(null);
   };
 
   const handleSubmit = async () => {
@@ -93,8 +183,43 @@ export default function ReportCreatePage() {
         return;
       }
 
+      const result = await response.json();
+      const embedId = result.data?.id;
+
+      if (!embedId) {
+        alert("등록은 성공했으나 ID를 받지 못했습니다.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 임베딩 처리 요청
+      try {
+        const fastApiUrl = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
+        const embedResponse = await fetch(`${fastApiUrl}/api/reports/embed`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            file_name: 보고서파일명,
+            embed_id: String(embedId),
+          }),
+        });
+
+        if (!embedResponse.ok) {
+          const embedError = await embedResponse.json();
+          showError(`임베딩 처리 요청 실패: ${embedError.detail || "알 수 없는 오류"}`);
+        } else {
+          showSuccess("보고서가 등록되었으며 임베딩 처리가 시작되었습니다.");
+        }
+      } catch (embedError) {
+        showError(`임베딩 처리 요청 중 오류: ${embedError instanceof Error ? embedError.message : "알 수 없는 오류"}`);
+      }
+
       // 성공 시 목록으로 이동 (로더는 계속 표시)
-      router.push("/admin/embeddings/reports");
+      setTimeout(() => {
+        router.push("/admin/embeddings/reports");
+      }, 1500);
     } catch (error) {
       alert(`등록 중 오류가 발생했습니다: ${error instanceof Error ? error.message : "알 수 없는 오류"}`);
       setIsSubmitting(false);
@@ -104,6 +229,7 @@ export default function ReportCreatePage() {
   return (
     <>
       {loader}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div className="flex w-full p-8">
         <div className="flex flex-col w-full p-11 gap-20 bg-white rounded-[5px] relative">
         <div className="flex flex-col gap-10 w-full">
@@ -224,27 +350,28 @@ export default function ReportCreatePage() {
                 </div>
                 <div className="flex flex-1 p-6 flex-col justify-center items-start gap-2">
                   <div className="flex items-center gap-2 w-full">
-                    <label htmlFor="file-upload">
-                      <div className="flex p-3 px-6 justify-center items-center gap-[6px] rounded-lg bg-[#E8F3FF] cursor-pointer">
+                    <label htmlFor="file-upload" className={isUploading ? "cursor-not-allowed opacity-50" : ""}>
+                      <div className={`flex p-3 px-6 justify-center items-center gap-[6px] rounded-lg bg-[#E8F3FF] ${isUploading ? "cursor-not-allowed" : "cursor-pointer"}`}>
                         <Plus
                           className="w-6 h-6 text-[#0077FF]"
                           strokeWidth={2}
                         />
                         <span className="text-[#07F] text-lg font-semibold tracking-[-0.36px]">
-                          파일 첨부
+                          {isUploading ? "업로드 중..." : "파일 첨부"}
                         </span>
                       </div>
                     </label>
                     <input
                       id="file-upload"
                       type="file"
-                      accept=".pdf,.doc,.docx"
+                      accept=".pdf"
                       onChange={handleFileUpload}
+                      disabled={isUploading}
                       className="hidden"
                     />
                     <div className="flex flex-1 p-3 px-[18px] items-center border border-[#E3E5E5] rounded-lg bg-white">
                       <span className={`text-base leading-6 tracking-[-0.064px] ${보고서파일명 ? 'text-black' : 'text-[#A6A6A6]'}`}>
-                        {보고서파일명 || "첨부파일을 업로드해주세요."}
+                        {보고서파일명 || (selectedFile ? `업로드 중: ${selectedFile.name}` : "첨부파일을 업로드해주세요.")}
                       </span>
                     </div>
                   </div>
