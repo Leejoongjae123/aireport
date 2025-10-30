@@ -21,6 +21,7 @@ export interface ExpertRequest {
   expert_informations: {
     id: string;
     name: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     field: any;
   } | null;
   expert_review: {

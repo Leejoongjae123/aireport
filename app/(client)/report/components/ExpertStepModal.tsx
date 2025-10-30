@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useExpertStore } from "./store/ExpertStore";
-import { ExpertMatchResponse } from "./types";
+import { ExpertMatchResponse } from "./Types";
 
 interface ExpertStepModalProps {
   isOpen: boolean;

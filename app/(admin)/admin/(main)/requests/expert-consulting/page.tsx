@@ -19,7 +19,7 @@ async function getInitialData(): Promise<ConsultingRequestResponse> {
     }
 
     return response.json();
-  } catch (error) {
+  } catch {
     return {
       data: [],
       count: 0,

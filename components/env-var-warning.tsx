@@ -1,5 +1,5 @@
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { Badge } from "./ui/Badge";
+import { Button } from "./ui/Button";
 
 export function EnvVarWarning() {
   return (

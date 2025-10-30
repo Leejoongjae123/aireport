@@ -40,7 +40,6 @@ export function ExpertDetailModal({
 }: ExpertDetailModalProps) {
   const [expertRequestData, setExpertRequestData] = useState<ExpertRequest | null>(null);
   const [selectedExpertInfo, setSelectedExpertInfo] = useState<ExpertInfo | null>(null);
-  const [candidateExperts, setCandidateExperts] = useState<ExpertInfo[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toasts, removeToast, showError } = useToast();
 
@@ -57,7 +56,6 @@ export function ExpertDetailModal({
       const data = await response.json();
       setExpertRequestData(data.expertRequest);
       setSelectedExpertInfo(data.selectedExpertInfo);
-      setCandidateExperts(data.candidateExperts);
     } catch {
       showError("전문가 평가 요청 정보를 불러오는 중 오류가 발생했습니다.");
     } finally {

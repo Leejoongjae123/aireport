@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(originalFileName)}`,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "파일 다운로드에 실패했습니다." }, { status: 500 });
   }
 }

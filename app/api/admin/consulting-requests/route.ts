@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const formattedData = data?.map((item: any) => ({
       id: item.id.toString(),
       created_at: item.created_at,
@@ -105,7 +106,7 @@ export async function GET(request: NextRequest) {
       page,
       limit,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

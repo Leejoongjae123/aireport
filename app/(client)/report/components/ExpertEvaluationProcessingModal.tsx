@@ -4,7 +4,7 @@ import { CustomModal } from "@/components/ui/CustomModal";
 import { X, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ExpertRecommendationCompleteModal } from "./ExpertRecommendationCompleteModal";
-import { Expert } from "./types";
+import { Expert } from "./Types";
 import { ExpertEvaluationRequestModal } from "./ExpertEvaluationRequestModal";
 import { useExpertStore } from "./store/ExpertStore";
 

@@ -77,6 +77,7 @@ function ReportEditorContent() {
   const [isDiagnosing, setIsDiagnosing] = useState(false);
   const [diagnosisError, setDiagnosisError] = useState<string | null>(null);
   const [showIncompleteModal, setShowIncompleteModal] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [requestBody, setRequestBody] = useState<any>(null); // requestBody 상태 추가
 
   const loadingOverlay = useLoadingOverlay({ isLoading: isDiagnosing });

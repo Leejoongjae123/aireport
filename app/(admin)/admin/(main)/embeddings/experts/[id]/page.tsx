@@ -108,6 +108,8 @@ export default function ExpertEmbeddingPage() {
             setFieldEntries(
               fieldArray.map((item: string, index: number) => ({
                 id: `field-${index}`,
+                year: "",
+                field: "",
                 description: item || "",
               }))
             );

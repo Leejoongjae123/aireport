@@ -15,7 +15,7 @@ interface SearchInputWithFilterProps {
   searchTypeOptions?: Array<{ value: string; label: string }>;
   onSearchTypeChange?: (value: string) => void;
   searchValue: string;
-  onSearchValueChange: (value: string) => void;
+  onSearchValueChange?: (value: string) => void;
   placeholder?: string;
   // 하위 호환성을 위한 기존 props
   filterValue?: string;

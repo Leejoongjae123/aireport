@@ -15,6 +15,7 @@ interface DiagnosisTabProps {
   isLoading?: boolean;
   isDiagnosing?: boolean;
   errorMessage?: string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   requestBody?: any; // requestBody 추가
 }
 

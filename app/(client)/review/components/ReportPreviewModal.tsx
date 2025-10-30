@@ -73,7 +73,7 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
       } else {
         alert("다운로드에 실패했습니다.");
       }
-    } catch (error) {
+    } catch {
       alert("다운로드 중 오류가 발생했습니다.");
     }
   };

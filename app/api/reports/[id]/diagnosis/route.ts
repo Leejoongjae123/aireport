@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import fs from "fs";
-import path from "path";
 
 interface ReportSection {
   query: string | null;
@@ -159,8 +157,10 @@ export async function POST(
 
       // scores 배열의 평균 계산 (fallback)
       if (!scoreAverage && diagnosisResult.scores && Array.isArray(diagnosisResult.scores)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const validScores = diagnosisResult.scores.filter((s: any) => !isNaN(Number(s)));
         if (validScores.length > 0) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const average = validScores.reduce((sum: number, s: any) => sum + Number(s), 0) / validScores.length;
           scoreAverage = Math.round(average * 100) / 100; // 소수점 둘째자리까지 유지
         }

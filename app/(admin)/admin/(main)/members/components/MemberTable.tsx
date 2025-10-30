@@ -58,13 +58,6 @@ function formatDate(dateString: string | null): string {
   return `${year}-${month}-${day}`;
 }
 
-function maskEmail(email: string | null): string {
-  if (!email) return "-";
-  const [localPart, domain] = email.split("@");
-  if (!domain) return email;
-  const maskedLocal = localPart.slice(0, 3) + "***";
-  return `${maskedLocal}@${domain}`;
-}
 
 export default function MemberTable({ members, currentPage, itemsPerPage }: MemberTableProps) {
   const router = useRouter();

@@ -1,13 +1,6 @@
 "use client";
 
 import { Input } from "@/components/ui/Input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
 import { Plus, Minus } from "lucide-react";
 import { FieldEntry } from "../types";
 
@@ -24,7 +17,7 @@ export default function FieldSection({
     const newId = Date.now().toString();
     onFieldEntriesChange([
       ...fieldEntries,
-      { id: newId, description: "" },
+      { id: newId, year: "", field: "", description: "" },
     ]);
   };
 

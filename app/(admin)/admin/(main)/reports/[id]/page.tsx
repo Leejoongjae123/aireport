@@ -68,7 +68,7 @@ export default function ReportDetailPage() {
             setReportData(result.data);
           }
         }
-      } catch (error) {
+      } catch {
         // 에러 처리
       }
     };
@@ -103,7 +103,7 @@ export default function ReportDetailPage() {
             }
           }
         }
-      } catch (error) {
+      } catch {
         // 에러 처리
       } finally {
         setIsLoading(false);
@@ -125,7 +125,7 @@ export default function ReportDetailPage() {
         if (result.success && result.data) {
           setGeneratedReport(result.data);
         }
-      } catch (error) {
+      } catch {
         // 에러 처리
       }
     };

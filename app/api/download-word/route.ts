@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import * as fs from 'fs';
-import * as path from 'path';
 import { Document, Packer, Paragraph, TextRun, Table, TableCell, TableRow } from 'docx';
 import * as cheerio from 'cheerio';
 
@@ -20,6 +18,7 @@ export async function POST(request: NextRequest) {
     // HTML 파싱 - body 태그로 감싸기
     const fullHtml = `<html><body>${html}</body></html>`;
     const $ = cheerio.load(fullHtml);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const children: any[] = [];
 
     // HTML 요소들을 순회하며 docx 요소 생성
@@ -94,7 +93,7 @@ export async function POST(request: NextRequest) {
     // filename 안전하게 인코딩
     const safeFilename = encodeURIComponent(title).replace(/['()]/g, escape).replace(/\*/g, '%2A') + '.docx';
 
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename*=UTF-8''${safeFilename}`,

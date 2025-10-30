@@ -64,13 +64,21 @@ async function getExpertReviewData(
     report_uuid: data.report_uuid,
     user_id: data.user_id,
     expert_request_id: data.expert_request_id,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     request_status: (data.expert_requests as any)?.status || null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     selected_expert_id: (data.expert_requests as any)?.selected_expert_id || null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     report_title: (data.report_create as any)?.title || null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     business_field: (data.report_create as any)?.business_field || null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     investment_amount: (data.report_create as any)?.investment_amount || null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     report_created_at: (data.report_create as any)?.created_at || null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     user_name: (data.profiles as any)?.name || null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     user_email: (data.profiles as any)?.email || null,
   };
 }

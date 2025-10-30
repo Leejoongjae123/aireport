@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ExpertRequest, ExpertRequestStatus } from "./types";
+import { ExpertRequest, ExpertRequestStatus } from "./Types";
 import {
   DropdownMenu,
   DropdownMenuContent,

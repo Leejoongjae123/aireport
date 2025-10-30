@@ -3,7 +3,7 @@
 import { CustomModal } from "@/components/ui/CustomModal";
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Expert } from "./types";
+import { Expert } from "./Types";
 import { useExpertStore } from "./store/ExpertStore";
 import { useReportStore } from "./store/ReportStore";
 

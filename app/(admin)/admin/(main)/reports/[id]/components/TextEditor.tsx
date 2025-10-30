@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Link from "@tiptap/extension-link";
 import ResizableImageExtension from "tiptap-extension-resize-image";
-import { Button } from "@/components/ui/Button";
 
 interface TextEditorProps {
   content?: string;

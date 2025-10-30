@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 모든 후보 전문가 ID 조회
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const candidateNames = experts.map((expert: any) => expert.name);
     const { data: allExperts, error: allExpertsError } = await supabase
       .from("expert_informations")
