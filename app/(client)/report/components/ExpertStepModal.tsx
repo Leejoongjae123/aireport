@@ -6,6 +6,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useExpertStore } from "./store/ExpertStore";
 import { ExpertMatchResponse } from "./types";
+import { useButtonLoader } from "@/components/hooks/UseButtonLoader";
 
 interface ExpertStepModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export function ExpertStepModal({
 }: ExpertStepModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { setExpertMatchData } = useExpertStore();
+  const Loader = useButtonLoader({ size: 40, color: "#FFFFFF" });
 
   const handleStartRequest = async () => {
     try {
@@ -157,9 +159,16 @@ export function ExpertStepModal({
           disabled={isLoading}
           className="flex py-5 px-[52px] justify-center items-center gap-2 self-stretch rounded-[10px] bg-[#07F] text-white transition-colors hover:bg-[#0066CC] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <div className="text-white font-[Pretendard] text-[18px] font-bold leading-normal tracking-[-0.36px]">
-            {isLoading ? "전문가 매칭 중..." : "전문가 평가 요청하기"}
-          </div>
+          {isLoading ? (
+            <>
+              {Loader}
+            
+            </>
+          ) : (
+            <div className="text-white font-[Pretendard] text-[18px] font-bold leading-normal tracking-[-0.36px]">
+              전문가 평가 요청하기
+            </div>
+          )}
         </button>
       </div>
     </CustomModal>

@@ -7,6 +7,7 @@ import { ExpertRecommendationCompleteModal } from "./ExpertRecommendationComplet
 import { Expert } from "./types";
 import { ExpertEvaluationRequestModal } from "./ExpertEvaluationRequestModal";
 import { useExpertStore } from "./store/ExpertStore";
+import { useButtonLoader } from "@/components/hooks/UseButtonLoader";
 
 interface ExpertRecommendationModalProps {
   isOpen: boolean;
@@ -26,6 +27,9 @@ export function ExpertRecommendationModal({
   const [showExpertEvaluation, setShowExpertEvaluation] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [experts, setExperts] = useState<Expert[]>([]);
+  
+  // useButtonLoader 훅을 컴포넌트 최상위에서 호출
+  const buttonLoader = useButtonLoader({ size: 24, color: '#0077FF', className: 'w-6 h-6' });
 
   // 모달이 열릴 때 상태 초기화 및 스텝 진행
   useEffect(() => {
@@ -101,7 +105,7 @@ export function ExpertRecommendationModal({
     }
   }, [isOpen, expertMatchData, step1Status, step2Status, step3Status]);
 
-  // 스텝 상태에 따른 ��이콘 렌더링
+  // 스텝 상태에 따른 아이콘 렌더링
   const renderStepIcon = (status: StepStatus) => {
     if (status === "completed") {
       // 체크 아이콘
@@ -144,23 +148,8 @@ export function ExpertRecommendationModal({
         </svg>
       );
     } else if (status === "loading") {
-      // 로딩 아이콘 (회전 애니메이션)
-      return (
-        <svg
-          className="w-6 h-6 shrink-0 animate-spin"
-          width="25"
-          height="24"
-          viewBox="0 0 25 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <circle cx="13" cy="12" r="9" stroke="#D9D9D9" strokeWidth="2" />
-          <path
-            d="M13 4C8.58172 4 5 7.58172 5 12C5 16.4183 8.58172 20 13 20C17.4183 20 21 16.4183 21 12H23C23 17.5228 18.5228 22 13 22C7.47715 22 3 17.5228 3 12C3 6.47715 7.47715 2 13 2V4Z"
-            fill="#0077FF"
-          />
-        </svg>
-      );
+      // 로딩 아이콘 (회전 애니메이션) - useButtonLoader 훅 사용
+      return buttonLoader;
     } else {
       // 대기 중 아이콘 (비활성)
       return (

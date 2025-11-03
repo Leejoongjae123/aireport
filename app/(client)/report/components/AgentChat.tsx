@@ -104,20 +104,60 @@ export default function AgentChat() {
         }
       }
 
-      const response = await fetch("/api/report/regenerate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
+      console.log(`[${action}] API 요청 시작:`, requestBody);
+
+      let response: Response;
+      try {
+        response = await fetch("/api/report/regenerate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        });
+      } catch (fetchError) {
+        const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
+        console.error(`[${action}] 네트워크 에러:`, errorMsg);
+        throw new Error(`네트워크 연결 실패: ${errorMsg}`);
+      }
+
+      console.log(`[${action}] API 응답 상태:`, {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.contents || "API 요청 실패");
+        let errorData;
+        let errorMessage = "API 요청 실패";
+        
+        try {
+          errorData = await response.json();
+          errorMessage = errorData.contents || errorData.message || errorMessage;
+        } catch {
+          try {
+            const errorText = await response.text();
+            errorMessage = errorText || `HTTP ${response.status} ${response.statusText}`;
+          } catch {
+            errorMessage = `HTTP ${response.status} ${response.statusText}`;
+          }
+        }
+        
+        console.error(`[${action}] API 에러:`, {
+          status: response.status,
+          errorData,
+          errorMessage,
+        });
+        
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
+      console.log(`[${action}] API 응답 성공:`, {
+        result: data.result,
+        contentLength: data.contents?.length || 0,
+        elapsed: data.elapsed_seconds,
+      });
 
       if (data.result === "success") {
         // 특허, 논문, 뉴스의 경우 기존 내용 뒤에 추가, 나머지는 교체
@@ -230,14 +270,29 @@ export default function AgentChat() {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      console.error("Quick Action Error:", error);
+      console.error(`[${action}] Quick Action Error:`, {
+        error,
+        errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      
+      // 에러 메시지를 더 자세히 표시
+      const detailedErrorMessage = `[${action}] 작업 실패\n\n오류 내용:\n${errorMessage}\n\n문제가 계속되면 브라우저 콘솔(F12)에서 상세 로그를 확인해주세요.`;
+      
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === aiGeneratingMessage.id
-            ? { ...msg, content: `오류: ${errorMessage}`, isGenerating: false }
+            ? { 
+                ...msg, 
+                content: detailedErrorMessage, 
+                isGenerating: false 
+              }
             : msg
         )
       );
+      
+      // 사용자에게 alert로도 알림
+      alert(`작업 실패: ${errorMessage}`);
     } finally {
       setIsLoading(false);
       setCurrentSection(null);

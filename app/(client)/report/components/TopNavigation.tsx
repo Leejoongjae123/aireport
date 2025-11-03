@@ -7,10 +7,12 @@ import Image from "next/image";
 import { useState } from "react";
 import { useReportStore } from "./store/ReportStore";
 import { useProcedureStore } from "../procedure/components/store/ProcedureStore";
+import { useEditorStore } from "../editor/store/EditorStore";
 import { ExpertRecommendationModal } from "./ExpertEvaluationProcessingModal";
-  import { ExpertStepModal } from "./ExpertStepModal";
+import { ExpertStepModal } from "./ExpertStepModal";
 import { CustomModal } from "@/components/ui/CustomModal";
-import { toast } from "sonner";
+import { useCustomToast } from "@/components/hooks/UseCustomToast";
+import { useButtonLoader } from "@/components/hooks/UseButtonLoader";
 
 interface TopNavigationProps {
   onMenuClick: () => void;
@@ -19,10 +21,13 @@ interface TopNavigationProps {
 export function TopNavigation({ onMenuClick }: TopNavigationProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { showSuccess, showError } = useCustomToast();
+  const Loader = useButtonLoader({ size: 24, color: '#0077FF' });
   const [isExpertStepModalOpen, setIsExpertStepModalOpen] = useState(false);
   const [isExpertRecommendationModalOpen, setIsExpertRecommendationModalOpen] =
     useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSavingTemp, setIsSavingTemp] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [isValidationErrorModalOpen, setIsValidationErrorModalOpen] =
     useState(false);
   const [validationErrorMessage, setValidationErrorMessage] = useState("");
@@ -37,6 +42,8 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
   } = useReportStore();
 
   const { procedureData } = useProcedureStore();
+  
+  const { editorContent, selectedSubsectionId, updateCachedSectionContent } = useEditorStore();
 
   const isInputsOrProcedurePage =
     pathname?.includes("/report/inputs") ||
@@ -63,7 +70,7 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
   };
 
   const saveInputs = async (currentReportId: string) => {
-    setIsSaving(true);
+    setIsSavingTemp(true);
     const response = await fetch("/api/reports/save-inputs", {
       method: "POST",
       headers: {
@@ -78,24 +85,24 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
     });
 
     const result = await response.json();
-    setIsSaving(false);
+    setIsSavingTemp(false);
 
     if (!response.ok) {
-      toast.error(result.error || "저장에 실패했습니다.");
+      showError(result.error || "저장에 실패했습니다.");
       return false;
     }
 
-    toast.success(result.message || "저장되었습니다.");
+    showSuccess(result.message || "저장되었습니다.");
     return true;
   };
 
   const saveProcedure = async (currentReportId: string) => {
     if (!procedureData) {
-      toast.error("저장할 데이터가 없습니다.");
+      showError("저장할 데이터가 없습니다.");
       return false;
     }
 
-    setIsSaving(true);
+    setIsSavingTemp(true);
     const response = await fetch(
       `/api/reports/${currentReportId}/procedure-modify`,
       {
@@ -110,14 +117,54 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
     );
 
     const result = await response.json();
-    setIsSaving(false);
+    setIsSavingTemp(false);
 
     if (!response.ok) {
-      toast.error(result.error || "저장에 실패했습니다.");
+      showError(result.error || "저장에 실패했습니다.");
       return false;
     }
 
-    toast.success("저장되었습니다.");
+    showSuccess("저장되었습니다.");
+    return true;
+  };
+
+  const saveEditorSection = async (currentReportId: string) => {
+    if (!selectedSubsectionId) {
+      showError("선택된 섹션이 없습니다.");
+      return false;
+    }
+
+    if (!editorContent) {
+      showError("저장할 내용이 없습니다.");
+      return false;
+    }
+
+    setIsSavingTemp(true);
+    const response = await fetch(
+      `/api/reports/${currentReportId}/sections/${selectedSubsectionId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: editorContent,
+        }),
+      }
+    );
+
+    const result = await response.json();
+    setIsSavingTemp(false);
+
+    if (!response.ok) {
+      showError(result.message || "저장에 실패했습니다.");
+      return false;
+    }
+
+    // 저장 성공 시 캐시 업데이트
+    updateCachedSectionContent(selectedSubsectionId, editorContent);
+    
+    showSuccess("저장되었습니다.");
     return true;
   };
 
@@ -140,7 +187,7 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
     } else if (pathname?.includes("/report/procedure")) {
       // procedure 페이지에서 다음 클릭 시 저장 후 모달 열기
       if (!reportId) {
-        toast.error("리포트 ID가 없습니다.");
+        showError("리포트 ID가 없습니다.");
         return;
       }
 
@@ -162,29 +209,35 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
       await saveInputs(currentReportId);
     } else if (pathname?.includes("/report/procedure")) {
       if (!reportId) {
-        toast.error("리포트 ID가 없습니다.");
+        showError("리포트 ID가 없습니다.");
         return;
       }
 
       await saveProcedure(reportId);
+    } else if (pathname?.includes("/report/editor")) {
+      if (!reportId) {
+        showError("리포트 ID가 없습니다.");
+        return;
+      }
+
+      await saveEditorSection(reportId);
     }
   };
 
   const handleExport = async () => {
     if (!reportId) {
-      toast.error("리포트 ID가 없습니다.");
+      showError("리포트 ID가 없습니다.");
       return;
     }
 
     try {
-      setIsSaving(true);
+      setIsExporting(true);
       const response = await fetch(`/api/reports/${reportId}/export`);
 
       if (!response.ok) {
-        toast.error("Word 파일 생성에 실패했습니다.");
+        showError("Word 파일 생성에 실패했습니다.");
         return;
       }
-      
 
       // Blob으로 변환
       const blob = await response.blob();
@@ -199,17 +252,17 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast.success("Word 파일이 다운로드되었습니다.");
+      showSuccess("Word 파일이 다운로드되었습니다.");
     } catch {
-      toast.error("내보내기 중 오류가 발생했습니다.");
+      showError("내보내기 중 오류가 발생했습니다.");
     } finally {
-      setIsSaving(false);
+      setIsExporting(false);
     }
   };
 
   const handleExpertReview = async () => {
     if (!reportId) {
-      toast.error("리포트 ID가 없습니다.");
+      showError("리포트 ID가 없습니다.");
       return;
     }
 
@@ -233,7 +286,7 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
 
       setIsExpertStepModalOpen(true);
     } catch {
-      toast.error("요청 이력 확인 중 오류가 발생했습니다.");
+      showError("요청 이력 확인 중 오류가 발생했습니다.");
     }
   };
 
@@ -244,6 +297,7 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
 
   const handleComplete = () => {
     // TODO: 완료 로직 구현
+    router.push(`/review`);
   };
 
   return (
@@ -266,18 +320,25 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
           <div className="flex gap-3">
             <Button
               variant="outline"
-              className="bg-white text-primary w-[144px] h-12 text-[18px] font-semibold border-primary hover:bg-white/90 hover:text-primary"
+              className="bg-white text-primary w-[144px] h-12 text-[18px] font-semibold border-primary hover:bg-white/90 hover:text-primary relative"
               onClick={handleTemporarySave}
-              disabled={isSaving}
+              disabled={isSavingTemp}
             >
-              <Image src="/images/save.svg" alt="save" width={15} height={15} />
-              {isSaving ? "저장 중..." : "임시 저장"}
+              <span className={`flex items-center gap-2 ${isSavingTemp ? 'invisible' : ''}`}>
+                <Image src="/images/save.svg" alt="save" width={15} height={15} />
+                임시 저장
+              </span>
+              {isSavingTemp && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {Loader}
+                </div>
+              )}
             </Button>
             <Button
               variant="default"
               className="w-[79px] h-12 text-[18px] font-semibold bg-primary text-white hover:bg-primary/90"
               onClick={handleNextClick}
-              disabled={isSaving}
+              disabled={isSavingTemp}
             >
               다음
             </Button>
@@ -288,24 +349,40 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
           <div className="flex gap-3">
             <Button
               variant="outline"
-              className="bg-white text-primary h-12 px-6 text-[18px] font-semibold border-primary hover:bg-white/90 hover:text-primary"
+              className="bg-white text-primary h-12 px-6 text-[18px] font-semibold border-primary hover:bg-white/90 hover:text-primary relative"
               onClick={handleTemporarySave}
+              disabled={isSavingTemp}
             >
-              <Image src="/images/save.svg" alt="save" width={15} height={15} />
-              임시저장
+              <span className={`flex items-center gap-2 ${isSavingTemp ? 'invisible' : ''}`}>
+                <Image src="/images/save.svg" alt="save" width={15} height={15} />
+                임시저장
+              </span>
+              {isSavingTemp && (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  {Loader}
+                </span>
+              )}
             </Button>
             <Button
               variant="outline"
-              className="bg-white text-primary h-12 px-6 text-[18px] font-semibold border-primary hover:bg-white/90 hover:text-primary"
+              className="bg-white text-primary h-12 px-6 text-[18px] font-semibold border-primary hover:bg-white/90 hover:text-primary relative"
               onClick={handleExport}
+              disabled={isExporting}
             >
-              <Image
-                src="/images/upload.png"
-                alt="export"
-                width={24}
-                height={24}
-              />
-              내보내기
+              <span className={`flex items-center gap-2 ${isExporting ? 'invisible' : ''}`}>
+                <Image
+                  src="/images/upload.png"
+                  alt="export"
+                  width={24}
+                  height={24}
+                />
+                내보내기
+              </span>
+              {isExporting && (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  {Loader}
+                </span>
+              )}
             </Button>
             <Button
               variant="default"

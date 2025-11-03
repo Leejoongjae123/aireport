@@ -6,6 +6,10 @@ import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Link from "@tiptap/extension-link";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableCell } from "@tiptap/extension-table-cell";
 import ResizableImageExtension from "tiptap-extension-resize-image";
 import { Button } from "@/components/ui/Button";
 import {
@@ -19,6 +23,7 @@ import {
   Link as LinkIcon,
   Image as ImageIcon,
   ListIcon,
+  Table as TableIcon,
 } from "lucide-react";
 import { LinkInsertModal } from "./LinkInsertModal";
 import { ImageInsertModal } from "./ImageInsertModal";
@@ -91,6 +96,23 @@ export function TextEditor({ content, onUpdate }: TextEditorProps) {
         openOnClick: false,
         HTMLAttributes: {
           class: "text-blue-500 underline cursor-pointer",
+        },
+      }),
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: "border-collapse table-auto w-full my-4",
+        },
+      }),
+      TableRow,
+      TableHeader.configure({
+        HTMLAttributes: {
+          class: "border border-gray-300 bg-gray-100 px-4 py-2 font-semibold text-left",
+        },
+      }),
+      TableCell.configure({
+        HTMLAttributes: {
+          class: "border border-gray-300 px-4 py-2",
         },
       }),
       ResizableImageExtension.configure({
@@ -478,6 +500,19 @@ export function TextEditor({ content, onUpdate }: TextEditorProps) {
                 </button>
                 <button onClick={openImageModal} className="p-1">
                   <ImageIcon className="w-5 h-5 text-[#232325]" />
+                </button>
+                <button
+                  onClick={() =>
+                    editor
+                      .chain()
+                      .focus()
+                      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+                      .run()
+                  }
+                  className="p-1"
+                  title="테이블 삽입"
+                >
+                  <TableIcon className="w-5 h-5 text-[#232325]" />
                 </button>
               </div>
             </div>

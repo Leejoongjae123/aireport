@@ -45,6 +45,7 @@ interface EditorState {
   updateCachedSections: (sections: GeneratedReportSection[]) => void;
   updateCachedSectionsWithMatching: (sections: GeneratedReportSection[], procedureModify: ProcedureModifyData | null) => void;
   getCachedSection: (subsectionId: string) => GeneratedReportSection | undefined;
+  updateCachedSectionContent: (subsectionId: string, content: string) => void; // 캐시된 섹션의 content 업데이트
   triggerForceUpdate: () => void; // 강제 업데이트 함수
   resetEditorState: () => void; // 에디터 상태 초기화 함수
 }
@@ -129,6 +130,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
   getCachedSection: (subsectionId) => {
     return get().cachedSections.get(subsectionId);
+  },
+  updateCachedSectionContent: (subsectionId, content) => {
+    const newCache = new Map(get().cachedSections);
+    const existingSection = newCache.get(subsectionId);
+    
+    if (existingSection) {
+      newCache.set(subsectionId, {
+        ...existingSection,
+        content,
+      });
+      set({ cachedSections: newCache });
+    }
   },
   resetEditorState: () => {
     set({
