@@ -190,8 +190,14 @@ export function ReviewResultModal({ children, reportUuid }: ReviewResultModalPro
 
               {/* Error State */}
               {error && !isLoading && (
-                <div className="flex items-center justify-center w-full h-80">
-                  <div className="text-[#FF0000] text-base">{error}</div>
+                <div className="flex flex-col items-center justify-center gap-4 w-full h-80">
+                  <Image
+                    src="/images/onprocess.png"
+                    alt="평가 진행중"
+                    width={160}
+                    height={160}
+                  />
+                  <div className="text-[#6B6B6B] text-2xl">아직 평가 진행중입니다.</div>
                 </div>
               )}
 

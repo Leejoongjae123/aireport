@@ -13,6 +13,7 @@ import { MoreHorizontal, Download, Trash2, Pencil, FileText, BarChart3 } from "l
 import { ReportPreviewModal } from "./ReportPreviewModal";
 import { ExpertConsultationModal } from "./ExpertConsultationModal";
 import { ReviewResultModal } from "./ReviewResult";
+import { useRouter } from "next/navigation";
 
 interface ExpertRequestsListProps {
   isOpen: boolean;
@@ -22,9 +23,11 @@ interface ExpertRequestsListProps {
 }
 
 export function ExpertRequestsList({ isOpen, statusFilter = "all", keyword, onLoadingChange }: ExpertRequestsListProps) {
+  const router = useRouter();
   const [requests, setRequests] = useState<ExpertRequest[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const fetchExpertRequests = useCallback(async () => {
     setIsLoading(true);
@@ -67,6 +70,32 @@ export function ExpertRequestsList({ isOpen, statusFilter = "all", keyword, onLo
       fetchExpertRequests();
     }
   }, [isOpen, fetchExpertRequests]);
+
+  const handleDelete = async (requestId: number) => {
+    if (!confirm("정말 삭제하시겠습니까?")) {
+      return;
+    }
+
+    setDeletingId(requestId);
+    try {
+      const response = await fetch(`/api/expert/requests/${requestId}`, {
+        method: "PATCH",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        // 삭제 성공 시 목록에서 제거
+        setRequests((prev) => prev?.filter((req) => req.id !== requestId) || null);
+      } else {
+        alert("삭제에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("삭제 오류:", error);
+      alert("삭제 중 오류가 발생했습니다.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -220,17 +249,21 @@ export function ExpertRequestsList({ isOpen, statusFilter = "all", keyword, onLo
                   sideOffset={5}
                   className="p-2 w-auto min-w-fit"
                 >
-                  <DropdownMenuItem className="flex items-center gap-[6px] px-3 py-[6px] bg-[#E8F3FF] text-[#0077FF] text-sm font-medium rounded hover:bg-[#E8F3FF]/80 cursor-pointer">
-                    <Download className="w-[18px] h-[18px]" />
-                    저장
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-[6px] px-3 py-[6px] text-[#767676] text-sm hover:bg-gray-50 cursor-pointer mt-[2px]">
+
+                  <DropdownMenuItem 
+                    className="flex items-center gap-[6px] px-3 py-[6px] text-[#767676] text-sm hover:bg-gray-50 cursor-pointer mt-[2px]"
+                    onClick={() => router.push(`/report/editor?reportId=${request.report_uuid}`)}
+                  >
                     <Pencil className="w-[18px] h-[18px]" />
                     수정
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-[6px] px-3 py-[6px] text-[#767676] text-sm hover:bg-gray-50 cursor-pointer mt-[2px]">
+                  <DropdownMenuItem 
+                    className="flex items-center gap-[6px] px-3 py-[6px] text-[#767676] text-sm hover:bg-gray-50 cursor-pointer mt-[2px]"
+                    onClick={() => handleDelete(request.id)}
+                    disabled={deletingId === request.id}
+                  >
                     <Trash2 className="w-[18px] h-[18px]" />
-                    삭제
+                    {deletingId === request.id ? "삭제 중..." : "삭제"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

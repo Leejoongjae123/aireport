@@ -68,6 +68,7 @@ export async function GET(request: NextRequest) {
       `
       )
       .eq("user_id", user.id)
+      .eq("is_deleted", false)
       .order("created_at", { ascending: false });
 
     console.log("쿼리 결과 데이터 개수:", data?.length || 0);
