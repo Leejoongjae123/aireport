@@ -45,9 +45,10 @@ export default function RootLayout({
       <body className="antialiased">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
+          enableSystem={false}
           disableTransitionOnChange
+          forcedTheme="light"
         >
           <div className="max-h-screen w-full max-w-[1440px] mx-auto bg-[#FBFCFD]">
             <Navbar />

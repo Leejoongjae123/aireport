@@ -2,6 +2,8 @@ import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import FAQSection from "./components/FAQSection";
 import Link from "next/link";
+import PrivacyPolicyModal from "./components/PrivacyPolicyModal";
+import AgreementModal from "./components/AgreementModal";
 
 export default function Home() {
   return (
@@ -340,8 +342,10 @@ export default function Home() {
           © 2025 레포트 어시스턴트
         </div>
 
-        <div className="absolute bottom-[120px] right-[97px] h-[26px] w-[179px] text-base font-normal leading-[160%] text-[#A6A6A6]">
-          개인정보처리방침 | 이용약관
+        <div className="absolute bottom-[120px] right-[97px] h-[26px] flex items-center gap-2 text-base font-normal leading-[160%] text-[#A6A6A6]">
+          <PrivacyPolicyModal />
+          <span>|</span>
+          <AgreementModal />
         </div>
 
         <div className="absolute bottom-[32px] right-[92px] text-right text-base font-normal leading-[160%] text-[#A6A6A6]">
