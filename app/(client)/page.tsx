@@ -162,11 +162,12 @@ export default function Home() {
                       완성됩니다.
                     </p>
                   </div>
-                  <button className="flex items-center gap-2 rounded-md bg-[#0077FF] px-6 py-3">
-                    <span className="text-base font-semibold text-white">
-                      지금 시작하기
-                    </span>
-                    <svg
+                  <Link href="/report/start">
+                    <button className="flex items-center gap-2 rounded-md bg-[#0077FF] px-6 py-3">
+                      <span className="text-base font-semibold text-white">
+                        지금 시작하기
+                      </span>
+                      <svg
                       width="24"
                       height="24"
                       viewBox="0 0 24 24"
@@ -182,6 +183,7 @@ export default function Home() {
                       />
                     </svg>
                   </button>
+                  </Link>
                 </div>
               </div>
 
@@ -200,6 +202,7 @@ export default function Home() {
                       다듬을 수 있습니다.
                     </p>
                   </div>
+                  <Link href="/report/start">
                   <button className="flex items-center gap-2 rounded-md bg-[#0077FF] px-6 py-3">
                     <span className="text-base font-semibold text-white">
                       지금 시작하기
@@ -220,6 +223,7 @@ export default function Home() {
                       />
                     </svg>
                   </button>
+                  </Link>
                 </div>
                 <Image
                   src="/images/main_banner2.png"
@@ -255,6 +259,7 @@ export default function Home() {
                       필요 시 컨설팅까지 연계할 수 있습니다.
                     </p>
                   </div>
+                  <Link href="/report/start">
                   <button className="flex items-center gap-2 rounded-md bg-[#0077FF] px-6 py-3">
                     <span className="text-base font-semibold text-white">
                       지금 시작하기
@@ -275,6 +280,7 @@ export default function Home() {
                       />
                     </svg>
                   </button>
+                  </Link>
                 </div>
               </div>
             </div>

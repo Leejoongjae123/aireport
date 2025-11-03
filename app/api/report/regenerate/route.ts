@@ -8,15 +8,14 @@ interface RegenerateRequest {
   contents?: string | null;
 }
 
-// RegenerateResponse 타입 정의
+// RegenerateResponse 타입 정의 (비동기 응답)
 interface RegenerateResponse {
-  result: "success" | "error";
-  contents: string;
-  elapsed_seconds: number;
+  success: boolean;
+  message: string;
+  task_id: string;
 }
 
 export async function POST(req: NextRequest) {
-  const startTime = Date.now();
   const supabase = await createClient();
 
   const {
@@ -24,7 +23,7 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json(
-      { result: "error", contents: "Unauthorized", elapsed_seconds: 0 },
+      { success: false, message: "Unauthorized", task_id: "" },
       { status: 401 }
     );
   }
@@ -38,9 +37,9 @@ export async function POST(req: NextRequest) {
       if (!contents) {
         return NextResponse.json(
           {
-            result: "error",
-            contents: '"contents" is required for this classification.',
-            elapsed_seconds: (Date.now() - startTime) / 1000,
+            success: false,
+            message: '"contents" is required for this classification.',
+            task_id: "",
           },
           { status: 400 }
         );
@@ -49,9 +48,9 @@ export async function POST(req: NextRequest) {
       if (!subject) {
         return NextResponse.json(
           {
-            result: "error",
-            contents: '"subject" is required for this classification.',
-            elapsed_seconds: (Date.now() - startTime) / 1000,
+            success: false,
+            message: '"subject" is required for this classification.',
+            task_id: "",
           },
           { status: 400 }
         );
@@ -63,9 +62,9 @@ export async function POST(req: NextRequest) {
     if (!aiEndpoint) {
       return NextResponse.json(
         {
-          result: "error",
-          contents: "AI 엔드포인트가 설정되지 않았습니다.",
-          elapsed_seconds: (Date.now() - startTime) / 1000,
+          success: false,
+          message: "AI 엔드포인트가 설정되지 않았습니다.",
+          task_id: "",
         },
         { status: 500 }
       );
@@ -100,9 +99,9 @@ export async function POST(req: NextRequest) {
       console.error('[Regenerate API] 네트워크 에러:', errorMsg);
       return NextResponse.json(
         {
-          result: "error",
-          contents: `AI 서버 연결 실패 (네트워크 에러): ${errorMsg}`,
-          elapsed_seconds: (Date.now() - startTime) / 1000,
+          success: false,
+          message: `AI 서버 연결 실패 (네트워크 에러): ${errorMsg}`,
+          task_id: "",
         },
         { status: 503 }
       );
@@ -138,9 +137,9 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(
         {
-          result: "error",
-          contents: `AI 서버 요청 실패 (${response.status} ${response.statusText}): ${errorDetail}`,
-          elapsed_seconds: (Date.now() - startTime) / 1000,
+          success: false,
+          message: `AI 서버 요청 실패 (${response.status} ${response.statusText}): ${errorDetail}`,
+          task_id: "",
         },
         { status: response.status }
       );
@@ -148,16 +147,24 @@ export async function POST(req: NextRequest) {
 
     const result: RegenerateResponse = await response.json();
 
+    console.log('[Regenerate API] 작업 시작 성공:', {
+      success: result.success,
+      task_id: result.task_id,
+      message: result.message,
+    });
+
     return NextResponse.json(result);
   } catch (error) {
-    const endTime = Date.now();
     const errorMessage =
       error instanceof Error ? error.message : "An unexpected error occurred.";
+    
+    console.error('[Regenerate API] 에러:', errorMessage);
+    
     return NextResponse.json(
       {
-        result: "error",
-        contents: errorMessage,
-        elapsed_seconds: (endTime - startTime) / 1000,
+        success: false,
+        message: errorMessage,
+        task_id: "",
       },
       { status: 500 }
     );

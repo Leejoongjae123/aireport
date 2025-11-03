@@ -2,15 +2,16 @@
 
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
 import { Label } from "@/components/ui/Label";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { PasswordResetModal } from "./components/PasswordResetModal";
 import { createClient } from "@/lib/supabase/client";
+import { useCustomToast } from "@/components/hooks/UseCustomToast";
 
 const LoginPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { showError } = useCustomToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberPassword, setRememberPassword] = useState(false);
@@ -50,7 +51,7 @@ const LoginPageContent = () => {
     }
 
     if (message) {
-      toast.error(message);
+      showError(message);
       toastShown.current = true;
       // URL에서 파라미터 제거
       const url = new URL(window.location.href);
@@ -58,7 +59,7 @@ const LoginPageContent = () => {
       url.searchParams.delete("error");
       window.history.replaceState({}, "", url.pathname);
     }
-  }, [searchParams]);
+  }, [searchParams, showError]);
 
   const handleLogin = async () => {
     if (!email || !password) {

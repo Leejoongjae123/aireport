@@ -8,6 +8,7 @@ import { useEditorStore } from "../editor/store/EditorStore";
 import { useReportStore } from "./store/ReportStore";
 import { defaultContent } from "../editor/components/TextEditor";
 import { CustomModal } from "@/components/ui/CustomModal";
+import { pollJobStatus, getStatusMessage } from "./lib/PollingUtils";
 
 export default function AgentChat() {
   const [messages, setMessages] = useState<Message[]>([
@@ -106,6 +107,7 @@ export default function AgentChat() {
 
       console.log(`[${action}] API 요청 시작:`, requestBody);
 
+      // Step 1: 재생성 작업 시작
       let response: Response;
       try {
         response = await fetch("/api/report/regenerate", {
@@ -133,7 +135,7 @@ export default function AgentChat() {
         
         try {
           errorData = await response.json();
-          errorMessage = errorData.contents || errorData.message || errorMessage;
+          errorMessage = errorData.message || errorData.contents || errorMessage;
         } catch {
           try {
             const errorText = await response.text();
@@ -153,18 +155,68 @@ export default function AgentChat() {
       }
 
       const data = await response.json();
-      console.log(`[${action}] API 응답 성공:`, {
-        result: data.result,
-        contentLength: data.contents?.length || 0,
-        elapsed: data.elapsed_seconds,
+      console.log(`[${action}] 작업 시작 응답:`, {
+        success: data.success,
+        task_id: data.task_id,
+        message: data.message,
       });
 
-      if (data.result === "success") {
+      if (!data.success || !data.task_id) {
+        throw new Error(data.message || "작업 시작 실패");
+      }
+
+      // Step 2: 폴링으로 작업 완료 대기
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === aiGeneratingMessage.id
+            ? {
+                ...msg,
+                content: "작업이 시작되었습니다. 완료될 때까지 기다려주세요...",
+                isGenerating: true,
+              }
+            : msg
+        )
+      );
+
+      const jobResult = await pollJobStatus({
+        taskId: data.task_id,
+        interval: 5000, // 5초마다 폴링
+        maxAttempts: 60, // 최대 5분
+        onProgress: (progressData) => {
+          const statusMsg = progressData.meta?.status || getStatusMessage(progressData.status);
+          console.log(`[${action}] 작업 진행 중:`, statusMsg);
+          
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiGeneratingMessage.id
+                ? {
+                    ...msg,
+                    content: statusMsg,
+                    isGenerating: true,
+                  }
+                : msg
+            )
+          );
+        },
+      });
+
+      console.log(`[${action}] 작업 완료:`, {
+        status: jobResult.status,
+        hasResult: !!jobResult.result,
+      });
+
+      // Step 3: 결과 처리
+      if (jobResult.status === "SUCCESS" && jobResult.result) {
+        const resultContents = jobResult.result.contents;
+        
+        if (!resultContents) {
+          throw new Error("작업은 완료되었으나 결과 내용이 없습니다.");
+        }
         // 특허, 논문, 뉴스의 경우 기존 내용 뒤에 추가, 나머지는 교체
         const shouldAppend = ["특허", "논문", "뉴스"].includes(action);
         const newContent = shouldAppend
-          ? editorContent + "\n\n" + data.contents
-          : data.contents;
+          ? editorContent + "\n\n" + resultContents
+          : resultContents;
 
         setEditorContent(newContent);
         triggerForceUpdate(); // 에디터 강제 업데이트 트리거
@@ -265,7 +317,7 @@ export default function AgentChat() {
         setCompletionMessage(`[${action}] 작업이 완료되었습니다.`);
         setIsCompletionModalOpen(true);
       } else {
-        throw new Error(data.contents || "작업 처리 중 오류가 발생했습니다.");
+        throw new Error(jobResult.error || "작업 처리 중 오류가 발생했습니다.");
       }
     } catch (error) {
       const errorMessage =

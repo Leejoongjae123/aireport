@@ -1,12 +1,12 @@
 "use client";
 
+import { useCallback } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle } from "lucide-react";
 import { BsCheckCircleFill } from "react-icons/bs";
 import { HiMiniXCircle } from "react-icons/hi2";
 
 export const useCustomToast = () => {
-  const showSuccess = (message: string) => {
+  const showSuccess = useCallback((message: string) => {
     toast.custom(
       () => (
         <div className="flex items-center gap-3 bg-green-100 border border-green-300 rounded-lg px-4 py-3 shadow-lg">
@@ -18,9 +18,9 @@ export const useCustomToast = () => {
         duration: 3000,
       }
     );
-  };
+  }, []);
 
-  const showError = (message: string) => {
+  const showError = useCallback((message: string) => {
     toast.custom(
       () => (
         <div className="flex items-center gap-3 bg-red-100 border border-red-300 rounded-lg px-4 py-3 shadow-lg">
@@ -32,7 +32,7 @@ export const useCustomToast = () => {
         duration: 3000,
       }
     );
-  };
+  }, []);
 
   return {
     showSuccess,

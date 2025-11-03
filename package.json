@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack -H localhost",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
