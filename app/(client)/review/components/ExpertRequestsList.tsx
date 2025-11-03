@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Button } from "@/components/ui/Button";
-import { MoreHorizontal, Download, Trash2, Pencil, FileText, BarChart3 } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, FileText, BarChart3 } from "lucide-react";
 import { ReportPreviewModal } from "./ReportPreviewModal";
 import { ExpertConsultationModal } from "./ExpertConsultationModal";
 import { ReviewResultModal } from "./ReviewResult";
