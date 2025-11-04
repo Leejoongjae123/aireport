@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "../(client)/globals.css";
+import { Toaster } from "sonner";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -18,7 +19,10 @@ export default function AdminRootLayout({
 }>) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      <body className="antialiased bg-[#FBFCFD]">{children}</body>
+      <body className="antialiased bg-[#FBFCFD]">
+        <Toaster position="top-center" richColors />
+        {children}
+      </body>
     </html>
   );
 }

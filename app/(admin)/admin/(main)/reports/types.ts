@@ -8,9 +8,7 @@ export interface ReportData {
   step: string | null;
   is_complete: boolean | null;
   created_at: string;
-  updated_at: string | null;
   user_name: string | null;
-  version: string | null;
 }
 
 export interface ReportSearchParams {

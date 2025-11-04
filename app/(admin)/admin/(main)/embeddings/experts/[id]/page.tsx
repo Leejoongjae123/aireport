@@ -10,6 +10,7 @@ import AttachmentSection from "./components/AttachmentSection";
 import { ExpertFormData, CareerEntry, FieldEntry } from "./types";
 import FieldSection from "./components/FieldSection";
 import { useLoader } from "@/components/hooks/UseLoader";
+import { Menu } from "lucide-react";
 
 export default function ExpertEmbeddingPage() {
   const params = useParams();
@@ -51,7 +52,7 @@ export default function ExpertEmbeddingPage() {
 
       try {
         const response = await fetch(`/api/experts/${expertId}`);
-        
+
         if (!response.ok) {
           alert("데이터를 불러오는데 실패했습니다.");
           router.back();
@@ -68,12 +69,16 @@ export default function ExpertEmbeddingPage() {
           summary: data.summary || "",
           experienceYears: data.experience_years || "",
           recentAffiliation: data.affiliation || "",
-          isPublic: true,
+          isPublic: data.is_visible ?? true,
           careerFileName: data.career_file_name || "",
         });
 
         // 경력 데이터 설정
-        if (data.career && Array.isArray(data.career) && data.career.length > 0) {
+        if (
+          data.career &&
+          Array.isArray(data.career) &&
+          data.career.length > 0
+        ) {
           // career 데이터가 ["문자열", "문자열", ...] 형태
           setCareerEntries(
             data.career.map((item: string, index: number) => ({
@@ -142,27 +147,24 @@ export default function ExpertEmbeddingPage() {
         summary: formData.summary,
         affiliation: formData.recentAffiliation,
         experience_years: formData.experienceYears,
-        career: careerEntries
-          .filter((entry) => entry.description.trim())
-          .length > 0 
-          ? careerEntries
-              .filter((entry) => entry.description.trim())
-              .map((entry) => entry.description)
-          : null,
-        field: fieldEntries
-          .filter((entry) => entry.description.trim())
-          .length > 0 
-          ? fieldEntries
-              .filter((entry) => entry.description.trim())
-              .map((entry) => entry.description)
-          : null,
+        is_visible: formData.isPublic,
+        career:
+          careerEntries.filter((entry) => entry.description.trim()).length > 0
+            ? careerEntries
+                .filter((entry) => entry.description.trim())
+                .map((entry) => entry.description)
+            : null,
+        field:
+          fieldEntries.filter((entry) => entry.description.trim()).length > 0
+            ? fieldEntries
+                .filter((entry) => entry.description.trim())
+                .map((entry) => entry.description)
+            : null,
         career_file_name: careerFileName || formData.careerFileName,
       };
 
       const apiUrl =
-        expertId === "new"
-          ? "/api/experts/new"
-          : `/api/experts/${expertId}`;
+        expertId === "new" ? "/api/experts/new" : `/api/experts/${expertId}`;
       const method = expertId === "new" ? "POST" : "PUT";
 
       const response = await fetch(apiUrl, {
@@ -202,55 +204,60 @@ export default function ExpertEmbeddingPage() {
     <>
       {Loader}
       <div className="flex w-full p-8 items-start gap-2.5">
-      <div className="flex w-full p-11 flex-col items-end gap-20 rounded-[5px] bg-white">
-        <div className="flex flex-col items-start gap-10 self-stretch">
-          <BasicInfoSection
-            formData={formData}
-            onFormDataChange={setFormData}
-          />
+        <div className="flex w-full p-11 flex-col items-end gap-20 rounded-[5px] bg-white">
+          <div className="flex flex-col items-start gap-10 self-stretch">
+            <BasicInfoSection
+              formData={formData}
+              onFormDataChange={setFormData}
+            />
 
-          <AffiliationSection
-            formData={formData}
-            onFormDataChange={setFormData}
-          />
+            <AffiliationSection
+              formData={formData}
+              onFormDataChange={setFormData}
+            />
 
-          <CareerSection
-            careerEntries={careerEntries}
-            onCareerEntriesChange={setCareerEntries}
-          />
+            <CareerSection
+              careerEntries={careerEntries}
+              onCareerEntriesChange={setCareerEntries}
+            />
 
-          <FieldSection
-            fieldEntries={fieldEntries}
-            onFieldEntriesChange={setFieldEntries}
-          />
+            <FieldSection
+              fieldEntries={fieldEntries}
+              onFieldEntriesChange={setFieldEntries}
+            />
 
-          <AttachmentSection
-            formData={formData}
-            onFormDataChange={setFormData}
-            uploadedFile={uploadedFile}
-            onFileUpload={setUploadedFile}
-          />
-        </div>
+            <AttachmentSection
+              formData={formData}
+              onFormDataChange={setFormData}
+              uploadedFile={uploadedFile}
+              onFileUpload={setUploadedFile}
+            />
+          </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-start gap-3">
-          <Button
-            variant="outline"
-            onClick={handleCancel}
-            className="flex w-[79px] h-[46px] justify-center items-center gap-1.5 rounded-lg border border-[#07F] bg-white text-[#07F] font-pretendard text-lg font-bold tracking-[-0.36px] hover:bg-[#F8FCFF]"
-          >
-            취소
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="flex w-[79px] h-[46px] justify-center items-center gap-1.5 rounded-lg bg-[#07F] text-white font-pretendard text-lg font-bold tracking-[-0.36px] hover:bg-[#0066CC] disabled:opacity-50"
-          >
-            {isSubmitting ? "저장 중..." : "저장"}
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex w-full justify-between items-center gap-3">
+            <div>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/admin/embeddings/experts")}
+                className="flex items-center gap-1.5 px-3 h-[45px] border border-[#a0a0a0] bg-white text-[#555555] text-sm font-semibold rounded"
+              >
+                <Menu className="w-4 h-4" />
+                목록으로
+              </Button>
+            </div>
+            <div>
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="flex w-[79px] h-[46px] justify-center items-center gap-1.5 rounded-lg bg-[#07F] text-white font-pretendard text-lg font-bold tracking-[-0.36px] hover:bg-[#0066CC] disabled:opacity-50"
+              >
+                {isSubmitting ? "저장 중..." : "저장"}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
     </>
   );
 }

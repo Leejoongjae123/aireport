@@ -40,7 +40,7 @@ export default function ExpertsTable({ experts, currentPage, itemsPerPage }: Exp
           <div className="text-center text-xs font-bold text-[#515151]">파일</div>
         </div>
         <div className="w-[25%] min-w-[150px] flex justify-center items-center">
-          <div className="text-center text-xs font-bold text-[#515151]">임베딩 일시</div>
+          <div className="text-center text-xs font-bold text-[#515151]">등록일</div>
         </div>
       </div>
 

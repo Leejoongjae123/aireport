@@ -39,6 +39,7 @@ export async function PUT(
     career_file_name,
     affiliation,
     experience_years,
+    is_visible,
   } = body;
 
   const { data, error } = await supabase
@@ -53,6 +54,7 @@ export async function PUT(
       career_file_name,
       affiliation,
       experience_years,
+      is_visible,
     })
     .eq("id", id)
     .select()
@@ -79,6 +81,7 @@ export async function POST(request: NextRequest) {
     career_file_name,
     affiliation,
     experience_years,
+    is_visible,
   } = body;
 
   const { data, error } = await supabase
@@ -93,6 +96,7 @@ export async function POST(request: NextRequest) {
       career_file_name,
       affiliation,
       experience_years,
+      is_visible,
     })
     .select()
     .single();

@@ -56,14 +56,8 @@ export default function ReportTable({ reports, currentPage, itemsPerPage }: Repo
         <div className="flex items-center justify-center px-2.5 flex-[1.5]">
           <span className="text-xs font-bold text-[#515151]">ID</span>
         </div>
-        <div className="flex items-center justify-center px-2.5 flex-1">
-          <span className="text-xs font-bold text-[#515151]">버전</span>
-        </div>
         <div className="flex items-center justify-center px-2.5 flex-[1.5]">
           <span className="text-xs font-bold text-[#515151]">생성일시</span>
-        </div>
-        <div className="flex items-center justify-center px-2.5 flex-[1.5]">
-          <span className="text-xs font-bold text-[#515151]">수정일시</span>
         </div>
       </div>
 
@@ -109,19 +103,9 @@ export default function ReportTable({ reports, currentPage, itemsPerPage }: Repo
                 {maskEmail(report.email)}
               </span>
             </div>
-            <div className="flex items-center justify-center px-2.5 flex-1">
-              <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
-                {report.version || "v1.0"}
-              </span>
-            </div>
             <div className="flex items-center justify-center px-2.5 flex-[1.5]">
               <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
                 {formatDateTime(report.created_at)}
-              </span>
-            </div>
-            <div className="flex items-center justify-center px-2.5 flex-[1.5]">
-              <span className="text-xs font-medium text-[#686868] group-hover:text-[#07F] transition-colors duration-200">
-                {report.updated_at ? formatDateTime(report.updated_at) : "-"}
               </span>
             </div>
           </div>

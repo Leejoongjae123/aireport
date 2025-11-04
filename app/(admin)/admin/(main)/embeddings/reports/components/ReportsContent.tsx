@@ -6,8 +6,10 @@ import ReportsSearchFilter from "./ReportsSearchFilter";
 import ReportsStatsCards from "./ReportsStatsCards";
 import ReportsTable from "./ReportsTable";
 import ReportsPagination from "./ReportsPagination";
-import { ReportResponse } from "../types";
+import { ReportResponse, ReportInformation } from "../types";
 import Link from "next/link";
+import { useExcelDownload } from "@/components/hooks/UseExcelDownload";
+import { useCustomToast } from "@/components/hooks/UseCustomToast";
 
 interface ReportsContentProps {
   initialData: ReportResponse;
@@ -25,6 +27,24 @@ export default function ReportsContent({ initialData }: ReportsContentProps) {
     field: "전체",
     searchFilter: "제목",
     searchValue: "",
+  });
+
+  const { showSuccess, showError } = useCustomToast();
+  const { downloadExcel } = useExcelDownload<ReportInformation>({
+    filename: `보고서_목록_${new Date().toISOString().split("T")[0]}.xlsx`,
+    sheetName: "보고서 목록",
+    dataTransformer: (reports) =>
+      reports.map((report, index: number) => ({
+        번호: index + 1,
+        제목: report.제목 || "",
+        분야: report.분야 || "",
+        키워드: report.키워드 || "",
+        보고서파일명: report.보고서파일명 || "",
+        작성일: report.created_at
+          ? new Date(report.created_at).toLocaleDateString("ko-KR")
+          : "",
+        완료여부: report.is_completed ? "완료" : "미완료",
+      })),
   });
 
   const fetchData = async (page: number, limit: number) => {
@@ -85,6 +105,27 @@ export default function ReportsContent({ initialData }: ReportsContentProps) {
     setCurrentPage(1);
   };
 
+  const handleExcelDownload = async () => {
+    try {
+      const response = await fetch("/api/admin/reports/all");
+      if (!response.ok) {
+        showError("보고서 정보를 불러오는데 실패했습니다.");
+        return;
+      }
+
+      const { data: allReports } = await response.json();
+      const result = await downloadExcel(allReports);
+
+      if (result.success) {
+        showSuccess("엑셀 파일이 다운로드되었습니다.");
+      } else {
+        showError("엑셀 다운로드에 실패했습니다.");
+      }
+    } catch {
+      showError("엑셀 다운로드 중 오류가 발생했습니다.");
+    }
+  };
+
   useEffect(() => {
     const itemsPerPageNum = parseInt(itemsPerPage.match(/\d+/)?.[0] || "10");
     fetchData(currentPage, itemsPerPageNum);
@@ -117,7 +158,9 @@ export default function ReportsContent({ initialData }: ReportsContentProps) {
             <span className="text-[#6D6D6D]">건</span>
           </div>
           <div className="flex gap-3">
-            <Button className="flex items-center gap-3 px-3 py-2.5 border-[1.6px] border-[#4CA452] bg-white text-[#4CA452] font-semibold text-sm rounded hover:bg-[#F8FFF9]">
+            <Button 
+              onClick={handleExcelDownload}
+              className="flex items-center gap-3 px-3 py-2.5 border-[1.6px] border-[#4CA452] bg-white text-[#4CA452] font-semibold text-sm rounded hover:bg-[#F8FFF9]">
               <svg className="w-4 h-4" viewBox="0 0 16 17" fill="none">
                 <path
                   d="M2.66797 5.47233V2.47233C2.66797 2.29552 2.73821 2.12595 2.86323 2.00093C2.98826 1.8759 3.15782 1.80566 3.33464 1.80566H12.668C12.8448 1.80566 13.0143 1.8759 13.1394 2.00093C13.2644 2.12595 13.3346 2.29552 13.3346 2.47233V14.4723C13.3346 14.6491 13.2644 14.8187 13.1394 14.9437C13.0143 15.0688 12.8448 15.139 12.668 15.139H3.33464C3.15782 15.139 2.98826 15.0688 2.86323 14.9437C2.73821 14.8187 2.66797 14.6491 2.66797 14.4723V11.4723"

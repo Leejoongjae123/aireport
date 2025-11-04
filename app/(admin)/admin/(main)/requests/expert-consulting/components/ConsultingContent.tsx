@@ -6,7 +6,9 @@ import ConsultingSearchFilter from "./ConsultingSearchFilter";
 import ConsultingStatsCards from "./ConsultingStatsCards";
 import ConsultingTable from "./ConsultingTable";
 import ConsultingPagination from "./ConsultingPagination";
-import { ConsultingRequestResponse } from "../types";
+import { ConsultingRequestResponse, ConsultingRequest } from "../types";
+import { useExcelDownload } from "@/components/hooks/UseExcelDownload";
+import { useCustomToast } from "@/components/hooks/UseCustomToast";
 
 interface ConsultingContentProps {
   initialData: ConsultingRequestResponse;
@@ -24,6 +26,26 @@ export default function ConsultingContent({ initialData }: ConsultingContentProp
     status: "전체",
     searchFilter: "이름",
     searchValue: "",
+  });
+
+  const { showSuccess, showError } = useCustomToast();
+  const { downloadExcel, isDownloading } = useExcelDownload<ConsultingRequest>({
+    filename: `전문가컨설팅요청_${new Date().toISOString().split("T")[0]}.xlsx`,
+    sheetName: "전문가 컨설팅 요청",
+    dataTransformer: (requests) =>
+      requests.map((request, index: number) => ({
+        번호: index + 1,
+        요청일: request.created_at
+          ? new Date(request.created_at).toLocaleDateString("ko-KR")
+          : "",
+        회원명: request.profiles?.name || "",
+        회원ID: request.profiles?.email || "",
+        "대상 보고서": request.report_create?.title || "",
+        분야: request.report_create?.business_field || "",
+        "전문가명": request.expert_informations?.name || "미배정",
+        요청사항: request.request_subject || "",
+        상태: request.status === "completed" ? "완료" : "대기",
+      })),
   });
 
   const fetchData = async (page: number, limit: number) => {
@@ -84,6 +106,27 @@ export default function ConsultingContent({ initialData }: ConsultingContentProp
     setCurrentPage(1);
   };
 
+  const handleExcelDownload = async () => {
+    try {
+      const response = await fetch("/api/admin/expert-consulting/all");
+      if (!response.ok) {
+        showError("전문가 컨설팅 요청 정보를 불러오는데 실패했습니다.");
+        return;
+      }
+
+      const { data: allRequests } = await response.json();
+      const result = await downloadExcel(allRequests);
+
+      if (result.success) {
+        showSuccess("엑셀 파일이 다운로드되었습니다.");
+      } else {
+        showError("엑셀 다운로드에 실패했습니다.");
+      }
+    } catch {
+      showError("엑셀 다운로드 중 오류가 발생했습니다.");
+    }
+  };
+
   useEffect(() => {
     const itemsPerPageNum = parseInt(itemsPerPage.match(/\d+/)?.[0] || "10");
     fetchData(currentPage, itemsPerPageNum);
@@ -115,7 +158,37 @@ export default function ConsultingContent({ initialData }: ConsultingContentProp
             <span className="text-[#07F]">{(data.count || 0).toLocaleString()}</span>
             <span className="text-[#6D6D6D]">건</span>
           </div>
-          <Button className="flex items-center gap-3 px-3 py-2.5 border-[1.6px] border-[#4CA452] bg-white text-[#4CA452] font-semibold text-sm rounded hover:bg-[#F8FFF9]">
+          <Button
+            onClick={handleExcelDownload}
+            disabled={isDownloading}
+            className="flex items-center gap-3 px-3 py-2.5 border-[1.6px] border-[#4CA452] bg-white text-[#4CA452] font-semibold text-sm rounded hover:bg-[#F8FFF9] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDownloading ? (
+              <>
+                <svg
+                  className="animate-spin h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                다운로드 중...
+              </>
+            ) : (
+              <>
             <svg className="w-4 h-4" viewBox="0 0 16 17" fill="none">
               <path
                 d="M2.66797 5.47233V2.47233C2.66797 2.29552 2.73821 2.12595 2.86323 2.00093C2.98826 1.8759 3.15782 1.80566 3.33464 1.80566H12.668C12.8448 1.80566 13.0143 1.8759 13.1394 2.00093C13.2644 2.12595 13.3346 2.29552 13.3346 2.47233V14.4723C13.3346 14.6491 13.2644 14.8187 13.1394 14.9437C13.0143 15.0688 12.8448 15.139 12.668 15.139H3.33464C3.15782 15.139 2.98826 15.0688 2.86323 14.9437C2.73821 14.8187 2.66797 14.6491 2.66797 14.4723V11.4723"
@@ -139,6 +212,8 @@ export default function ConsultingContent({ initialData }: ConsultingContentProp
               />
             </svg>
             엑셀 다운로드
+              </>
+            )}
           </Button>
         </div>
 

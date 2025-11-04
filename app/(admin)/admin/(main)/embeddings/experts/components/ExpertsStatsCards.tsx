@@ -30,7 +30,7 @@ export default function ExpertsStatsCards({ stats }: ExpertsStatsCardsProps) {
 
       <div className="flex flex-col items-center gap-4 border border-[rgba(217,217,217,1)] bg-white rounded-lg w-[220px] h-[120px] justify-center">
         <Badge className="flex p-[6px_10px] justify-center items-center rounded-full bg-[#ECF5FF] text-xs font-normal text-[#07F] hover:bg-[#ECF5FF]">
-          최신 임베딩일
+          최신 등록일
         </Badge>
         <div className="flex flex-col items-center">
           <div className="w-[180px] text-center text-base font-bold text-[#303030]">
