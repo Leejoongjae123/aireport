@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { X } from "lucide-react";
 import Image from "next/image";
 import { useLoadingOverlay } from "@/components/hooks/UseLoadingOverlay";
+import { useWordDownload } from "@/components/hooks/UseWordDownload";
 
 interface ReportPreviewModalProps {
   uuid: string;
@@ -21,6 +22,8 @@ export default function ReportPreviewModal({ uuid }: ReportPreviewModalProps) {
     isLoading,
     currentSection: "",
   });
+
+  const { downloadWord } = useWordDownload();
 
   const handleCloseModal = () => {
     setIsOpen(false);
@@ -67,26 +70,7 @@ export default function ReportPreviewModal({ uuid }: ReportPreviewModalProps) {
   }, [uuid, fetchReportTitle, fetchReportSections]);
 
   const handleDownloadWord = async () => {
-    try {
-      const response = await fetch("/api/download-word", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html: reportContent, title: reportTitle }),
-      });
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${reportTitle}.docx`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      } else {
-        alert("다운로드에 실패했습니다.");
-      }
-    } catch {
-      alert("다운로드 중 오류가 발생했습니다.");
-    }
+    await downloadWord(uuid);
   };
 
   return (

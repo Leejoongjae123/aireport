@@ -13,6 +13,7 @@ import { ExpertStepModal } from "./ExpertStepModal";
 import { CustomModal } from "@/components/ui/CustomModal";
 import { useCustomToast } from "@/components/hooks/UseCustomToast";
 import { useButtonLoader } from "@/components/hooks/UseButtonLoader";
+import { useWordDownload } from "@/components/hooks/UseWordDownload";
 
 interface TopNavigationProps {
   onMenuClick: () => void;
@@ -23,6 +24,10 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
   const router = useRouter();
   const { showSuccess, showError } = useCustomToast();
   const Loader = useButtonLoader({ size: 24, color: '#0077FF' });
+  const { downloadWord } = useWordDownload({
+    onSuccess: () => showSuccess("Word 파일이 다운로드되었습니다."),
+    onError: (error) => showError(error),
+  });
   const [isExpertStepModalOpen, setIsExpertStepModalOpen] = useState(false);
   const [isExpertRecommendationModalOpen, setIsExpertRecommendationModalOpen] =
     useState(false);
@@ -232,27 +237,7 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
 
     try {
       setIsExporting(true);
-      const response = await fetch(`/api/reports/${reportId}/export`);
-
-      if (!response.ok) {
-        showError("Word 파일 생성에 실패했습니다.");
-        return;
-      }
-
-      // Blob으로 변환
-      const blob = await response.blob();
-
-      // 다운로드 링크 생성
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `report_${new Date().getTime()}.docx`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      showSuccess("Word 파일이 다운로드되었습니다.");
+      await downloadWord(reportId);
     } catch {
       showError("내보내기 중 오류가 발생했습니다.");
     } finally {

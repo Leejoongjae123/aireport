@@ -7,6 +7,9 @@ import Image from "next/image";
 import { TableOfContents } from "./components/TableOfContents";
 import { TextEditor } from "./components/TextEditor";
 import { useParams } from "next/navigation";
+import { useLoader } from "@/components/hooks/UseLoader";
+import { useWordDownload } from "@/components/hooks/UseWordDownload";
+import { useCustomToast } from "@/components/hooks/UseCustomToast";
 
 interface GeneratedReportSection {
   query: string;
@@ -56,6 +59,12 @@ export default function ReportDetailPage() {
   >(null);
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const { showSuccess, showError } = useCustomToast();
+  const { downloadWord, isDownloading } = useWordDownload({
+    onSuccess: () => showSuccess("보고서 다운로드가 완료되었습니다."),
+    onError: (error) => showError(error),
+  });
 
   // 보고서 기본 정보 가져오기
   useEffect(() => {
@@ -192,15 +201,22 @@ export default function ReportDetailPage() {
   const handleItemSelect = (id: string) => {
     setSelectedItemId(id);
   };
-  if (isLoading) {
-    return (
-      <div className="flex w-full p-8 mx-auto items-center justify-center min-h-screen">
-        <div className="text-lg">로딩 중...</div>
-      </div>
-    );
-  }
+
+  const handleDownloadReport = async () => {
+    if (!generatedReport || generatedReport.length === 0) {
+      alert("다운로드할 보고서 내용이 없습니다.");
+      return;
+    }
+
+    await downloadWord(reportId);
+  };
+
+  const Loader = useLoader({ isLoading });
 
   return (
+    <>
+      {Loader}
+      {!isLoading && (
     <div className="flex w-full p-8 mx-auto">
       <div className="flex w-full items-start gap-3 h-full min-h-screen">
         <div className="flex p-11 flex-col justify-center items-center gap-6 flex-1 rounded-[5px] bg-white">
@@ -225,6 +241,8 @@ export default function ReportDetailPage() {
                 <Button
                   variant="outline"
                   className="flex p-2 justify-center items-center gap-2 rounded border border-[#D9D9D9] bg-white"
+                  onClick={handleDownloadReport}
+                  disabled={isDownloading}
                 >
                   <Image
                     src="/images/word.svg"
@@ -233,7 +251,7 @@ export default function ReportDetailPage() {
                     height={24}
                   />
                   <span className="text-[#5A5A5A] font-pretendard text-xs font-bold leading-4">
-                    보고서 다운로드
+                    {isDownloading ? "다운로드 중..." : "보고서 다운로드"}
                   </span>
                 </Button>
               </div>
@@ -260,7 +278,7 @@ export default function ReportDetailPage() {
                     <div className="w-[120px] text-[#767676] font-pretendard text-base font-semibold leading-6">
                       사용자
                     </div>
-                    <div className="w-[200px] text-[#0077FF] font-pretendard text-base font-bold leading-6">
+                    <div className="flex-1 text-[#0077FF] font-pretendard text-base font-bold leading-6">
                       {reportData?.user_name || "-"} ({reportData?.email || "-"}
                       )
                     </div>
@@ -269,7 +287,7 @@ export default function ReportDetailPage() {
                     <div className="w-[120px] text-[#767676] font-pretendard text-base font-semibold leading-6">
                       생성일시
                     </div>
-                    <div className="w-[200px] text-[#0077FF] font-pretendard text-base font-bold leading-6">
+                    <div className="flex-1 text-[#0077FF] font-pretendard text-base font-bold leading-6">
                       {reportData?.created_at
                         ? new Date(reportData.created_at).toLocaleString(
                             "ko-KR"
@@ -281,7 +299,7 @@ export default function ReportDetailPage() {
                     <div className="w-[120px] text-[#767676] font-pretendard text-base font-semibold leading-6">
                       제목
                     </div>
-                    <div className="w-[200px] text-[#0077FF] font-pretendard text-base font-bold leading-6">
+                    <div className="flex-1 text-[#0077FF] font-pretendard text-base font-bold leading-6">
                       {reportData?.title || "-"}
                     </div>
                   </div>
@@ -295,7 +313,7 @@ export default function ReportDetailPage() {
                     <div className="w-[120px] text-[#767676] font-pretendard text-base font-semibold leading-6">
                       분야
                     </div>
-                    <div className="w-[200px] text-[#0077FF] font-pretendard text-base font-bold leading-6">
+                    <div className="flex-1 text-[#0077FF] font-pretendard text-base font-bold leading-6">
                       {reportData?.business_field || "-"}
                     </div>
                   </div>
@@ -303,7 +321,7 @@ export default function ReportDetailPage() {
                     <div className="w-[120px] text-[#767676] font-pretendard text-base font-semibold leading-6">
                       제목
                     </div>
-                    <div className="w-[200px] text-[#0077FF] font-pretendard text-base font-bold leading-6">
+                    <div className="flex-1 text-[#0077FF] font-pretendard text-base font-bold leading-6">
                       {reportData?.title || "-"}
                     </div>
                   </div>
@@ -339,5 +357,7 @@ export default function ReportDetailPage() {
         </div>
       </div>
     </div>
+      )}
+    </>
   );
 }
