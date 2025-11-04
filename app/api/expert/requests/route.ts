@@ -104,10 +104,8 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    console.log("필터링 후 최종 데이터 개수:", rows.length);
-    if (rows.length > 0) {
-      console.log("최종 응답 데이터 샘플:", JSON.stringify(rows[0], null, 2));
-    }
+    // console.log("필터링 후 최종 데이터 개수:", rows.length);
+    
 
     return NextResponse.json(rows);
   } catch (error) {

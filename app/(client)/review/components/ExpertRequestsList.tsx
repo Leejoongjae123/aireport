@@ -101,7 +101,7 @@ export function ExpertRequestsList({ isOpen, statusFilter = "all", keyword, onLo
     switch (status) {
       case "pending":
         return {
-          text: "대기중",
+          text: "평가요청",
           className:
             "bg-[#FFF1C2] text-[#BF6A02] px-3 py-2 rounded-full text-sm font-semibold",
         };
@@ -119,7 +119,7 @@ export function ExpertRequestsList({ isOpen, statusFilter = "all", keyword, onLo
         };
       case "completed":
         return {
-          text: "완료됨",
+          text: "평가완료",
           className:
             "bg-[#C7EAFF] text-[#0077FF] px-3 py-2 rounded-full text-sm font-semibold",
         };

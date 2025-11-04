@@ -97,7 +97,7 @@ export function ReportSidebar() {
                         isSelected ? "bg-[#E8F3FF]" : "hover:bg-gray-50"
                       }`}
                       onClick={() =>
-                        router.push(`/report/editor?id=${report.uuid}`)
+                        router.push(`/report/editor?reportId=${report.uuid}`)
                       }
                     >
                       <FileText

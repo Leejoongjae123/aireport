@@ -18,10 +18,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 외부 전문가 매칭 API 호출
-    const response = await fetch("http://localhost:8000/api/expert/match", {
+    const response = await fetch("https://8szu2n9tl3.execute-api.ap-northeast-2.amazonaws.com/api/expert/match", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "accept": "application/json",
       },
       body: JSON.stringify({
         business_report,

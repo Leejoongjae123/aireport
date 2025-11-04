@@ -196,7 +196,7 @@ export function BusinessCategoryModal({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleCategoryClick = async (categoryTitle: string) => {
+  const handleCategoryClick = async (categoryId: string, categoryTitle: string) => {
     if (isLoading) {
       return;
     }
@@ -252,8 +252,8 @@ export function BusinessCategoryModal({
           return;
         }
 
-        // 콜백으로 선택된 business field 전달
-        onBusinessFieldChange?.(categoryTitle);
+        // 콜백으로 선택된 business field ID 전달
+        onBusinessFieldChange?.(categoryId);
         onOpenChange?.(false);
       }
     } catch {
@@ -297,7 +297,7 @@ export function BusinessCategoryModal({
                 className={`w-[296px] h-[168px] p-5 flex flex-col gap-2 bg-[#F9FAFC] rounded-[10px] cursor-pointer hover:bg-[#F0F6FF] transition-colors ${
                   isLoading ? "opacity-50 pointer-events-none" : ""
                 }`}
-                onClick={() => handleCategoryClick(category.title)}
+                onClick={() => handleCategoryClick(category.id, category.title)}
               >
                 {/* Icon */}
                 <div className="w-[38px] h-[38px] p-[7px] flex items-center justify-center bg-[#DBE7FF] rounded-full mb-2">

@@ -23,7 +23,7 @@ export function ExpertStepModal({
 }: ExpertStepModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { setExpertMatchData } = useExpertStore();
-  const Loader = useButtonLoader({ size: 40, color: "#FFFFFF" });
+  const Loader = useButtonLoader({ size: 40, color: "#0077FF" });
 
   const handleStartRequest = async () => {
     try {

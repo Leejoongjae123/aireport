@@ -78,20 +78,16 @@ export default function ExpertCreatePage() {
         career: careerEntries
           .filter((entry) => entry.description.trim())
           .length > 0 
-          ? [{ 
-              career: careerEntries
-                .filter((entry) => entry.description.trim())
-                .map((entry) => entry.description)
-            }] 
+          ? careerEntries
+              .filter((entry) => entry.description.trim())
+              .map((entry) => entry.description)
           : null,
         field: fieldEntries
           .filter((entry) => entry.description.trim())
           .length > 0 
-          ? [{ 
-              field: fieldEntries
-                .filter((entry) => entry.description.trim())
-                .map((entry) => entry.description)
-            }] 
+          ? fieldEntries
+              .filter((entry) => entry.description.trim())
+              .map((entry) => entry.description)
           : null,
         career_file_name: careerFileName,
       };

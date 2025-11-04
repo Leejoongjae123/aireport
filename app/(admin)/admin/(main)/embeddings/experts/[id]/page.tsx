@@ -74,46 +74,26 @@ export default function ExpertEmbeddingPage() {
 
         // 경력 데이터 설정
         if (data.career && Array.isArray(data.career) && data.career.length > 0) {
-          // career 데이터가 [{"career": ["문자열", "문자열", ...]}] 형태이거나 ["문자열", "문자열", ...] 형태일 수 있음
-          let careerArray: string[] = [];
-          
-          if (data.career[0] && data.career[0].career && Array.isArray(data.career[0].career)) {
-            careerArray = data.career[0].career;
-          } else if (typeof data.career[0] === 'string') {
-            careerArray = data.career;
-          }
-          
-          if (careerArray.length > 0) {
-            setCareerEntries(
-              careerArray.map((item: string, index: number) => ({
-                id: `career-${index}`,
-                description: item || "",
-              }))
-            );
-          }
+          // career 데이터가 ["문자열", "문자열", ...] 형태
+          setCareerEntries(
+            data.career.map((item: string, index: number) => ({
+              id: `career-${index}`,
+              description: item || "",
+            }))
+          );
         }
 
         // 분야 데이터 설정
         if (data.field && Array.isArray(data.field) && data.field.length > 0) {
-          // field 데이터가 [{"field": ["문자열", "문자열", ...]}] 형태이거나 ["문자열", "문자열", ...] 형태일 수 있음
-          let fieldArray: string[] = [];
-          
-          if (data.field[0] && data.field[0].field && Array.isArray(data.field[0].field)) {
-            fieldArray = data.field[0].field;
-          } else if (typeof data.field[0] === 'string') {
-            fieldArray = data.field;
-          }
-          
-          if (fieldArray.length > 0) {
-            setFieldEntries(
-              fieldArray.map((item: string, index: number) => ({
-                id: `field-${index}`,
-                year: "",
-                field: "",
-                description: item || "",
-              }))
-            );
-          }
+          // field 데이터가 ["문자열", "문자열", ...] 형태
+          setFieldEntries(
+            data.field.map((item: string, index: number) => ({
+              id: `field-${index}`,
+              year: "",
+              field: "",
+              description: item || "",
+            }))
+          );
         }
       } catch {
         alert("데이터를 불러오는 중 오류가 발생했습니다.");
@@ -165,20 +145,16 @@ export default function ExpertEmbeddingPage() {
         career: careerEntries
           .filter((entry) => entry.description.trim())
           .length > 0 
-          ? [{ 
-              career: careerEntries
-                .filter((entry) => entry.description.trim())
-                .map((entry) => entry.description)
-            }] 
+          ? careerEntries
+              .filter((entry) => entry.description.trim())
+              .map((entry) => entry.description)
           : null,
         field: fieldEntries
           .filter((entry) => entry.description.trim())
           .length > 0 
-          ? [{ 
-              field: fieldEntries
-                .filter((entry) => entry.description.trim())
-                .map((entry) => entry.description)
-            }] 
+          ? fieldEntries
+              .filter((entry) => entry.description.trim())
+              .map((entry) => entry.description)
           : null,
         career_file_name: careerFileName || formData.careerFileName,
       };
