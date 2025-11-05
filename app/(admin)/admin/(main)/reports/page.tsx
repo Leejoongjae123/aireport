@@ -13,7 +13,11 @@ async function fetchReports(searchParams: ReportSearchParams): Promise<ReportLis
   if (searchParams.searchType) params.set("searchType", searchParams.searchType);
   if (searchParams.searchValue) params.set("searchValue", searchParams.searchValue);
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!baseUrl) {
+    return { data: [], total: 0, page: 1, limit: 10 };
+  }
+  
   const url = `${baseUrl}/api/admin/report-create?${params.toString()}`;
   
   try {
@@ -22,15 +26,12 @@ async function fetchReports(searchParams: ReportSearchParams): Promise<ReportLis
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API Error:", response.status, errorText);
       return { data: [], total: 0, page: 1, limit: 10 };
     }
 
     const result = await response.json();
     return result;
-  } catch (error) {
-    console.error("Fetch Error:", error);
+  } catch {
     return { data: [], total: 0, page: 1, limit: 10 };
   }
 }

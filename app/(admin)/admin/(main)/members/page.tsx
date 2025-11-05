@@ -14,7 +14,11 @@ async function fetchMembers(searchParams: MemberSearchParams): Promise<MemberLis
   if (searchParams.searchType) params.set("searchType", searchParams.searchType);
   if (searchParams.searchValue) params.set("searchValue", searchParams.searchValue);
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!baseUrl) {
+    return { data: [], total: 0, page: 1, limit: 10 };
+  }
+  
   const response = await fetch(`${baseUrl}/api/admin/members?${params.toString()}`, {
     cache: "no-store",
   });

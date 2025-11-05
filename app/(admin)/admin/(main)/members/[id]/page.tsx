@@ -12,7 +12,11 @@ interface MemberDetailPageProps {
 }
 
 async function fetchMemberDetail(id: string): Promise<MemberDetailResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!baseUrl) {
+    return { member: null, requests: [] };
+  }
+  
   const response = await fetch(`${baseUrl}/api/admin/members/${id}`, {
     cache: "no-store",
   });

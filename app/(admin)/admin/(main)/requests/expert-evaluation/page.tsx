@@ -3,7 +3,17 @@ import { ExpertEvaluationResponse } from "./types";
 
 async function getInitialData(): Promise<ExpertEvaluationResponse> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (!baseUrl) {
+      return { 
+        data: [], 
+        count: 0, 
+        stats: { total: 0, completed: 0, pending: 0, delayed: 0 },
+        page: 1, 
+        limit: 10 
+      };
+    }
+    
     const response = await fetch(`${baseUrl}/api/admin/expert-evaluation?page=1&limit=10`, {
       cache: "no-store",
     });
