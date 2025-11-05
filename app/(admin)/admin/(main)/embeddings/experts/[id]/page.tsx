@@ -188,9 +188,6 @@ export default function ExpertEmbeddingPage() {
     }
   };
 
-  const handleCancel = () => {
-    router.back();
-  };
 
   if (isLoading) {
     return (

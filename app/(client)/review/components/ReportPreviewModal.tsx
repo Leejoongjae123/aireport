@@ -117,7 +117,10 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
             <div className="flex w-[611px] h-[555px] p-5 px-6 flex-col items-start gap-[10px] border border-[#EEEEEF] bg-white rounded-xl relative overflow-y-auto">
               {loadingOverlay}
               <div
-                className="prose prose-sm max-w-none w-full [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-6 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-5 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:mb-2 [&_h3]:mt-4"
+                className="prose prose-sm max-w-none w-full 
+                  [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-6 
+                  [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-5 
+                  [&_h3]:text-lg [&_h3]:font-medium [&_h3]:mb-2 [&_h3]:mt-4"
                 dangerouslySetInnerHTML={{ __html: reportContent }}
               />
             </div>

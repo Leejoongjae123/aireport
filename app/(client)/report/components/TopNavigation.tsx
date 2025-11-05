@@ -14,6 +14,7 @@ import { CustomModal } from "@/components/ui/CustomModal";
 import { useCustomToast } from "@/components/hooks/UseCustomToast";
 import { useButtonLoader } from "@/components/hooks/UseButtonLoader";
 import { useWordDownload } from "@/components/hooks/UseWordDownload";
+import { uploadBase64ImagesInHtml, hasBase64Images } from "./lib/ImageUploadUtils";
 
 interface TopNavigationProps {
   onMenuClick: () => void;
@@ -145,32 +146,45 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
     }
 
     setIsSavingTemp(true);
-    const response = await fetch(
-      `/api/reports/${currentReportId}/sections/${selectedSubsectionId}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          content: editorContent,
-        }),
+
+    try {
+      // HTML에 base64 이미지가 있는지 확인하고 업로드
+      let contentToSave = editorContent;
+      if (hasBase64Images(editorContent)) {
+        contentToSave = await uploadBase64ImagesInHtml(editorContent, currentReportId);
       }
-    );
 
-    const result = await response.json();
-    setIsSavingTemp(false);
+      const response = await fetch(
+        `/api/reports/${currentReportId}/sections/${selectedSubsectionId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            content: contentToSave,
+          }),
+        }
+      );
 
-    if (!response.ok) {
-      showError(result.message || "저장에 실패했습니다.");
+      const result = await response.json();
+      setIsSavingTemp(false);
+
+      if (!response.ok) {
+        showError(result.message || "저장에 실패했습니다.");
+        return false;
+      }
+
+      // 저장 성공 시 캐시 업데이트 (업로드된 URL로 업데이트)
+      updateCachedSectionContent(selectedSubsectionId, contentToSave);
+      
+      showSuccess("저장되었습니다.");
+      return true;
+    } catch {
+      setIsSavingTemp(false);
+      showError("저장 중 오류가 발생했습니다.");
       return false;
     }
-
-    // 저장 성공 시 캐시 업데이트
-    updateCachedSectionContent(selectedSubsectionId, editorContent);
-    
-    showSuccess("저장되었습니다.");
-    return true;
   };
 
   const handleNextClick = async () => {
