@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "../utils";
 
 export async function updateSession(request: NextRequest) {
+  // eslint-disable-next-line prefer-const
   let supabaseResponse = NextResponse.next({
     request,
   });
