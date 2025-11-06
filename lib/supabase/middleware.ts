@@ -50,6 +50,15 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  // 디버깅용 로그 (배포 후 확인용)
+  if (process.env.NODE_ENV === 'production') {
+    console.log('[Middleware Debug]', {
+      pathname,
+      hasUser: !!user,
+      cookies: request.cookies.getAll().map(c => c.name),
+    });
+  }
+
   // API 경로, /register/complete, /preview 페이지는 체크에서 제외
   if (
     pathname.startsWith("/api/") ||
