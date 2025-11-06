@@ -14,9 +14,9 @@ export async function GET(request: NextRequest) {
     );
 
     if (exchangeError) {
-      return NextResponse.redirect(
-        `${requestUrl.origin}/login?error=auth_failed`
-      );
+      const redirectUrl = new URL('/login', requestUrl.origin);
+      redirectUrl.searchParams.set('error', 'auth_failed');
+      return NextResponse.redirect(redirectUrl);
     }
 
     // 사용자 정보 가져오기
@@ -25,11 +25,15 @@ export async function GET(request: NextRequest) {
       const { data: { user: fetchedUser } } = await supabase.auth.getUser();
       user = fetchedUser;
     } catch {
-      return NextResponse.redirect(`${requestUrl.origin}/login?error=get_user_failed`);
+      const redirectUrl = new URL('/login', requestUrl.origin);
+      redirectUrl.searchParams.set('error', 'get_user_failed');
+      return NextResponse.redirect(redirectUrl);
     }
 
     if (!user) {
-      return NextResponse.redirect(`${requestUrl.origin}/login?error=no_user`);
+      const redirectUrl = new URL('/login', requestUrl.origin);
+      redirectUrl.searchParams.set('error', 'no_user');
+      return NextResponse.redirect(redirectUrl);
     }
 
     // OAuth 로그인 시 프로필의 email과 provider 업데이트
@@ -47,10 +51,13 @@ export async function GET(request: NextRequest) {
         .eq("id", user.id);
     }
 
-    // name, organization, business_field 중 하나라도 없어도 홈으로 (정보 부족 시 제외하지 않음)
-    return NextResponse.redirect(`${requestUrl.origin}/`);
+    // 홈으로 리다이렉트
+    const redirectUrl = new URL('/', requestUrl.origin);
+    return NextResponse.redirect(redirectUrl);
   }
 
   // 코드가 없으면 로그인 페이지로
-  return NextResponse.redirect(`${requestUrl.origin}/login?error=no_code`);
+  const redirectUrl = new URL('/login', requestUrl.origin);
+  redirectUrl.searchParams.set('error', 'no_code');
+  return NextResponse.redirect(redirectUrl);
 }

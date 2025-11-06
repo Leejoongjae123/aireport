@@ -24,15 +24,18 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({
-            request,
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+            supabaseResponse.cookies.set({
+              name,
+              value,
+              ...options,
+            });
           });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
         },
       },
     }
@@ -51,13 +54,13 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // 디버깅용 로그 (배포 후 확인용)
-  if (process.env.NODE_ENV === 'production') {
-    console.log('[Middleware Debug]', {
-      pathname,
-      hasUser: !!user,
-      cookies: request.cookies.getAll().map(c => c.name),
-    });
-  }
+  console.log('[Middleware Debug]', {
+    pathname,
+    hasUser: !!user,
+    userId: user?.id,
+    cookies: request.cookies.getAll().map(c => ({ name: c.name, value: c.value.substring(0, 20) + '...' })),
+    origin: request.nextUrl.origin,
+  });
 
   // API 경로, /register/complete, /preview 페이지는 체크에서 제외
   if (

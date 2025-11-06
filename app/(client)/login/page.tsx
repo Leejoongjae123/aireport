@@ -90,9 +90,13 @@ const LoginPageContent = () => {
     }
 
     // 로그인 성공 시 메인 페이지로 이동
-    // onAuthStateChange가 자동으로 상태를 업데이트합니다
-    router.push("/");
-    setIsLoading(false);
+    // router.refresh()를 먼저 호출하여 서버 컴포넌트를 새로고침
+    router.refresh();
+    // 약간의 딜레이 후 페이지 이동 (쿠키가 제대로 설정되도록)
+    setTimeout(() => {
+      router.push("/");
+      setIsLoading(false);
+    }, 100);
   };
 
   const handleOAuthLogin = (provider: "google" | "kakao") => {
