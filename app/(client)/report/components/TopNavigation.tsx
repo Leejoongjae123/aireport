@@ -14,7 +14,10 @@ import { CustomModal } from "@/components/ui/CustomModal";
 import { useCustomToast } from "@/components/hooks/UseCustomToast";
 import { useButtonLoader } from "@/components/hooks/UseButtonLoader";
 import { useWordDownload } from "@/components/hooks/UseWordDownload";
-import { uploadBase64ImagesInHtml, hasBase64Images } from "./lib/ImageUploadUtils";
+import {
+  uploadBase64ImagesInHtml,
+  hasBase64Images,
+} from "./lib/ImageUploadUtils";
 
 interface TopNavigationProps {
   onMenuClick: () => void;
@@ -24,7 +27,7 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { showSuccess, showError } = useCustomToast();
-  const Loader = useButtonLoader({ size: 24, color: '#0077FF' });
+  const Loader = useButtonLoader({ size: 24, color: "#0077FF" });
   const { downloadWord } = useWordDownload({
     onSuccess: () => showSuccess("Word 파일이 다운로드되었습니다."),
     onError: (error) => showError(error),
@@ -39,6 +42,7 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
   const [validationErrorMessage, setValidationErrorMessage] = useState("");
   const [isAlreadyRequestedModalOpen, setIsAlreadyRequestedModalOpen] =
     useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   const {
     reportType,
     reportId,
@@ -48,8 +52,9 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
   } = useReportStore();
 
   const { procedureData } = useProcedureStore();
-  
-  const { editorContent, selectedSubsectionId, updateCachedSectionContent } = useEditorStore();
+
+  const { editorContent, selectedSubsectionId, updateCachedSectionContent } =
+    useEditorStore();
 
   const isInputsOrProcedurePage =
     pathname?.includes("/report/inputs") ||
@@ -151,7 +156,10 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
       // HTML에 base64 이미지가 있는지 확인하고 업로드
       let contentToSave = editorContent;
       if (hasBase64Images(editorContent)) {
-        contentToSave = await uploadBase64ImagesInHtml(editorContent, currentReportId);
+        contentToSave = await uploadBase64ImagesInHtml(
+          editorContent,
+          currentReportId
+        );
       }
 
       const response = await fetch(
@@ -177,7 +185,7 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
 
       // 저장 성공 시 캐시 업데이트 (업로드된 URL로 업데이트)
       updateCachedSectionContent(selectedSubsectionId, contentToSave);
-      
+
       showSuccess("저장되었습니다.");
       return true;
     } catch {
@@ -294,9 +302,81 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
     setIsExpertRecommendationModalOpen(true);
   };
 
-  const handleComplete = () => {
-    // TODO: 완료 로직 구현
-    router.push(`/review`);
+  const handleComplete = async () => {
+    if (!reportId) {
+      showError("리포트 ID가 없습니다.");
+      return;
+    }
+
+    try {
+      setIsCompleting(true);
+
+      // 1) 현재 섹션 스냅샷 조회
+      const sectionsResponse = await fetch(`/api/reports/${reportId}/sections`);
+      const sectionsResult = await sectionsResponse.json().catch(() => null);
+
+      if (!sectionsResponse.ok || !sectionsResult?.success) {
+        showError(
+          sectionsResult?.message || "보고서 섹션 정보를 가져오지 못했습니다."
+        );
+        setIsCompleting(false);
+        return;
+      }
+
+      const generatedReport = sectionsResult.data;
+
+      // 2) 임시 본문으로 저장
+      const tempResponse = await fetch(`/api/reports/generated/temporary`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          report_id: reportId,
+          generated_report: generatedReport,
+        }),
+      });
+
+      const tempResult = await tempResponse.json().catch(() => null);
+
+      if (!tempResponse.ok || !tempResult?.success) {
+        showError(
+          tempResult?.message ||
+            "임시 보고서 저장에 실패했습니다. 다시 시도해주세요."
+        );
+        setIsCompleting(false);
+        return;
+      }
+
+      // 3) 임시 본문을 최종 본문으로 확정
+      const confirmResponse = await fetch(`/api/reports/generated/confirm`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          report_id: reportId,
+        }),
+      });
+
+      const confirmResult = await confirmResponse.json().catch(() => null);
+
+      if (!confirmResponse.ok || !confirmResult?.success) {
+        showError(
+          confirmResult?.message ||
+            "최종 보고서 확정에 실패했습니다. 잠시 후 다시 시도해주세요."
+        );
+        setIsCompleting(false);
+        return;
+      }
+
+      showSuccess("보고서가 최종 확정되었습니다.");
+      router.push(`/review`);
+    } catch {
+      showError("보고서 완료 처리 중 오류가 발생했습니다.");
+    } finally {
+      setIsCompleting(false);
+    }
   };
 
   return (
@@ -323,8 +403,17 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
               onClick={handleTemporarySave}
               disabled={isSavingTemp}
             >
-              <span className={`flex items-center gap-2 ${isSavingTemp ? 'invisible' : ''}`}>
-                <Image src="/images/save.svg" alt="save" width={15} height={15} />
+              <span
+                className={`flex items-center gap-2 ${
+                  isSavingTemp ? "invisible" : ""
+                }`}
+              >
+                <Image
+                  src="/images/save.svg"
+                  alt="save"
+                  width={15}
+                  height={15}
+                />
                 임시 저장
               </span>
               {isSavingTemp && (
@@ -352,8 +441,17 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
               onClick={handleTemporarySave}
               disabled={isSavingTemp}
             >
-              <span className={`flex items-center gap-2 ${isSavingTemp ? 'invisible' : ''}`}>
-                <Image src="/images/save.svg" alt="save" width={15} height={15} />
+              <span
+                className={`flex items-center gap-2 ${
+                  isSavingTemp ? "invisible" : ""
+                }`}
+              >
+                <Image
+                  src="/images/save.svg"
+                  alt="save"
+                  width={15}
+                  height={15}
+                />
                 임시저장
               </span>
               {isSavingTemp && (
@@ -368,7 +466,11 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
               onClick={handleExport}
               disabled={isExporting}
             >
-              <span className={`flex items-center gap-2 ${isExporting ? 'invisible' : ''}`}>
+              <span
+                className={`flex items-center gap-2 ${
+                  isExporting ? "invisible" : ""
+                }`}
+              >
                 <Image
                   src="/images/upload.png"
                   alt="export"
@@ -394,6 +496,7 @@ export function TopNavigation({ onMenuClick }: TopNavigationProps) {
               variant="default"
               className="h-12 px-6 text-[18px] font-semibold"
               onClick={handleComplete}
+              disabled={isCompleting}
             >
               완료
             </Button>

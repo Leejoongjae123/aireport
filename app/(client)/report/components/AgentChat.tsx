@@ -9,6 +9,7 @@ import { useReportStore } from "./store/ReportStore";
 import { defaultContent } from "../editor/components/TextEditor";
 import { CustomModal } from "@/components/ui/CustomModal";
 import { pollJobStatus, getStatusMessage } from "./lib/PollingUtils";
+import { RegenerateConfirmModal } from "./RegenerateConfirmModal";
 
 export default function AgentChat() {
   const [messages, setMessages] = useState<Message[]>([
@@ -21,6 +22,14 @@ export default function AgentChat() {
   ]);
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
   const [completionMessage, setCompletionMessage] = useState("");
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [pendingContent, setPendingContent] = useState<string | null>(null);
+  const [originalContentBeforeRegenerate, setOriginalContentBeforeRegenerate] =
+    useState<string | null>(null);
+  const [pendingActionLabel, setPendingActionLabel] = useState<string | null>(
+    null
+  );
+  const [pendingMessageId, setPendingMessageId] = useState<string | null>(null);
 
   const {
     editorContent,
@@ -105,8 +114,6 @@ export default function AgentChat() {
         }
       }
 
-      console.log(`[${action}] API 요청 시작:`, requestBody);
-
       // Step 1: 재생성 작업 시작
       let response: Response;
       try {
@@ -118,7 +125,8 @@ export default function AgentChat() {
           body: JSON.stringify(requestBody),
         });
       } catch (fetchError) {
-        const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
+        const errorMsg =
+          fetchError instanceof Error ? fetchError.message : String(fetchError);
         console.error(`[${action}] 네트워크 에러:`, errorMsg);
         throw new Error(`네트워크 연결 실패: ${errorMsg}`);
       }
@@ -132,25 +140,27 @@ export default function AgentChat() {
       if (!response.ok) {
         let errorData;
         let errorMessage = "API 요청 실패";
-        
+
         try {
           errorData = await response.json();
-          errorMessage = errorData.message || errorData.contents || errorMessage;
+          errorMessage =
+            errorData.message || errorData.contents || errorMessage;
         } catch {
           try {
             const errorText = await response.text();
-            errorMessage = errorText || `HTTP ${response.status} ${response.statusText}`;
+            errorMessage =
+              errorText || `HTTP ${response.status} ${response.statusText}`;
           } catch {
             errorMessage = `HTTP ${response.status} ${response.statusText}`;
           }
         }
-        
+
         console.error(`[${action}] API 에러:`, {
           status: response.status,
           errorData,
           errorMessage,
         });
-        
+
         throw new Error(errorMessage);
       }
 
@@ -183,9 +193,10 @@ export default function AgentChat() {
         interval: 5000, // 5초마다 폴링
         maxAttempts: 60, // 최대 5분
         onProgress: (progressData) => {
-          const statusMsg = progressData.meta?.status || getStatusMessage(progressData.status);
+          const statusMsg =
+            progressData.meta?.status || getStatusMessage(progressData.status);
           console.log(`[${action}] 작업 진행 중:`, statusMsg);
-          
+
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === aiGeneratingMessage.id
@@ -208,7 +219,7 @@ export default function AgentChat() {
       // Step 3: 결과 처리
       if (jobResult.status === "SUCCESS" && jobResult.result) {
         const resultContents = jobResult.result.contents;
-        
+
         if (!resultContents) {
           throw new Error("작업은 완료되었으나 결과 내용이 없습니다.");
         }
@@ -217,105 +228,25 @@ export default function AgentChat() {
         const newContent = shouldAppend
           ? editorContent + "\n\n" + resultContents
           : resultContents;
+        // 확인 모달을 통해 사용자가 적용 여부를 선택하도록 처리
+        setOriginalContentBeforeRegenerate(editorContent);
+        setPendingContent(newContent);
+        setPendingActionLabel(action);
+        setPendingMessageId(aiGeneratingMessage.id);
+        setIsConfirmModalOpen(true);
 
-        setEditorContent(newContent);
-        triggerForceUpdate(); // 에디터 강제 업데이트 트리거
-
-        // DB에 수정된 내용 저장 및 캐시 업데이트
-        if (reportId && selectedSubsectionId) {
-          try {
-            const updateResponse = await fetch(
-              `/api/reports/${reportId}/sections/${selectedSubsectionId}`,
-              {
-                method: "PATCH",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  content: newContent,
-                }),
-              }
-            );
-
-            if (updateResponse.ok) {
-              const updateResult = await updateResponse.json();
-              if (updateResult.success && updateResult.data) {
-                // 캐시 업데이트: DB에 저장된 최신 데이터로 캐시 갱신
-                updateCachedSections([updateResult.data]);
-
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === aiGeneratingMessage.id
-                      ? {
-                          ...msg,
-                          content: `[${action}] 요청이 완료되어 에디터 및 DB에 저장되었습니다.`,
-                          isGenerating: false,
-                        }
-                      : msg
-                  )
-                );
-              } else {
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === aiGeneratingMessage.id
-                      ? {
-                          ...msg,
-                          content: `[${action}] 요청이 완료되어 에디터에 반영되었으나 DB 저장에 실패했습니다.`,
-                          isGenerating: false,
-                        }
-                      : msg
-                  )
-                );
-              }
-            } else {
-              const errorData = await updateResponse.json().catch(() => ({}));
-              const errorMsg = errorData.message || "DB 저장 실패";
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === aiGeneratingMessage.id
-                    ? {
-                        ...msg,
-                        content: `[${action}] 요청이 완료되어 에디터에 반영되었으나 DB 저장 중 오류가 발생했습니다: ${errorMsg}`,
-                        isGenerating: false,
-                      }
-                    : msg
-                )
-              );
-            }
-          } catch (error) {
-            // DB 저장 실패해도 에디터에는 반영됨
-            const errorMsg =
-              error instanceof Error ? error.message : "DB 저장 실패";
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === aiGeneratingMessage.id
-                  ? {
-                      ...msg,
-                      content: `[${action}] 요청이 완료되어 에디터에 반영되었으나 DB 저장 중 오류가 발생했습니다: ${errorMsg}`,
-                      isGenerating: false,
-                    }
-                  : msg
-              )
-            );
-          }
-        } else {
-          // reportId 또는 selectedSubsectionId가 없는 경우
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === aiGeneratingMessage.id
-                ? {
-                    ...msg,
-                    content: `[${action}] 요청이 완료되어 에디터에 반영되었습니다. (리포트 정보가 없어 DB에 저장되지 않았습니다)`,
-                    isGenerating: false,
-                  }
-                : msg
-            )
-          );
-        }
-
-        // 완료 모달 표시
-        setCompletionMessage(`[${action}] 작업이 완료되었습니다.`);
-        setIsCompletionModalOpen(true);
+        // 챗 메시지 업데이트: 결과가 준비되었음을 안내
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === aiGeneratingMessage.id
+              ? {
+                  ...msg,
+                  content: `[${action}] AI 제안이 준비되었습니다. 아래 모달에서 기존 내용과 비교한 뒤 적용 여부를 선택해주세요.`,
+                  isGenerating: false,
+                }
+              : msg
+          )
+        );
       } else {
         throw new Error(jobResult.error || "작업 처리 중 오류가 발생했습니다.");
       }
@@ -327,22 +258,22 @@ export default function AgentChat() {
         errorMessage,
         stack: error instanceof Error ? error.stack : undefined,
       });
-      
+
       // 에러 메시지를 더 자세히 표시
       const detailedErrorMessage = `[${action}] 작업 실패\n\n오류 내용:\n${errorMessage}\n\n문제가 계속되면 브라우저 콘솔(F12)에서 상세 로그를 확인해주세요.`;
-      
+
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === aiGeneratingMessage.id
-            ? { 
-                ...msg, 
-                content: detailedErrorMessage, 
-                isGenerating: false 
+            ? {
+                ...msg,
+                content: detailedErrorMessage,
+                isGenerating: false,
               }
             : msg
         )
       );
-      
+
       // 사용자에게 alert로도 알림
       alert(`작업 실패: ${errorMessage}`);
     } finally {
@@ -356,11 +287,161 @@ export default function AgentChat() {
     setCompletionMessage("");
   };
 
+  const handleConfirmApply = async () => {
+    if (!pendingContent) {
+      setIsConfirmModalOpen(false);
+      return;
+    }
+
+    const actionLabel = pendingActionLabel || "AI";
+    const newContent = pendingContent;
+
+    setEditorContent(newContent);
+    triggerForceUpdate();
+
+    if (reportId && selectedSubsectionId) {
+      try {
+        const updateResponse = await fetch(
+          `/api/reports/${reportId}/sections/${selectedSubsectionId}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              content: newContent,
+            }),
+          }
+        );
+
+        if (updateResponse.ok) {
+          const updateResult = await updateResponse.json();
+          if (updateResult.success && updateResult.data) {
+            updateCachedSections([updateResult.data]);
+
+            if (pendingMessageId) {
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === pendingMessageId
+                    ? {
+                        ...msg,
+                        content: `[${actionLabel}] 요청이 완료되어 에디터 및 DB에 저장되었습니다.`,
+                        isGenerating: false,
+                      }
+                    : msg
+                )
+              );
+            }
+          } else if (pendingMessageId) {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === pendingMessageId
+                  ? {
+                      ...msg,
+                      content: `[${actionLabel}] 요청이 완료되어 에디터에 반영되었으나 DB 저장에 실패했습니다.`,
+                      isGenerating: false,
+                    }
+                  : msg
+              )
+            );
+          }
+        } else {
+          const errorData = await updateResponse.json().catch(() => ({}));
+          const errorMsg = errorData.message || "DB 저장 실패";
+
+          if (pendingMessageId) {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === pendingMessageId
+                  ? {
+                      ...msg,
+                      content: `[${actionLabel}] 요청이 완료되어 에디터에 반영되었으나 DB 저장 중 오류가 발생했습니다: ${errorMsg}`,
+                      isGenerating: false,
+                    }
+                  : msg
+              )
+            );
+          }
+        }
+      } catch (error) {
+        const errorMsg =
+          error instanceof Error ? error.message : "DB 저장 실패";
+
+        if (pendingMessageId) {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === pendingMessageId
+                ? {
+                    ...msg,
+                    content: `[${actionLabel}] 요청이 완료되어 에디터에 반영되었으나 DB 저장 중 오류가 발생했습니다: ${errorMsg}`,
+                    isGenerating: false,
+                  }
+                : msg
+            )
+          );
+        }
+      }
+    } else if (pendingMessageId) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === pendingMessageId
+            ? {
+                ...msg,
+                content: `[${actionLabel}] 요청이 완료되어 에디터에 반영되었습니다. (리포트 정보가 없어 DB에 저장되지 않았습니다)`,
+                isGenerating: false,
+              }
+            : msg
+        )
+      );
+    }
+
+    setCompletionMessage(`[${actionLabel}] 작업이 완료되었습니다.`);
+    setIsCompletionModalOpen(true);
+
+    setIsConfirmModalOpen(false);
+    setPendingContent(null);
+    setOriginalContentBeforeRegenerate(null);
+    setPendingActionLabel(null);
+    setPendingMessageId(null);
+  };
+
+  const handleCancelConfirm = () => {
+    const actionLabel = pendingActionLabel || "AI";
+
+    if (pendingMessageId) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === pendingMessageId
+            ? {
+                ...msg,
+                content: `[${actionLabel}] 요청이 취소되었습니다. 기존 내용이 유지됩니다.`,
+                isGenerating: false,
+              }
+            : msg
+        )
+      );
+    }
+
+    setIsConfirmModalOpen(false);
+    setPendingContent(null);
+    setOriginalContentBeforeRegenerate(null);
+    setPendingActionLabel(null);
+    setPendingMessageId(null);
+  };
+
   return (
     <>
       <QuickActions
         handleQuickAction={handleQuickAction}
         isLoading={isLoading}
+      />
+
+      <RegenerateConfirmModal
+        isOpen={isConfirmModalOpen}
+        onCancel={handleCancelConfirm}
+        onConfirm={handleConfirmApply}
+        originalContent={originalContentBeforeRegenerate ?? editorContent}
+        newContent={pendingContent ?? ""}
       />
 
       {/* Completion Modal */}
